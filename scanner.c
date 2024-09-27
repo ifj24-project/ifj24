@@ -6,9 +6,8 @@
 #include "scanner.h"
 
 /* TODO :
-    - Skip Comments
     - Add keywords
-    - Add identifiers
+    - How long Identifiers can be ?
     - Add values
 */
 
@@ -42,6 +41,53 @@ Token* Token_create(enum token_type type, enum token_Category category) {
     return token;
 }
 
+void SkipComment() {
+    while (1) {
+        char next = getchar();
+        if (next == '\n' || next == EOF) {
+            break;
+        }
+    }
+}
+
+Token* create_ID(char first,char second){
+    Token* token = Token_create(T_ID, TC_ID);
+    int length=60;
+    token->value.ID_name = malloc(sizeof(char) * length);
+
+    if (token->value.ID_name == NULL) {                 // malloc failed
+        free(token->value.ID_name);
+        token->Category = TC_ERR;
+        token->type = T_ERORR;
+        token->value.code=99;
+        return token;
+    }
+    
+    int index = 0;
+    token->value.ID_name[index] = first; // First character of the identifier
+    index++;
+    token->value.ID_name[index] = second;   // Second character of the identifier
+
+    char Char;
+    Char = getchar();
+    while(1) {
+        if (!isalnum(Char) && Char != '_'){     // end of ID
+            ungetc(Char, stdin);
+            break;
+        }
+        else {                                  // char is automata
+            token->value.ID_name[index] = Char;
+            index++;
+            Char = getchar();
+        }
+    }
+    
+    token->value.ID_name[index] = '\0';
+    //printf("Id: %s\n", token->value.ID_name);
+    return token;
+    
+}
+
 Token* scan() {                             
     char curr = GetNotWhiteChar();         
     char next = curr;
@@ -62,7 +108,15 @@ Token* scan() {
             break;
 
         case '/':       // can be comment
-            token = Token_create(T_Div, TC_OPERATOR);
+            if ((next = getchar()) == '/') {
+                SkipComment();
+                //printf("Comment skipped\n");
+                return scan();                  // found comment so we need to call scan again so it doesnt return previous token
+            }
+            else {
+                ungetc(next, stdin);
+                token = Token_create(T_Div, TC_OPERATOR);
+            }
             break;
             
         case '=':
@@ -158,9 +212,17 @@ Token* scan() {
             break;
 
         case '_':
-            token = Token_create(T_Underscore, TC_PUNCATION);
+            next = getchar();
+            if (isalnum(next) || next=='_') {
+                token = create_ID(curr,next);
+                return token;                   
+            }
+
+            else {
+                ungetc(next, stdin);
+                return Token_create(T_Underscore, TC_PUNCATION);
+            }
             break;
-    
         case EOF:
             token = Token_create(T_EOF, TC_EOF);
             break;
@@ -173,19 +235,19 @@ Token* scan() {
     return token;
 }
 
-// int main() {                                    
-//     Token* token;
-//     token = scan();
-//     while (token->type != T_EOF) {
-//         if (token->Category == TC_ERR) {
-//             printf("Error code: %d\n", token->value.code);
-//             break;
-//         }
-//         else {
-//             printf("Token type: %d\n", token->type);
-//         }
-//         token = scan();
-//     }
-//     return 0;
-//     }
+int main() {                                    
+     Token* token;
+     token = scan();
+     while (token->type != T_EOF) {
+         if (token->Category == TC_ERR) {
+            printf("Error code: %d\n", token->value.code);
+             break;
+         }
+         else {
+             printf("Token type: %d\n", token->type);
+         }
+         token = scan();
+    }
+    return 0;
+    }
  
