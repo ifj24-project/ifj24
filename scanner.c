@@ -6,13 +6,12 @@
 #include "scanner.h"
 
 /* TODO :
-    - Add keywords
     - Add values
 
     - How long Identifiers can be ?
     - Nullables
     - Param,import as KW 
-    
+    - 123.123e123.12 (is lexical or syntax error) (2 dots in float)
 !!! DONT CHANGE THE ORDER OF ENUMS !!! (if I do make changes in Create_ID_or_Keyword,change in detecting keywords)
 */
 
@@ -103,11 +102,96 @@ Token* Create_ID_or_Keyword(char first){
     
 }
 
+Token* numbers(char first){
+    Token* token = Token_create(T_Integer, TC_VALUE);
+
+    char numbers[256]; 
+    int index = 0;
+    numbers[index] = first;
+    index++;
+
+    char Char;
+    Char = getchar();
+
+    while (isdigit(Char)) {         
+        numbers[index] = Char;
+        index++;
+        Char = getchar();
+    }
+    // Integer part Done    
+    
+    if (Char == '.'){
+        numbers[index] = Char;
+        index++;
+        Char = getchar();
+        if(!isdigit(Char) && Char!='e' && Char!='E'){
+            ungetc(Char, stdin);
+            token = Token_create(T_ERORR, TC_ERR);
+            token->value.code=1;
+            return token;
+        } 
+        while (isdigit(Char)) {
+            numbers[index] = Char;
+            index++;
+            Char = getchar();
+        }
+    }
+
+    // decimal part done
+    //numbers[index] = '\0';
+    //printf("Number: %s\n", numbers);
+    if (Char == 'e' || Char == 'E') {   // Exponentn part
+        numbers[index] = Char;
+        index++;
+        Char = getchar();
+        
+        if (Char == '+' || Char == '-') {
+            numbers[index] = Char;
+            index++;
+            Char = getchar();
+            if (!isdigit(Char)){
+                ungetc(Char, stdin);
+                token = Token_create(T_ERORR, TC_ERR);
+                token->value.code=1;
+                return token;
+            }
+        }
+
+        if(isdigit(Char)){
+            while (isdigit(Char)) {
+                numbers[index] = Char;
+                index++;
+                Char = getchar();
+            }
+        }
+
+        else{
+            ungetc(Char, stdin);
+            token = Token_create(T_ERORR, TC_ERR);
+            token->value.code=1;
+            return token;
+        }
+    }
+    ungetc(Char, stdin);        // we are done with numbers push back the last read character
+    numbers[index] = '\0';
+    // Done with Exponents
+    //printf("Number: %s\n", numbers);
+    if (strchr(numbers, '.') != NULL || strchr(numbers, 'e') != NULL || strchr(numbers, 'E') != NULL) {
+        token->type = T_Float;
+        token->value.Float = atof(numbers);    // Convert string to double
+    } 
+    else {
+        token->type=T_Integer;
+        token->value.integer = atoi(numbers);     // Convert string to int
+    }
+    return token;
+}
+
 Token* scan() {                             
     char curr = GetNotWhiteChar();         
     char next = curr;
     Token* token;
-    //printf("%c",curr);
+    //printf("%c \n",curr);
 
     switch (curr) {
         case '-':
@@ -246,6 +330,11 @@ Token* scan() {
         case 'P': case 'Q': case 'R': case 'S': case 'T':case 'U': case 'V': case 'W': case 'X': case 'Y':case 'Z':
             token = Create_ID_or_Keyword(curr);
             break;
+        
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+            token = numbers(curr);
+            break;
+        
         case EOF:
             token = Token_create(T_EOF, TC_EOF);
             break;
@@ -283,7 +372,18 @@ int main() {
          else {
              printf("Token type: %s\n", token_type_names[token->type]);
          }
-         token = scan();
+        token = scan();
+        if (token->Category == TC_VALUE) {
+            if (token->type == T_String) {
+                printf("Value: %s\n", token->value.stringVal);
+            }
+            else if (token->type == T_Float) {
+                printf("Value: %f\n", token->value.Float);
+            }
+            else if (token->type == T_Integer) {
+                printf("Value: %d\n", token->value.integer);
+            }
+        }
     }
     printf("Token type: %s\n", token_type_names[token->type]);
     return 0;
