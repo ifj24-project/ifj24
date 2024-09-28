@@ -63,19 +63,20 @@ enum token_type {
     T_var,              // var          (35)
     T_void,             // void         (36)
     T_while,            // while        (37)
+    T_import,           // import       (38)  
 
     // ID                       
-    T_ID,               // Id   {F26}    (38)
+    T_ID,               // Id   {F26}    (39)
 
     // Value
-    T_Integer,          // Integer  {f28}   (39)
-    T_Float,            // Float    {f29}   (40)
-    T_Exponent,         // Exponent {f30}   (41)
-    T_String,           // String   {f31}   (42)
+    T_Integer,          // Integer  {f28}   (40)
+    T_Float,            // Float    {f29}   (41)
+    T_Exponent,         // Exponent {f30}   (42)
+    T_String,           // String   {f31}   (43)
 
     // Errors
-    T_EOF,              // End of file  {F32}   (43)
-    T_ERORR             // Error                (44)
+    T_EOF,              // End of file  {F32}   (44)
+    T_ERORR             // Error                (45)
 
 }token_type;
 

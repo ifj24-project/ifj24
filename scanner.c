@@ -7,8 +7,13 @@
 
 /* TODO :
     - Add keywords
-    - How long Identifiers can be ?
     - Add values
+
+    - How long Identifiers can be ?
+    - Nullables
+    - Param,import as KW 
+    
+!!! DONT CHANGE THE ORDER OF ENUMS !!! (if I do make changes in Create_ID_or_Keyword,change in detecting keywords)
 */
 
 int IsWhiteChar(char input){
@@ -50,7 +55,7 @@ void SkipComment() {
     }
 }
 
-Token* create_ID(char first,char second){
+Token* Create_ID_or_Keyword(char first){
     Token* token = Token_create(T_ID, TC_ID);
     int length=60;
     token->value.ID_name = malloc(sizeof(char) * length);
@@ -62,11 +67,11 @@ Token* create_ID(char first,char second){
         token->value.code=99;
         return token;
     }
-    
+
     int index = 0;
     token->value.ID_name[index] = first; // First character of the identifier
     index++;
-    token->value.ID_name[index] = second;   // Second character of the identifier
+
 
     char Char;
     Char = getchar();
@@ -84,6 +89,16 @@ Token* create_ID(char first,char second){
     
     token->value.ID_name[index] = '\0';
     //printf("Id: %s\n", token->value.ID_name);
+    char *keywords[] = {"import","while","void", "var","u8","return","pub","null","f64","i32","if","fn","else","const"};
+    for(int i = 0; i < 14; i++) {
+        //printf("%s==%s \n", keywords[i], token->value.ID_name);
+        if(strcmp(keywords[i], token->value.ID_name) == 0) {
+            //printf("we found KW\n");
+            // 38 is the first keyword, so I flipped list of keywords and minused the position of the index
+            token->type = 38 - i;
+            return token;
+        }
+    }
     return token;
     
 }
@@ -214,7 +229,8 @@ Token* scan() {
         case '_':
             next = getchar();
             if (isalnum(next) || next=='_') {
-                token = create_ID(curr,next);
+                token = Create_ID_or_Keyword(curr);
+                ungetc(next, stdin);
                 return token;                   
             }
 
@@ -222,6 +238,13 @@ Token* scan() {
                 ungetc(next, stdin);
                 return Token_create(T_Underscore, TC_PUNCATION);
             }
+            break;
+
+        case 'a': case 'b': case 'c': case 'd': case 'e':case 'f': case 'g': case 'h': case 'i': case 'j':case 'k': case 'l': case 'm': case 'n': case 'o':
+        case 'p': case 'q': case 'r': case 's': case 't':case 'u': case 'v': case 'w': case 'x': case 'y':case 'z':
+        case 'A': case 'B': case 'C': case 'D': case 'E':case 'F': case 'G': case 'H': case 'I': case 'J':case 'K': case 'L': case 'M': case 'N': case 'O':
+        case 'P': case 'Q': case 'R': case 'S': case 'T':case 'U': case 'V': case 'W': case 'X': case 'Y':case 'Z':
+            token = Create_ID_or_Keyword(curr);
             break;
         case EOF:
             token = Token_create(T_EOF, TC_EOF);
@@ -235,6 +258,20 @@ Token* scan() {
     return token;
 }
 
+
+// testings
+
+const char* token_type_names[] = {
+    "T_Minus", "T_Plus", "T_Mul", "T_Div", "T_Assign",
+    "T_Equal", "T_Lesser", "T_Less_Eq", "T_Greater", "T_Great_Eq", "T_Not_Eq",
+    "T_L_Square_B", "T_R_Square_B", "T_L_Curly_B", "T_R_Curly_B", "T_L_Round_B", "T_R_Round_B",
+    "T_Percent", "T_SemiC", "T_Comma", "T_Dot", "T_At", "T_Colon", "T_Question", "T_Underscore",
+    "T_const", "T_else", "T_fn", "T_if", "T_i32", "T_f64", "T_null", "T_pub", "T_return", "T_u8", "T_var", "T_void", "T_while", "T_import",
+    "T_ID",
+    "T_Integer", "T_Float", "T_Exponent", "T_String",
+    "T_EOF", "T_ERORR"
+};
+
 int main() {                                    
      Token* token;
      token = scan();
@@ -244,10 +281,11 @@ int main() {
              break;
          }
          else {
-             printf("Token type: %d\n", token->type);
+             printf("Token type: %s\n", token_type_names[token->type]);
          }
          token = scan();
     }
+    printf("Token type: %s\n", token_type_names[token->type]);
     return 0;
     }
  
