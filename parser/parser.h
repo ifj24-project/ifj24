@@ -8,8 +8,18 @@ typedef struct Node
     Node *second;
     Node *third;
     Node *fourth;
+    Data_value data;
 
 }Node;
+
+typedef union data
+{
+    int id;
+    char* str;
+    float flt;
+    int inteeger;
+}Data_value;
+
 
 
 typedef enum NodeType {
@@ -30,7 +40,10 @@ typedef enum NodeType {
     If_N = 14,
     While_N = 15,
     VoidCall_N = 16,
-    ReturnStatement_N = 17
+    ReturnStatement_N = 17,
+    Id_N = 18,
+    Str_N = 19,
+    Float_N = 20
     // doplnit EXPRESSION, null not null while/if
 
 } NodeType;
@@ -50,7 +63,7 @@ Node * ThreeChildNode_new(int node_type, Node * first, Node * second, Node * thi
 Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * third, Node * fourth);
 
 
-Node * Parse_start();
+Node * Parse_start(); // jedina public fce
 
 Node * Parse_id();
 Node * Parse_string();

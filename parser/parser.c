@@ -3,7 +3,48 @@
 #include <stdbool.h>
 #include "parser.h"
 
-Node * IdNode_new(int *id_in_sym_table); // bude tam pointer na symtable
+Node * IdNode_new(int *id_in_sym_table){
+    Node* x = malloc(sizeof(Node));
+    if (x == NULL)
+    {
+        exit(2);
+    }
+    x->type = Id_N;
+    // x->data.id = id_in_sym_table; 
+    return x;
+} // bude tam pointer na symtable
+
+Node * StringNode_new(char *string){
+        Node* x = malloc(sizeof(Node));
+    if (x == NULL)
+    {
+        exit(2);
+    }
+    x->type = Id_N;
+    x->data.str = string;
+    return x;
+}
+Node * FloatNode_new(float num){
+        Node* x = malloc(sizeof(Node));
+    if (x == NULL)
+    {
+        exit(2);
+    }
+    x->type = Id_N;
+    x->data.flt = num;
+    return x;
+}
+Node * IntNode_new(int num){
+        Node* x = malloc(sizeof(Node));
+    if (x == NULL)
+    {
+        exit(2);
+    }
+    x->type = Id_N;
+    x->data.inteeger = num;
+    return x;
+}
+
 Node * DataTypeNode_new(int type); // predetermined proradi i32 || f64 || u8 || void
 
 Node * OneChildNode_new(int node_type, Node * first){
