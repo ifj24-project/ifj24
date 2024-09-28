@@ -1,27 +1,39 @@
-#ifndef PARSER.H
-#define PARSER.H
+#ifndef PARSER_H 
+#define PARSER_H 
 
-typedef struct Node
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node Node;
+
+typedef int IdValue;
+typedef char* StrValue;
+typedef double FloatValue;
+typedef int IntValue;
+
+typedef union
 {
-    NodeType type;
+    IdValue id;
+    StrValue str;
+    FloatValue flt;
+    IntValue inteeger;
+
+} Data_value;
+
+struct Node
+{
+    int type;
     Node *first;
     Node *second;
     Node *third;
     Node *fourth;
     Data_value data;
 
-}Node;
+};
 
-typedef union data
-{
-    int id;
-    char* str;
-    float flt;
-    int inteeger;
-}Data_value;
-
-
-
+/**
+ * @brief typy uzlu - pocet deti vychazi z ll-gramatiky 
+ */
 typedef enum NodeType {
     Start_N = 0,
     ProgramProlog_N = 1,
@@ -48,43 +60,75 @@ typedef enum NodeType {
 
 } NodeType;
 
+/**
+ * @brief buffer pro parsovani (lookahead)
+ */
+typedef struct TokenBuffer
+{
+    int first;
+    int second;
+    int third;
+    int fourth;
+}TokenBuffer;
+
+/**
+ * @brief ctor pro buffer na tokeny, ktery se musi passnout parse_start() fci
+ * @return ukazatel na onen buffer
+ */
+TokenBuffer * buffer_ctor();
+
+/**
+ * @brief shiftne tokeny v bufferu (prvni zahodi, zbytek posune a na posledni prida novy)
+ * @param token ukazatel na buffer
+ */
+void consume_buffer(TokenBuffer* token, size_t n);
+
+/**
+ * @brief vysledna fce celeho parsingu
+ * @param token ukazatel na buffer tokenu vytvorim pomoci buffer_ctor()
+ * @return ukazatel na celkovy parse tree
+ */
+Node * Parse_start(TokenBuffer* token);
+
+/**
+ * Dale jen "pomocne" private fce
+ */
+
 Node * IdNode_new(int *id_in_sym_table); // bude tam pointer na symtable
 Node * StringNode_new(char *string);
-Node * FloatNode_new(float num);
+Node * FloatNode_new(double num);
 Node * IntNode_new(int num);
 
 
 
 Node * DataTypeNode_new(int type); // predetermined proradi i32 || f64 || u8 || void
 
+Node * NoChildNode_new(int node_type);
 Node * OneChildNode_new(int node_type, Node * first);
 Node * TwoChildNode_new(int node_type, Node * first, Node * second);
 Node * ThreeChildNode_new(int node_type, Node * first, Node * second, Node * third);
 Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * third, Node * fourth);
 
+Node * Parse_id(TokenBuffer* token);
+Node * Parse_string(TokenBuffer* token);
 
-Node * Parse_start(); // jedina public fce
-
-Node * Parse_id();
-Node * Parse_string();
-
-Node * Parse_prolog();
-Node * Parse_program();
-Node * Parse_datatype();
-Node * Parse_func_define();
-Node * Parse_params_define();
-Node * Parse_params_define_next();
-Node * Parse_func_body();
-Node * Parse_statement();
-Node * Parse_variable_define();
-Node * Parse_variable_assign();
-Node * Parse_func_call();
-Node * Parse_params();
-Node * Parse_params_next();
-Node * Parse_if();
-Node * Parse_while();
-Node * Parse_void_call();
-Node * Parse_return_statement();
+Node * Parse_prolog(TokenBuffer* token);
+Node * Parse_program(TokenBuffer* token);
+Node * Parse_datatype(TokenBuffer* token);
+Node * Parse_func_define(TokenBuffer* token);
+Node * Parse_params_define(TokenBuffer* token);
+Node * Parse_params_define_next(TokenBuffer* token);
+Node * Parse_func_body(TokenBuffer* token);
+Node * Parse_statement(TokenBuffer* token);
+Node * Parse_variable_define(TokenBuffer* token);
+Node * Parse_variable_assign(TokenBuffer* token);
+Node * Parse_func_call(TokenBuffer* token);
+Node * Parse_params(TokenBuffer* token);
+Node * Parse_params_next(TokenBuffer* token);
+Node * Parse_if(TokenBuffer* token);
+Node * Parse_while(TokenBuffer* token);
+Node * Parse_void_call(TokenBuffer* token);
+Node * Parse_return_statement(TokenBuffer* token);
 
 
 
