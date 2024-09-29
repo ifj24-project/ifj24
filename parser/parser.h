@@ -11,6 +11,7 @@ typedef int IdValue;
 typedef char* StrValue;
 typedef double FloatValue;
 typedef int IntValue;
+typedef int DataTypeValue;
 
 typedef union
 {
@@ -18,6 +19,7 @@ typedef union
     StrValue str;
     FloatValue flt;
     IntValue inteeger;
+    DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void 
 
 } Data_value;
 
@@ -60,6 +62,7 @@ typedef enum NodeType {
     // doplnit EXPRESSION, null not null while/if
 
 } NodeType;
+
 
 /**
  * @brief buffer pro parsovani (lookahead)

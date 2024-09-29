@@ -10,7 +10,6 @@
  * kontrola prologu
  * provazat se scannerem
  * consume
- * datatype new
  * id node new
  */
 
@@ -32,13 +31,23 @@ TokenBuffer * buffer_ctor(){
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
-        // free(token->first);
+        free(token->first);
         token->first = token->second;
         token->second = token->third;
         token->third = token->fourth;
         token->fourth = scan();
     }
     
+}
+
+void buffer_check_first(TokenBuffer* token, token_type num){
+    if (token->first->type != num)
+    {
+        printf("Expected token type: %d; got: %d\n",num, token->first->type);
+        exit(2);
+    }
+    consume_buffer(token, 1);
+    return;
 }
 
 Node * IdNode_new(int *id_in_sym_table){
@@ -83,7 +92,11 @@ Node * IntNode_new(int num){
     return x;
 }
 
-Node * DataTypeNode_new(int type); // predetermined proradi i32 || f64 || u8 || void
+Node * DataTypeNode_new(int type){ // predetermined proradi i32 || f64 || u8 || void
+    Node * x = NoChildNode_new(DataType_N);
+    x->data.data_type = type;
+    return x;
+}
 
 Node * NoChildNode_new(int node_type){
     Node* x = malloc(sizeof(Node));
@@ -166,11 +179,97 @@ Node * Parse_program(TokenBuffer* token){
 
     return TwoChildNode_new(Program_N, x, y);
 }
-Node * Parse_datatype(TokenBuffer* token){}
-Node * Parse_func_define(TokenBuffer* token){}
-Node * Parse_params_define(TokenBuffer* token){}
-Node * Parse_params_define_next(TokenBuffer* token){}
-Node * Parse_func_body(TokenBuffer* token){}
+
+Node * Parse_datatype(TokenBuffer* token){
+    int x;
+
+    switch (token->first->type)
+    {
+    case T_i32:
+        consume_buffer(token,1);
+        x = 1;
+        break;
+    
+    case T_f64:
+        consume_buffer(token, 1);
+        x = 2;
+        break;
+        
+    case T_L_Square_B:
+        buffer_check_first(token, T_L_Square_B);
+        buffer_check_first(token,T_R_Square_B);
+        buffer_check_first(token, T_u8);
+        x = 3;
+        break;
+    
+    case T_void:
+        consume_buffer(token, 1);
+        x = 4;
+        break;
+
+    default:
+        printf("Expected data_token, got: %d\n",token->first->type);
+        exit(2);
+        break;
+    }
+    
+}
+
+Node * Parse_func_define(TokenBuffer* token){
+    buffer_check_first(token, T_pub);
+    buffer_check_first(token, T_fn);
+
+    Node * a = Parse_id(token);
+    buffer_check_first(token, T_L_Round_B);
+    Node * b = Parse_params_define(token);
+    buffer_check_first(token, T_R_Round_B);
+    Node * c = Parse_datatype(token);
+    buffer_check_first(token, T_L_Curly_B);
+    Node * d = Parse_func_body(token);
+    buffer_check_first(token, T_R_Curly_B);
+
+    return FourChildNode_new(FuncDefine_N, a, b, c, d);
+}
+
+Node * Parse_params_define(TokenBuffer* token){
+    if (token->first->type == T_R_Round_B)
+    {
+        return NULL;
+    }
+
+    Node * a = Parse_id(token);
+    buffer_check_first(token, T_Colon);
+    Node * b = Parse_datatype(token);
+    Node * c = Parse_params_define_next(token);
+
+    return ThreeChildNode_new(ParamsDefine_N, a, b, c);
+}
+
+Node * Parse_params_define_next(TokenBuffer* token){
+    if (token->first->type == T_R_Round_B)
+    {
+        return NULL;
+    }
+
+    buffer_check_first(token, T_Comma);
+
+    Node * a = Parse_id(token);
+    buffer_check_first(token, T_Colon);
+    Node * b = Parse_datatype(token);
+    Node * c = Parse_params_define_next(token);
+
+    return ThreeChildNode_new(ParamsDefineNext_N, a, b, c);
+}
+
+Node * Parse_func_body(TokenBuffer* token){
+    if (token->first->type == T_R_Curly_B){return NULL;}
+
+    Node * a = Parse_statement(token);
+    Node * b = Parse_func_body(token);
+
+    return TwoChildNode_new(FuncBody_N, a, b);
+}
+
 Node * Parse_statement(TokenBuffer* token){}
 Node * Parse_variable_define(TokenBuffer* token){}
 Node * Parse_variable_assign(TokenBuffer* token){}
