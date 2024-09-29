@@ -350,42 +350,42 @@ Token* scan() {
 
 // testings
 
-const char* token_type_names[] = {
-    "T_Minus", "T_Plus", "T_Mul", "T_Div", "T_Assign",
-    "T_Equal", "T_Lesser", "T_Less_Eq", "T_Greater", "T_Great_Eq", "T_Not_Eq",
-    "T_L_Square_B", "T_R_Square_B", "T_L_Curly_B", "T_R_Curly_B", "T_L_Round_B", "T_R_Round_B",
-    "T_Percent", "T_SemiC", "T_Comma", "T_Dot", "T_At", "T_Colon", "T_Question", "T_Underscore",
-    "T_const", "T_else", "T_fn", "T_if", "T_i32", "T_f64", "T_null", "T_pub", "T_return", "T_u8", "T_var", "T_void", "T_while", "T_import",
-    "T_ID",
-    "T_Integer", "T_Float", "T_Exponent", "T_String",
-    "T_EOF", "T_ERORR"
-};
+// const char* token_type_names[] = {
+//     "T_Minus", "T_Plus", "T_Mul", "T_Div", "T_Assign",
+//     "T_Equal", "T_Lesser", "T_Less_Eq", "T_Greater", "T_Great_Eq", "T_Not_Eq",
+//     "T_L_Square_B", "T_R_Square_B", "T_L_Curly_B", "T_R_Curly_B", "T_L_Round_B", "T_R_Round_B",
+//     "T_Percent", "T_SemiC", "T_Comma", "T_Dot", "T_At", "T_Colon", "T_Question", "T_Underscore",
+//     "T_const", "T_else", "T_fn", "T_if", "T_i32", "T_f64", "T_null", "T_pub", "T_return", "T_u8", "T_var", "T_void", "T_while", "T_import",
+//     "T_ID",
+//     "T_Integer", "T_Float", "T_Exponent", "T_String",
+//     "T_EOF", "T_ERORR"
+// };
 
-int main() {                                    
-     Token* token;
-     token = scan();
-     while (token->type != T_EOF) {
-         if (token->Category == TC_ERR) {
-            printf("Error code: %d\n", token->value.code);
-             break;
-         }
-         else {
-             printf("Token type: %s\n", token_type_names[token->type]);
-         }
-        token = scan();
-        if (token->Category == TC_VALUE) {
-            if (token->type == T_String) {
-                printf("Value: %s\n", token->value.stringVal);
-            }
-            else if (token->type == T_Float) {
-                printf("Value: %f\n", token->value.Float);
-            }
-            else if (token->type == T_Integer) {
-                printf("Value: %d\n", token->value.integer);
-            }
-        }
-    }
-    printf("Token type: %s\n", token_type_names[token->type]);
-    return 0;
-    }
+// int main() {                                    
+//      Token* token;
+//      token = scan();
+//      while (token->type != T_EOF) {
+//          if (token->Category == TC_ERR) {
+//             printf("Error code: %d\n", token->value.code);
+//              break;
+//          }
+//          else {
+//              printf("Token type: %s\n", token_type_names[token->type]);
+//          }
+//         token = scan();
+//         if (token->Category == TC_VALUE) {
+//             if (token->type == T_String) {
+//                 printf("Value: %s\n", token->value.stringVal);
+//             }
+//             else if (token->type == T_Float) {
+//                 printf("Value: %f\n", token->value.Float);
+//             }
+//             else if (token->type == T_Integer) {
+//                 printf("Value: %d\n", token->value.integer);
+//             }
+//         }
+//     }
+//     printf("Token type: %s\n", token_type_names[token->type]);
+//     return 0;
+//     }
  

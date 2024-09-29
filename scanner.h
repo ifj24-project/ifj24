@@ -1,9 +1,16 @@
+/**
+ * ifndef pridano aby se scanner.h dal includenout na vice mistech a make by nenadaval
+ */
+#ifndef SCANNER_H 
+#define SCANNER_H 
+
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
-enum token_Category {
+typedef enum token_Category {
     TC_OPERATOR,
     TC_LOGICAL,
     TC_BRACKET,
@@ -15,7 +22,7 @@ enum token_Category {
     TC_EOF
 }token_Category;
 
-enum token_type {
+typedef enum token_type {
     //operators         (ASCII) {State} (index)
     T_Minus,            // -     {F1}    (0)
     T_Plus,             // +     {F2}    (1)
@@ -91,8 +98,15 @@ typedef struct tokenValue_t{
 
 
 typedef struct Token {
-    enum token_type type;
-    enum token_Category Category;
+    token_type type;
+    token_Category Category;
     tokenValue_t value;
 } Token;
 
+/**
+ * @brief tokenizer (definice jen jako public fce)
+ * @return ukazatel na token
+ */
+Token* scan();
+
+#endif

@@ -1,15 +1,15 @@
 # Lets specify compiler
 CC = gcc
-CFLAGS = -std=gnu99 
+CFLAGS = -std=gnu99 -c
 
 # Source files.  We keep header files separate from the cpp files.
 # Recall that we will compile cpp files, but we do not compile
 # the header files.
-HEADER = parser.h
-CPP = parser.c
+HEADER = parser/parser.h scanner.h
+CPP = parser/parser.c scanner.c  main.c
 
 # Program name
-PROGNAME = parser
+PROGNAME = compiler
 
 # Object files
 OBJ = $(CPP:.c=.o)

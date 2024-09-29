@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "parser.h"
+// #include "../scanner.h"
+// #include "../scanner.c"
 
 /**
  * TODO: 
@@ -12,9 +14,7 @@
  * id node new
  */
 
-int scan(){
-    //placeholder for scanner fnc
-}
+
 
 TokenBuffer * buffer_ctor(){
     TokenBuffer * x = malloc(sizeof(TokenBuffer));
@@ -94,7 +94,6 @@ Node * NoChildNode_new(int node_type){
     x->type = node_type;
     return x;
 }
-
 Node * OneChildNode_new(int node_type, Node * first){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
@@ -157,7 +156,7 @@ Node * Parse_prolog(TokenBuffer* token){
     return NoChildNode_new(ProgramProlog_N);
 }
 Node * Parse_program(TokenBuffer* token){
-    if (token->first == EOF || NULL) //prispusobit
+    if (token->first->type == T_EOF || T_ERORR) //prispusobit
     {
         return NULL;
     }

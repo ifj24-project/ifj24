@@ -1,6 +1,7 @@
 #ifndef PARSER_H 
 #define PARSER_H 
 
+#include "../scanner.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -65,10 +66,10 @@ typedef enum NodeType {
  */
 typedef struct TokenBuffer
 {
-    int first;
-    int second;
-    int third;
-    int fourth;
+    Token* first;
+    Token* second;
+    Token* third;
+    Token* fourth;
 }TokenBuffer;
 
 /**
