@@ -235,7 +235,7 @@ int unicode(int index, Token* token) {
         // Read the next character
         curr = getchar();
     }
-
+    ungetc(curr, stdin);  // Can change the structure of code so it doenst read additional char
     token->value.stringVal[index] = (char) unicodeValue;
     return unicodeValue;  // Return the converted decimal value
 }
@@ -279,6 +279,7 @@ Token* String(){
             }
             else if (escape == 1) {
                 good = unicode(index, token);
+                index++;
                 if (good == -1) {
                     token->Category = TC_ERR;
                     token->type = T_ERORR;
