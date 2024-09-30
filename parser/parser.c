@@ -10,7 +10,8 @@
  * kontrola prologu
  * provazat se scannerem
  * consume
- * id node new
+ * id node new / parse id
+ * string node new / parse string
  * parse variable define: fucn_call 
  */
 
@@ -174,8 +175,20 @@ Node * Parse_start(TokenBuffer* token){
     return TwoChildNode_new(Start_N,first, second);
 }
 
-Node * Parse_id(TokenBuffer* token){}
-Node * Parse_string(TokenBuffer* token){}
+Node * Parse_id(TokenBuffer* token){
+    /**
+     * placeholder
+     */
+    buffer_check_first(token, T_ID);
+    return NULL;
+}
+Node * Parse_string(TokenBuffer* token){
+    /**
+     * placeholder
+     */
+    buffer_check_first(token, T_String);
+    return NULL;
+}
 
 Node * Parse_prolog(TokenBuffer* token){
     printf("start prolog\n");
@@ -512,5 +525,8 @@ Node * Parse_return_statement(TokenBuffer* token){
 }
 
 Node * Parse_expression(TokenBuffer* token){
+    /**
+     * placeholder
+     */
     return NULL;
 }
