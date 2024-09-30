@@ -7,7 +7,7 @@
 
 /* TODO :
     - Add values
-
+    - Lot testing for signgle 
     - How long Identifiers can be ?
     - Nullables
     - Param,import as KW 
@@ -187,6 +187,123 @@ Token* numbers(char first){
     return token;
 }
 
+int escape_sequence() {
+    char curr = getchar(); 
+    switch (curr) {
+        case '\"':                          // this "  
+            return '\"';
+        case 'n':                           // new line
+            return '\n';
+        case 'r':                           // reset to the line start
+            return '\r';
+        case 't' :                          // tab
+            return '\t';
+        case '\\':                       
+            return '\\';
+        case 'x':                           // unix code
+            return 1;
+        default:                     
+            return 0;
+    }
+}
+int hex_char_to_decimal(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'A' && c <= 'F') {
+        return 10 + (c - 'A');
+    } else if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    }
+    return -1; // Invalid hex character
+}
+
+int unicode(int index, Token* token) {
+    char curr = getchar();  // Get the first hex digit
+    int unicodeValue = 0;
+
+    for (int i = 0; i < 2; i++) {
+
+        // Check if valid hex character and convert to decimal
+        int hexValue = hex_char_to_decimal(curr);
+        if (hexValue == -1) {
+            return -1;  // Error in case of invalid hex digit
+        }
+
+        // Accumulate the hex value (shift left by 4 bits to make room for next digit)
+        unicodeValue = (unicodeValue << 4) | hexValue;
+
+        // Read the next character
+        curr = getchar();
+    }
+
+    token->value.stringVal[index] = (char) unicodeValue;
+    return unicodeValue;  // Return the converted decimal value
+}
+
+
+Token* String(){
+    Token* token = Token_create(T_String, TC_VALUE);
+    int length=60;
+    token->value.stringVal = malloc(sizeof(char) * length);
+    if (token->value.stringVal == NULL) {                 // malloc failed
+        free(token->value.stringVal);
+        token->Category = TC_ERR;
+        token->type = T_ERORR;
+        token->value.code=99;
+        return token;
+    }
+
+    int index = 0;
+    char Char;
+    Char = getchar();
+    int good = 1;
+    while(1) {
+        //printf("%c\n",Char);
+        if (Char == '\n' || Char == EOF ){     // Errors
+            token->Category = TC_ERR;   
+            token->type = T_ERORR;
+            token->value.code=1;
+            return token;
+        }
+
+        if (Char == '"'){     // end of string
+            break;
+        }
+        else if (Char == '\\') {
+            int escape = escape_sequence();
+            if (escape == 0) {
+                token->Category = TC_ERR;
+                token->type = T_ERORR;
+                token->value.code=1;
+                return token;
+            }
+            else if (escape == 1) {
+                good = unicode(index, token);
+                if (good == -1) {
+                    token->Category = TC_ERR;
+                    token->type = T_ERORR;
+                    token->value.code=1;
+                    return token;
+                }
+                //printf("%caaaaa\n",Char);
+            }
+            else {
+                token->value.stringVal[index] = escape;
+                index++;
+            }
+            Char = getchar();
+        }
+        
+        else {                                  // char in automata
+            token->value.stringVal[index] = Char;
+            index++;
+            Char = getchar();
+        }
+    }
+    token->value.stringVal[index] = '\0';
+    return token;
+}
+
 Token* scan() {                             
     char curr = GetNotWhiteChar();         
     char next = curr;
@@ -335,9 +452,14 @@ Token* scan() {
             token = numbers(curr);
             break;
         
+        case '"':
+            token = String();
+            break;
+
         case EOF:
             token = Token_create(T_EOF, TC_EOF);
             break;
+        
 
         default:
             token = Token_create(T_ERORR, TC_ERR);
@@ -364,15 +486,16 @@ const char* token_type_names[] = {
 int main() {                                    
      Token* token;
      token = scan();
+     printf("Token type: %s\n", token_type_names[token->type]);
      while (token->type != T_EOF) {
-         if (token->Category == TC_ERR) {
-            printf("Error code: %d\n", token->value.code);
-             break;
-         }
-         else {
-             printf("Token type: %s\n", token_type_names[token->type]);
-         }
         token = scan();
+        if (token->Category == TC_ERR) {
+            printf("Error code: %d\n", token->value.code);
+            break;
+         }
+        else {
+            printf("Token type: %s\n", token_type_names[token->type]);
+        }
         if (token->Category == TC_VALUE) {
             if (token->type == T_String) {
                 printf("Value: %s\n", token->value.stringVal);
@@ -383,9 +506,11 @@ int main() {
             else if (token->type == T_Integer) {
                 printf("Value: %d\n", token->value.integer);
             }
+            else if (token->type == T_ID){
+                printf("Value: %s\n", token->value.ID_name);
+            }
         }
     }
-    printf("Token type: %s\n", token_type_names[token->type]);
     return 0;
     }
  
