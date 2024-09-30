@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 typedef struct Node Node;
 
 typedef int IdValue;
@@ -12,6 +13,7 @@ typedef char* StrValue;
 typedef double FloatValue;
 typedef int IntValue;
 typedef int DataTypeValue;
+typedef int VariableDefineValue;
 
 typedef union
 {
@@ -20,6 +22,7 @@ typedef union
     FloatValue flt;
     IntValue inteeger;
     DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void 
+    VariableDefineValue var_or_const; // 0==var, 1==const
 
 } Data_value;
 
@@ -81,6 +84,11 @@ typedef struct TokenBuffer
  */
 TokenBuffer * buffer_ctor();
 
+/**
+ * @brief destructor pro buffer na tokeny
+ * @param token bere ukazatel na buffer, ktery chceme dat free()
+ */
+void buffer_dtor(TokenBuffer * token);
 /**
  * @brief shiftne tokeny v bufferu (prvni zahodi, zbytek posune a na posledni prida novy)
  * @param token ukazatel na buffer

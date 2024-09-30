@@ -11,6 +11,7 @@
  * provazat se scannerem
  * consume
  * id node new
+ * parse variable define: fucn_call 
  */
 
 
@@ -28,6 +29,17 @@ TokenBuffer * buffer_ctor(){
 
     return x;
 }
+
+void buffer_dtor(TokenBuffer * token){
+    free(token->first);
+    free(token->second);
+    free(token->third);
+    free(token->fourth);
+    free(token);
+
+    return;
+}
+
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
@@ -36,6 +48,7 @@ void consume_buffer(TokenBuffer* token, size_t n){
         token->second = token->third;
         token->third = token->fourth;
         token->fourth = scan();
+        //TODO: free vsechno, kdyz EOF
     }
     
 }
@@ -165,7 +178,18 @@ Node * Parse_id(TokenBuffer* token){}
 Node * Parse_string(TokenBuffer* token){}
 
 Node * Parse_prolog(TokenBuffer* token){
-    //dodelat kontrolu prologu
+    printf("start prolog\n");
+    buffer_check_first(token, T_const);
+    buffer_check_first(token, T_ID);
+    buffer_check_first(token, T_Assign);
+    buffer_check_first(token, T_At);
+    buffer_check_first(token, T_import);
+    buffer_check_first(token, T_L_Round_B);
+    buffer_check_first(token, T_String);
+    buffer_check_first(token, T_R_Round_B);
+    buffer_check_first(token, T_SemiC);
+
+    printf("end prolog\n");
     return NoChildNode_new(ProgramProlog_N);
 }
 Node * Parse_program(TokenBuffer* token){
@@ -270,15 +294,223 @@ Node * Parse_func_body(TokenBuffer* token){
     return TwoChildNode_new(FuncBody_N, a, b);
 }
 
-Node * Parse_statement(TokenBuffer* token){}
-Node * Parse_variable_define(TokenBuffer* token){}
-Node * Parse_variable_assign(TokenBuffer* token){}
-Node * Parse_func_call(TokenBuffer* token){}
-Node * Parse_params(TokenBuffer* token){}
-Node * Parse_params_next(TokenBuffer* token){}
-Node * Parse_if(TokenBuffer* token){}
-Node * Parse_while(TokenBuffer* token){}
-Node * Parse_void_call(TokenBuffer* token){}
-Node * Parse_return_statement(TokenBuffer* token){}
+Node * Parse_statement(TokenBuffer* token){
+    Node * a;
 
-Node * Parse_expression(TokenBuffer* token){}
+    switch (token->first->type)
+    {
+    case T_const:
+        a = Parse_variable_define(token);
+        break;
+    case T_var:
+        a = Parse_variable_define(token);
+        break;
+    case T_ID: // var assign or void call
+        if (token->second->type == T_L_Round_B)
+        {
+            a = Parse_void_call(token);
+        }
+        else {
+            a = Parse_variable_assign(token);
+        }
+        
+        break;
+    case T_if:
+        a = Parse_if(token);
+        break;
+    case T_while:
+        a = Parse_while(token);
+        break;
+    case T_return:
+        a = Parse_return_statement(token);
+        break;
+    default:
+        printf("expected statement got token type: %d \n",token->first->type);
+        exit(2);
+        break;
+    }
+
+    return OneChildNode_new(Statement_N, a);
+}
+Node * Parse_variable_define(TokenBuffer* token){
+    Node * a;
+    Node * b;
+    Node * c;
+    int var_const = -1;
+    // TODO: narvat to do sym-tablu az bude
+    if (token->first->type == T_const)
+    {
+        consume_buffer(token, 1);
+        var_const = 1;
+        /* code */
+    }
+    else if (token->first->type == T_var)
+    {
+        consume_buffer(token, 1);
+        var_const = 0;
+        /* code */
+    }
+    else{
+        exit(2);
+    }
+    
+    a = Parse_id(token);
+    buffer_check_first(token, T_Colon);
+    b = Parse_datatype(token);
+    buffer_check_first(token, T_Assign);
+
+    if (token->first->type == T_ID && token->second->type == T_Dot) //TODO: && id is function
+    {
+        c = Parse_func_call(token);
+    }
+    else if (token->first->type == T_String)
+    {
+        c = Parse_string(token);
+    }
+    else {
+        c = Parse_expression(token);
+    }
+
+    buffer_check_first(token, T_SemiC);
+
+    Node * ret = ThreeChildNode_new(VariableDefine_N, a, b, c);
+    ret->data.var_or_const = var_const;
+    return ret;
+}
+
+Node * Parse_variable_assign(TokenBuffer* token){
+    Node * a = Parse_id(token);
+    buffer_check_first(token, T_Assign);
+    Node * b;
+    if (token->first->type == T_ID && token->second->type == T_Dot) //TODO: && id is function
+    {
+        b = Parse_func_call(token);
+    }
+    else if (token->first->type == T_String)
+    {
+        b = Parse_string(token);
+    }
+    else {
+        b = Parse_expression(token);
+    }
+
+    buffer_check_first(token, T_SemiC);
+    return TwoChildNode_new(VariableAssign_N, a, b);
+}
+
+Node * Parse_func_call(TokenBuffer* token){
+    Node * a = Parse_id(token);
+    buffer_check_first(token, T_L_Round_B);
+    Node * b = Parse_params(token);
+    buffer_check_first(token, T_R_Round_B);
+
+    return TwoChildNode_new(FuncCall_N, a, b);
+}
+
+Node * Parse_params(TokenBuffer* token){
+    if (token->first->type == T_R_Round_B)
+    {
+        return NULL;
+    }
+
+    Node * a;
+
+    if (token->first->type == T_String)
+    {
+        a = Parse_string(token);
+    }
+    else if ((token->first->type == T_ID) && (token->second->type == T_Comma))
+    {
+        a = Parse_id(token);
+    }
+    else if ((token->first->type == T_ID) && (token->second->type == T_R_Round_B))
+    {
+        a = Parse_id(token);
+    }
+    else {
+        a = Parse_expression(token);
+    }
+    
+    Node * b = Parse_params_next(token);
+
+    return TwoChildNode_new(Params_N, a, b);
+}
+
+Node * Parse_params_next(TokenBuffer* token){
+        if (token->first->type == T_R_Round_B)
+    {
+        return NULL;
+    }
+
+    buffer_check_first(token, T_Comma);
+    Node * a;
+
+    if (token->first->type == T_String)
+    {
+        a = Parse_string(token);
+    }
+    else if ((token->first->type == T_ID) && (token->second->type == T_Comma))
+    {
+        a = Parse_id(token);
+    }
+    else if ((token->first->type == T_ID) && (token->second->type == T_R_Round_B))
+    {
+        a = Parse_id(token);
+    }
+    else {
+        a = Parse_expression(token);
+    }
+    
+    Node * b = Parse_params_next(token);
+
+    return TwoChildNode_new(ParamsNext_N, a, b);
+}
+
+Node * Parse_if(TokenBuffer* token){
+    buffer_check_first(token, T_if);
+    buffer_check_first(token, T_L_Round_B);
+    Node * a = Parse_expression(token);
+    buffer_check_first(token, T_R_Round_B);
+    buffer_check_first(token, T_L_Curly_B);
+    Node * b = Parse_func_body(token);
+    buffer_check_first(token, T_R_Curly_B);
+    buffer_check_first(token, T_else);
+    buffer_check_first(token, T_L_Curly_B);
+    Node * c = Parse_func_body(token);
+    buffer_check_first(token, T_R_Curly_B);
+
+    return ThreeChildNode_new(If_N, a, b, c);
+}
+
+Node * Parse_while(TokenBuffer* token){
+    buffer_check_first(token, T_while);
+    buffer_check_first(token, T_L_Round_B);
+    Node * a = Parse_expression(token);
+    buffer_check_first(token, T_R_Round_B);
+    buffer_check_first(token, T_L_Curly_B);
+    Node * b = Parse_func_body(token);
+
+    return TwoChildNode_new(While_N, a, b);
+}
+
+Node * Parse_void_call(TokenBuffer* token){
+    Node * a = Parse_id(token);
+    buffer_check_first(token, T_L_Round_B);
+    Node * b = Parse_params(token);
+    buffer_check_first(token, T_R_Round_B);
+    buffer_check_first(token, T_SemiC);
+    
+    return TwoChildNode_new(VoidCall_N, a, b);
+}
+
+Node * Parse_return_statement(TokenBuffer* token){
+    buffer_check_first(token, T_return);
+    Node * a = Parse_expression(token);
+    buffer_check_first(token, T_SemiC);
+
+    return OneChildNode_new(ReturnStatement_N, a);
+}
+
+Node * Parse_expression(TokenBuffer* token){
+    return NULL;
+}

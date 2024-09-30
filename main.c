@@ -5,7 +5,8 @@ int main(int argc, char const *argv[])
 {
     // printf("hello\n");
     TokenBuffer* t = buffer_ctor();
-    Parse_start(t);
+    Node * parse_tree = Parse_start(t);
+    buffer_dtor(t);
 
     return 0;
 }
