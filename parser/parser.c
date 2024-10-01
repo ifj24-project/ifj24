@@ -345,6 +345,7 @@ Node * Parse_statement(TokenBuffer* token){
 
     return OneChildNode_new(Statement_N, a);
 }
+
 Node * Parse_variable_define(TokenBuffer* token){
     Node * a;
     Node * b;
