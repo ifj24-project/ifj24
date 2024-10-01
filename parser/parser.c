@@ -41,9 +41,156 @@ void buffer_dtor(TokenBuffer * token){
     return;
 }
 
+const char * get_token_name(enum token_type token_id){
+    switch (token_id)
+    {
+    case T_Minus:
+        return "T_Minus";
+        break;
+    case T_Plus:
+        return "T_Plus";
+        break;
+    case T_Mul:
+        return "T_Mul";
+        break;
+    case T_Div:
+        return "T_Div";
+        break;
+    case T_Assign:
+        return "T_Assign";
+        break;
+    case T_Equal:
+        return "T_Equal";
+        break;
+    case T_Lesser:
+        return "T_Lesser";
+        break;
+    case T_Less_Eq:
+        return "T_Less_Eq";
+        break;
+    case T_Greater:
+        return "T_Greater";
+        break;
+    case T_Great_Eq:
+        return "T_Great_Eq";
+        break;
+    case T_Not_Eq:
+        return "T_Not_Eq";
+        break;
+    case T_L_Square_B:
+        return "T_L_Square_B";
+        break;
+    case T_R_Square_B:
+        return "T_R_Square_B";
+        break;
+    case T_L_Curly_B:
+        return "T_L_Curly_B";
+        break;
+    case T_R_Curly_B:
+        return "T_R_Curly_B";
+        break;
+    case T_L_Round_B:
+        return "T_L_Round_B";
+        break;
+    case T_R_Round_B:
+        return "T_R_Round_B";
+        break;
+    case T_Percent:
+        return "%";
+        break;
+    case T_SemiC:
+        return ";";
+        break;
+    case T_Comma:
+        return ",";
+        break;
+    case T_Dot:
+        return "T_Dot";
+        break;
+    case T_At:
+        return "@";
+        break;
+    case T_Colon:
+        return ":";
+        break;
+    case T_Question:
+        return "?";
+        break;
+    case T_Underscore:
+        return "_";
+        break;
+    case T_const:
+        return "T_const";
+        break;
+    case T_else:
+        return "T_else";
+        break;
+    case T_fn:
+        return "T_fn";
+        break;
+    case T_if:
+        return "T_if";
+        break;
+    case T_i32:
+        return "T_i32";
+        break;
+    case T_f64:
+        return "T_f64";
+        break;
+    case T_null:
+        return "T_null";
+        break;
+    case T_pub:
+        return "T_pub";
+        break;
+    case T_return:
+        return "T_return";
+        break;
+    case T_u8:
+        return "T_u8";
+        break;
+    case T_var:
+        return "T_var";
+        break;
+    case T_void:
+        return "T_void";
+        break;
+    case T_while:
+        return "T_while";
+        break;
+    case T_import:
+        return "T_import";
+        break;
+    case T_ID:
+        return "T_ID";
+        break;
+    case T_Integer:
+        return "T_Integer";
+        break;
+    case T_Float:
+        return "T_Float";
+        break;
+    case T_Exponent:
+        return "T_Exponent";
+        break;
+    case T_String:
+        return "T_String";
+        break;
+    case T_EOF:
+        return "T_EOF";
+        break;
+    case T_ERORR:
+        return "T_ERROR";
+        break;
+    default:
+        break;
+    }
+}
+
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
+        printf("token: %s\n",get_token_name(token->first->type));
         free(token->first);
         token->first = token->second;
         token->second = token->third;
@@ -57,7 +204,7 @@ void consume_buffer(TokenBuffer* token, size_t n){
 void buffer_check_first(TokenBuffer* token, token_type num){
     if (token->first->type != num)
     {
-        printf("Expected token type: %d; got: %d\n",num, token->first->type);
+        printf("Expected token type: %s ; got: %s\n", get_token_name(num), get_token_name(token->first->type));
         exit(2);
     }
     consume_buffer(token, 1);
@@ -191,7 +338,6 @@ Node * Parse_string(TokenBuffer* token){
 }
 
 Node * Parse_prolog(TokenBuffer* token){
-    printf("start prolog\n");
     buffer_check_first(token, T_const);
     buffer_check_first(token, T_ID);
     buffer_check_first(token, T_Assign);
@@ -202,11 +348,10 @@ Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_R_Round_B);
     buffer_check_first(token, T_SemiC);
 
-    printf("end prolog\n");
     return NoChildNode_new(ProgramProlog_N);
 }
 Node * Parse_program(TokenBuffer* token){
-    if (token->first->type == T_EOF || T_ERORR) //prispusobit
+    if (token->first->type == T_EOF) //prispusobit
     {
         return NULL;
     }
@@ -245,7 +390,7 @@ Node * Parse_datatype(TokenBuffer* token){
         break;
 
     default:
-        printf("Expected data_token, got: %d\n",token->first->type);
+        printf("Expected data_token, got: %s\n",get_token_name(token->first->type));
         exit(2);
         break;
     }
@@ -319,7 +464,7 @@ Node * Parse_statement(TokenBuffer* token){
         a = Parse_variable_define(token);
         break;
     case T_ID: // var assign or void call
-        if (token->second->type == T_L_Round_B)
+        if ((token->second->type == T_L_Round_B)||(token->second->type == T_Dot))
         {
             a = Parse_void_call(token);
         }
@@ -338,7 +483,7 @@ Node * Parse_statement(TokenBuffer* token){
         a = Parse_return_statement(token);
         break;
     default:
-        printf("expected statement got token type: %d \n",token->first->type);
+        printf("expected statement got token type: %s \n",get_token_name(token->first->type));
         exit(2);
         break;
     }
@@ -485,6 +630,10 @@ Node * Parse_if(TokenBuffer* token){
     buffer_check_first(token, T_L_Round_B);
     Node * a = Parse_expression(token);
     buffer_check_first(token, T_R_Round_B);
+    /**
+     * TODO: check for pipe
+     */
+
     buffer_check_first(token, T_L_Curly_B);
     Node * b = Parse_func_body(token);
     buffer_check_first(token, T_R_Curly_B);
@@ -496,19 +645,71 @@ Node * Parse_if(TokenBuffer* token){
     return ThreeChildNode_new(If_N, a, b, c);
 }
 
+// Node * Parse_if_not_null(TokenBuffer* token){
+//     buffer_check_first(token, T_if);
+//     buffer_check_first(token, T_L_Round_B);
+//     Node * a = Parse_expression(token);
+//     buffer_check_first(token, T_R_Round_B);
+//     /**
+//      * TODO: check for pipe
+//      */
+//     Node * b;
+
+
+//     buffer_check_first(token, T_L_Curly_B);
+//     Node * c = Parse_func_body(token);
+//     buffer_check_first(token, T_R_Curly_B);
+//     buffer_check_first(token, T_else);
+//     buffer_check_first(token, T_L_Curly_B);
+//     Node * d = Parse_func_body(token);
+//     buffer_check_first(token, T_R_Curly_B);
+
+//     return FourChildNode_new(If_N, a, b, c, d);
+// }
+
 Node * Parse_while(TokenBuffer* token){
     buffer_check_first(token, T_while);
     buffer_check_first(token, T_L_Round_B);
     Node * a = Parse_expression(token);
     buffer_check_first(token, T_R_Round_B);
+    /**
+     * TODO: check for pipe
+     */
+    
+
     buffer_check_first(token, T_L_Curly_B);
     Node * b = Parse_func_body(token);
 
     return TwoChildNode_new(While_N, a, b);
 }
 
+// Node * Parse_while_not_null(TokenBuffer* token){
+//     buffer_check_first(token, T_while);
+//     buffer_check_first(token, T_L_Round_B);
+//     Node * a = Parse_expression(token);
+//     buffer_check_first(token, T_R_Round_B);
+//     /**
+//      * TODO: check for pipe
+//      */
+//     Node * b;
+
+
+//     buffer_check_first(token, T_L_Curly_B);
+//     Node * c = Parse_func_body(token);
+
+//     return ChildNode_new(While_N, a, b, c);
+// }
+
 Node * Parse_void_call(TokenBuffer* token){
     Node * a = Parse_id(token);
+
+    if (token->first->type == T_Dot)
+    {
+        buffer_check_first(token, T_Dot);
+        buffer_check_first(token, T_ID);
+    }
+    
+
     buffer_check_first(token, T_L_Round_B);
     Node * b = Parse_params(token);
     buffer_check_first(token, T_R_Round_B);

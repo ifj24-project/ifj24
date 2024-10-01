@@ -4,6 +4,7 @@
 #include "../scanner.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 
 typedef struct Node Node;
@@ -14,6 +15,7 @@ typedef double FloatValue;
 typedef int IntValue;
 typedef int DataTypeValue;
 typedef int VariableDefineValue;
+typedef bool Not_null_statement;
 
 typedef union
 {
@@ -23,6 +25,7 @@ typedef union
     IntValue inteeger;
     DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void 
     VariableDefineValue var_or_const; // 0==var, 1==const
+    Not_null_statement has_not_null_id; // true== ma o dite navic, .second dite je |id| v te pipe
 
 } Data_value;
 
@@ -61,8 +64,10 @@ typedef enum NodeType {
     ReturnStatement_N = 17,
     Id_N = 18,
     Str_N = 19,
-    Float_N = 20
-    // doplnit EXPRESSION, null not null while/if
+    Float_N = 20,
+    If_not_null = 21,
+    while_not_null =22
+    // doplnit EXPRESSION
 
 } NodeType;
 
