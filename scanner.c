@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "scanner.h"
+#include "error.c"
 
 /* TODO :
     - Functions which will clean up the memory from tokens and their values
@@ -585,7 +586,7 @@ int main() {
      while (token->type != T_EOF) {
         token = scan();
         if (token->Category == TC_ERR) {
-            printf("Error code: %d\n", token->value.code);
+            ThrowError(token->value.code);
             break;
          }
         else {
