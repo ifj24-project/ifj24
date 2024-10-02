@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "error.h"
 
 void ThrowError(int errorCode){
     fprintf(stderr, "\033[0;31m");

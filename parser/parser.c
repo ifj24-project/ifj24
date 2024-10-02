@@ -2,26 +2,23 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "parser.h"
+#include "../error/error.h"
 // #include "../scanner.h"
 // #include "../scanner.c"
 
 /**
  * TODO: 
- * kontrola prologu
- * provazat se scannerem
- * consume
+ * provazat se sym-tablem
  * id node new / parse id
  * string node new / parse string
  * parse variable define: fucn_call 
  */
 
-
-
 TokenBuffer * buffer_ctor(){
     TokenBuffer * x = malloc(sizeof(TokenBuffer));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->first = scan();
     x->second = scan();
@@ -78,22 +75,22 @@ const char * get_token_name(enum token_type token_id){
         return "T_Not_Eq";
         break;
     case T_L_Square_B:
-        return "T_L_Square_B";
+        return "[";
         break;
     case T_R_Square_B:
-        return "T_R_Square_B";
+        return "]";
         break;
     case T_L_Curly_B:
-        return "T_L_Curly_B";
+        return "{";
         break;
     case T_R_Curly_B:
-        return "T_R_Curly_B";
+        return "}";
         break;
     case T_L_Round_B:
-        return "T_L_Round_B";
+        return "(";
         break;
     case T_R_Round_B:
-        return "T_R_Round_B";
+        return ")";
         break;
     case T_Percent:
         return "%";
@@ -196,7 +193,6 @@ void consume_buffer(TokenBuffer* token, size_t n){
         token->second = token->third;
         token->third = token->fourth;
         token->fourth = scan();
-        //TODO: free vsechno, kdyz EOF
     }
     
 }
@@ -204,8 +200,8 @@ void consume_buffer(TokenBuffer* token, size_t n){
 void buffer_check_first(TokenBuffer* token, token_type num){
     if (token->first->type != num)
     {
-        printf("Expected token type: %s ; got: %s\n", get_token_name(num), get_token_name(token->first->type));
-        exit(2);
+        printf("Expected token type: %s got: %s\n", get_token_name(num), get_token_name(token->first->type));
+        ThrowError(2);
     }
     consume_buffer(token, 1);
     return;
@@ -215,7 +211,7 @@ Node * IdNode_new(int *id_in_sym_table){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = Id_N;
     // x->data.id = id_in_sym_table; 
@@ -226,7 +222,7 @@ Node * StringNode_new(char *string){
         Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = Id_N;
     x->data.str = string;
@@ -236,7 +232,7 @@ Node * FloatNode_new(double num){
         Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = Id_N;
     x->data.flt = num;
@@ -246,14 +242,14 @@ Node * IntNode_new(int num){
         Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = Id_N;
-    x->data.inteeger = num;
+    x->data.integer = num;
     return x;
 }
 
-Node * DataTypeNode_new(int type){ // predetermined proradi i32 || f64 || u8 || void
+Node * DataTypeNode_new(int type){ // 1==i32, 2==f64, 3==[]u8, 4==void
     Node * x = NoChildNode_new(DataType_N);
     x->data.data_type = type;
     return x;
@@ -263,7 +259,7 @@ Node * NoChildNode_new(int node_type){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = node_type;
     return x;
@@ -272,7 +268,7 @@ Node * OneChildNode_new(int node_type, Node * first){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = node_type;
     x->first = first;
@@ -282,7 +278,7 @@ Node * TwoChildNode_new(int node_type, Node * first, Node * second){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = node_type;
     x->first = first;
@@ -293,7 +289,7 @@ Node * ThreeChildNode_new(int node_type, Node * first, Node * second, Node * thi
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = node_type;
     x->first = first;
@@ -305,7 +301,7 @@ Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * thir
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        exit(99);
+        ThrowError(99);
     }
     x->type = node_type;
     x->first = first;
@@ -390,11 +386,14 @@ Node * Parse_datatype(TokenBuffer* token){
         break;
 
     default:
-        printf("Expected data_token, got: %s\n",get_token_name(token->first->type));
-        exit(2);
+        printf("Expected data_type_token, got: %s\n",get_token_name(token->first->type));
+        ThrowError(2);
         break;
     }
-    
+
+    Node * ret = NoChildNode_new(DataType_N);
+    ret->data.data_type=x;
+    return ret;
 }
 
 Node * Parse_func_define(TokenBuffer* token){
@@ -483,8 +482,8 @@ Node * Parse_statement(TokenBuffer* token){
         a = Parse_return_statement(token);
         break;
     default:
-        printf("expected statement got token type: %s \n",get_token_name(token->first->type));
-        exit(2);
+        printf("expected statement_token got: %s \n",get_token_name(token->first->type));
+        ThrowError(2);
         break;
     }
 
@@ -510,18 +509,36 @@ Node * Parse_variable_define(TokenBuffer* token){
         /* code */
     }
     else{
-        exit(2);
+        ThrowError(2);
     }
     
     a = Parse_id(token);
-    buffer_check_first(token, T_Colon);
-    b = Parse_datatype(token);
+
+    /** odvozeny typ z fce */
+    if (token->first->type == T_Assign)
+    {  
+        /**
+         * TODO: vyhledat fci v sym-table a odvodit typ
+         */
+        b = NoChildNode_new(DataType_N);
+        b->data.data_type = -1; //zjistit datatype z sym-table
+    }
+    else {
+        buffer_check_first(token, T_Colon);
+        b = Parse_datatype(token);
+    }
+
     buffer_check_first(token, T_Assign);
 
-    if (token->first->type == T_ID && token->second->type == T_Dot) //TODO: && id is function
+    if (token->first->type == T_ID && token->second->type == T_Dot)
     {
         c = Parse_func_call(token);
     }
+    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
+    {
+        c = Parse_func_call(token);
+    }
+    
     else if (token->first->type == T_String)
     {
         c = Parse_string(token);
@@ -558,7 +575,13 @@ Node * Parse_variable_assign(TokenBuffer* token){
 }
 
 Node * Parse_func_call(TokenBuffer* token){
-    Node * a = Parse_id(token);
+    if (token->second->type == T_Dot)
+    {
+        buffer_check_first(token, T_ID); // TODO: check if ifj.func
+        buffer_check_first(token, T_Dot);
+    }
+    
+    Node * a = Parse_id(token); 
     buffer_check_first(token, T_L_Round_B);
     Node * b = Parse_params(token);
     buffer_check_first(token, T_R_Round_B);
@@ -654,8 +677,6 @@ Node * Parse_if(TokenBuffer* token){
 //      * TODO: check for pipe
 //      */
 //     Node * b;
-
-
 //     buffer_check_first(token, T_L_Curly_B);
 //     Node * c = Parse_func_body(token);
 //     buffer_check_first(token, T_R_Curly_B);
@@ -663,7 +684,6 @@ Node * Parse_if(TokenBuffer* token){
 //     buffer_check_first(token, T_L_Curly_B);
 //     Node * d = Parse_func_body(token);
 //     buffer_check_first(token, T_R_Curly_B);
-
 //     return FourChildNode_new(If_N, a, b, c, d);
 // }
 
@@ -692,23 +712,20 @@ Node * Parse_while(TokenBuffer* token){
 //      * TODO: check for pipe
 //      */
 //     Node * b;
-
-
 //     buffer_check_first(token, T_L_Curly_B);
 //     Node * c = Parse_func_body(token);
-
 //     return ChildNode_new(While_N, a, b, c);
 // }
 
 Node * Parse_void_call(TokenBuffer* token){
-    Node * a = Parse_id(token);
 
-    if (token->first->type == T_Dot)
+    if (token->second->type == T_Dot)
     {
-        buffer_check_first(token, T_Dot);
         buffer_check_first(token, T_ID);
+        buffer_check_first(token, T_Dot);
     }
     
+    Node * a = Parse_id(token);
 
     buffer_check_first(token, T_L_Round_B);
     Node * b = Parse_params(token);

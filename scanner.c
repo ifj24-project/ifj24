@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "scanner.h"
-#include "error.c"
+#include "error/error.h"
 
 /* TODO :
     - Functions which will clean up the memory from tokens and their values

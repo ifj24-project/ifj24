@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include "parser/parser.h"
+#include "semantic/semantic.h"
 
 int main(int argc, char const *argv[])
 {
@@ -8,6 +9,7 @@ int main(int argc, char const *argv[])
     Node * parse_tree = Parse_start(t);
     printf("%d\n",parse_tree->second->type);
     buffer_dtor(t);
+    semantic_scan(parse_tree);
 
     return 0;
 }

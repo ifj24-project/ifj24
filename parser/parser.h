@@ -9,37 +9,6 @@
 
 typedef struct Node Node;
 
-typedef int IdValue;
-typedef char* StrValue;
-typedef double FloatValue;
-typedef int IntValue;
-typedef int DataTypeValue;
-typedef int VariableDefineValue;
-typedef bool Not_null_statement;
-
-typedef union
-{
-    IdValue id;
-    StrValue str;
-    FloatValue flt;
-    IntValue inteeger;
-    DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void 
-    VariableDefineValue var_or_const; // 0==var, 1==const
-    Not_null_statement has_not_null_id; // true== ma o dite navic, .second dite je |id| v te pipe
-
-} Data_value;
-
-struct Node
-{
-    int type;
-    Node *first;
-    Node *second;
-    Node *third;
-    Node *fourth;
-    Data_value data;
-
-};
-
 /**
  * @brief typy uzlu - pocet deti vychazi z ll-gramatiky 
  */
@@ -71,6 +40,42 @@ typedef enum NodeType {
 
 } NodeType;
 
+typedef int IdValue; // TODO: zmenit typ na ukazatel do symtable
+typedef char* StrValue;
+typedef double FloatValue;
+typedef int IntValue;
+typedef int DataTypeValue;
+typedef int VariableDefineValue;
+typedef bool Not_null_statement;
+
+/**
+ * @brief specialni members pro nektere uzly
+ */
+typedef union DataValue
+{
+    IdValue id; // TODO: value pro id
+    StrValue str; // value pro string node
+    FloatValue flt; // value pro float node
+    IntValue integer; // value pro int node
+    DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void 
+    VariableDefineValue var_or_const; // 0==var, 1==const
+    Not_null_statement has_not_null_id; // true== ma o dite navic, node.second dite je |id| v te pipe
+
+} Data_value;
+
+/**
+ * @brief struktura uzlu parse stromu
+ */
+struct Node
+{
+    NodeType type; /**< typ uzlu */
+    Node *first; /**< ukazatal na prvni uzel (prvni dite) */
+    Node *second; /**< ukazatal na druhe uzel (druhe dite) */
+    Node *third; /**< ukazatal na treti uzel (treti dite) */
+    Node *fourth; /**< ukazatal na ctvrty uzel (ctvrte dite) */
+    Data_value data; /**< nektere node typy maji specialni value. Node muze mit pouze jedny data */
+
+};
 
 /**
  * @brief buffer pro parsovani (lookahead)
@@ -91,26 +96,26 @@ TokenBuffer * buffer_ctor();
 
 /**
  * @brief destructor pro buffer na tokeny
- * @param token bere ukazatel na buffer, ktery chceme dat free()
+ * @param[in] token bere ukazatel na buffer, ktery chceme dat free()
  */
 void buffer_dtor(TokenBuffer * token);
 /**
  * @brief shiftne tokeny v bufferu (prvni zahodi, zbytek posune a na posledni prida novy)
- * @param token ukazatel na buffer
+ * @param[in] token ukazatel na buffer
+ * @param[in] n kolik tokenu chceme shiftnout
  */
 void consume_buffer(TokenBuffer* token, size_t n);
 
 /**
  * @brief vysledna fce celeho parsingu
- * @param token ukazatel na buffer tokenu vytvorim pomoci buffer_ctor()
- * @return ukazatel na celkovy parse tree
+ * @param[in] token ukazatel na buffer tokenu vytvorim pomoci buffer_ctor()
+ * @return ukazatel na vrcholovy uzel celeho parse tree
  */
 Node * Parse_start(TokenBuffer* token);
 
 /**
  * Dale jen "pomocne" private fce
  */
-
 Node * IdNode_new(int *id_in_sym_table); // bude tam pointer na symtable
 Node * StringNode_new(char *string);
 Node * FloatNode_new(double num);
@@ -149,7 +154,7 @@ Node * Parse_return_statement(TokenBuffer* token);
 
 
 
-Node * Parse_expression();  //nastudovat jak implementovat precedencni syntaktickou analyzu
+Node * Parse_expression(TokenBuffer* token);  //nastudovat jak implementovat precedencni syntaktickou analyzu
 
 
 
