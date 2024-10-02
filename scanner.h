@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-enum token_Category {
+typedef enum token_Category {
     TC_OPERATOR,
     TC_LOGICAL,
     TC_BRACKET,
@@ -15,7 +15,7 @@ enum token_Category {
     TC_EOF
 }token_Category;
 
-enum token_type {
+typedef enum token_type {
     //operators         (ASCII) {State} (index)
     T_Minus,            // -     {F1}    (0)
     T_Plus,             // +     {F2}    (1)
@@ -47,37 +47,37 @@ enum token_type {
     T_At,               // @    {F22}   (21)
     T_Colon,            // :    {F23}   (22)
     T_Question,         // ?    {F24}   (23)
-    T_Underscore,       // _    {F25}   (24)
+    T_Pipe,             // |    {F25}   (24)
+    T_Underscore,       // _    {F26}   (25)
 
-    // Keywords                 {F26}
-    T_const,            // const        (25)
-    T_else,             // else         (26)
-    T_fn,               // fn           (27)
-    T_if,               // if           (28)
-    T_i32,              // i32          (29)
-    T_f64,              // f64          (30)
-    T_null,             // null         (31)
-    T_pub,              // pub          (32)
-    T_return,           // return       (33)
-    T_u8,               // u8           (34)
-    T_var,              // var          (35)
-    T_void,             // void         (36)
-    T_while,            // while        (37)
-    T_import,           // import       (38)  
+    // Keywords                 {F27}
+    T_const,            // const        (26)
+    T_else,             // else         (27)
+    T_fn,               // fn           (28)
+    T_if,               // if           (29)
+    T_i32,              // i32          (30)
+    T_f64,              // f64          (31)
+    T_null,             // null         (32)
+    T_pub,              // pub          (33)
+    T_return,           // return       (34)
+    T_u8,               // u8           (35)
+    T_var,              // var          (36)
+    T_void,             // void         (37)
+    T_while,            // while        (38)
+    T_import,           // import       (39)  
 
     // ID                       
-    T_ID,               // Id   {F26}    (39)
+    T_ID,               // Id   {F28}    (40)
 
     // Value
-    T_Integer,          // Integer  {f28}   (40)
-    T_Float,            // Float    {f29}   (41)
-    T_Exponent,         // Exponent {f30}   (42)
-    T_String,           // String   {f31}   (43)
+    T_Integer,          // Integer  {F29}   (41)
+    T_Float,            // Float    {F30}   (42)
+    T_Exponent,         // Exponent {F31}   (43)
+    T_String,           // String   {F32}   (44)
 
     // Errors
-    T_EOF,              // End of file  {F32}   (44)
-    T_ERORR             // Error                (45)
-
+    T_EOF,              // End of file  {F33}   (45)
+    T_ERORR             // Error                (46)
 }token_type;
 
 typedef struct tokenValue_t{
@@ -91,8 +91,8 @@ typedef struct tokenValue_t{
 
 
 typedef struct Token {
-    enum token_type type;
-    enum token_Category Category;
+    token_type type;
+    token_Category Category;
     tokenValue_t value;
 } Token;
 
