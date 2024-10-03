@@ -97,10 +97,10 @@ String* substring_string(const String *str, size_t start, size_t end) {
     return substr;
 }
 
-unsigned int hash_string(const String *str, int table_size) {
-    unsigned long hash = 0;
-    for (size_t i = 0; i < str->length; i++) {
-        hash = hash * 31 + str->data[i]; 
+unsigned int hash(String* key, int table_size) {
+    unsigned long int hash_value = 0;
+    for (int i = 0; i < key->length; i++) {
+        hash_value = hash_value * 31 + key->data[i];
     }
-    return hash % table_size;  
+    return hash_value % table_size;
 }
