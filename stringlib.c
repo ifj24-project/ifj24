@@ -1,8 +1,8 @@
-#include <stringlib.h>
 #include <string.h>
-#include "../error/error.h"
 #include <malloc.h>
 #include <stdio.h>
+#include "../error/error.h"
+#include "stringlib.h"
 
 String* create_empty_string() {
     String* str = (String*)malloc(sizeof(String));
