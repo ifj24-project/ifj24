@@ -18,6 +18,6 @@ int compare_strings(const String* str1, const String* str2);
 String* concat_strings(const String *str1, const String *str2);
 void resize_string(String* str, size_t new_capacity);
 String* substring_string(const String *str, size_t start, size_t end);
-unsigned int hash_string(const String *str, int table_size);
+unsigned int hash(String* key, int table_size);
 
 #endif
