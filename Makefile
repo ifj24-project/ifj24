@@ -5,8 +5,8 @@ CFLAGS = -std=gnu99 -c
 # Source files.  We keep header files separate from the cpp files.
 # Recall that we will compile cpp files, but we do not compile
 # the header files.
-HEADER = parser/parser.h scanner.h semantic/semantic.h error/error.h
-CPP = parser/parser.c scanner.c  main.c semantic/semantic.c error/error.c
+HEADER = parser/parser.h scanner.h semantic/semantic.h error/error.h stringlib.h symstack.h symtable.h
+CPP = parser/parser.c scanner.c  main.c semantic/semantic.c error/error.c stringlib.c symstack.c symtable.c
 
 # Program name
 PROGNAME = compiler

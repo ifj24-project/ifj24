@@ -9,8 +9,7 @@
 /**
  * TODO: 
  * provazat se sym-tablem
- * id node new / parse id
- * string node new / parse string
+ * variable used
  * parse variable define: fucn_call 
  */
 
@@ -184,6 +183,19 @@ const char * get_token_name(enum token_type token_id){
     }
 }
 
+SymbolValue* create_sym_val(bool is_const, bool is_func, bool is_defined, bool is_used, int type){
+    SymbolValue* value = malloc(sizeof(SymbolValue));
+    if (value == NULL) {
+        ThrowError(99);
+    }
+
+    value->is_const = is_const;
+    value->is_func = is_func;
+    value->is_defined = is_defined;
+    value->is_used = is_used;
+    value->type = type;
+}
+
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
@@ -207,16 +219,16 @@ void buffer_check_first(TokenBuffer* token, token_type num){
     return;
 }
 
-Node * IdNode_new(int *id_in_sym_table){
+Node * IdNode_new(char* id_string){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
         ThrowError(99);
     }
     x->type = Id_N;
-    // x->data.id = id_in_sym_table; 
+    x->data.id = create_string(id_string); 
     return x;
-} // bude tam pointer na symtable
+} 
 
 Node * StringNode_new(char *string){
         Node* x = malloc(sizeof(Node));
@@ -225,7 +237,7 @@ Node * StringNode_new(char *string){
         ThrowError(99);
     }
     x->type = Id_N;
-    x->data.str = string;
+    x->data.str = create_string(string);
     return x;
 }
 Node * FloatNode_new(double num){
@@ -319,18 +331,29 @@ Node * Parse_start(TokenBuffer* token){
 }
 
 Node * Parse_id(TokenBuffer* token){
-    /**
-     * placeholder
-     */
-    buffer_check_first(token, T_ID);
-    return NULL;
+    if (token->first->type == T_ID)
+    {
+        char* id_string = token->first->value.ID_name;
+        consume_buffer(token, 1);
+        return IdNode_new(id_string);
+    }
+    else
+    {
+        buffer_check_first(token, T_ID);
+    }
+    
 }
 Node * Parse_string(TokenBuffer* token){
-    /**
-     * placeholder
-     */
-    buffer_check_first(token, T_String);
-    return NULL;
+    if (token->first->type == T_String)
+    {
+        char* string = token->first->value.stringVal;
+        consume_buffer(token, 1);
+        return StringNode_new(string);
+    }
+    else
+    {
+        buffer_check_first(token, T_String);
+    }
 }
 
 Node * Parse_prolog(TokenBuffer* token){
@@ -347,7 +370,7 @@ Node * Parse_prolog(TokenBuffer* token){
     return NoChildNode_new(ProgramProlog_N);
 }
 Node * Parse_program(TokenBuffer* token){
-    if (token->first->type == T_EOF) //prispusobit
+    if (token->first->type == T_EOF)
     {
         return NULL;
     }
@@ -408,6 +431,8 @@ Node * Parse_func_define(TokenBuffer* token){
     buffer_check_first(token, T_L_Curly_B);
     Node * d = Parse_func_body(token);
     buffer_check_first(token, T_R_Curly_B);
+
+    insert_symbol(token->sym_table, a->data.id, c->data.data_type, create_sym_val(NULL, true, true, false, c->data.data_type));
 
     return FourChildNode_new(FuncDefine_N, a, b, c, d);
 }
@@ -495,18 +520,15 @@ Node * Parse_variable_define(TokenBuffer* token){
     Node * b;
     Node * c;
     int var_const = -1;
-    // TODO: narvat to do sym-tablu az bude
     if (token->first->type == T_const)
     {
         consume_buffer(token, 1);
         var_const = 1;
-        /* code */
     }
     else if (token->first->type == T_var)
     {
         consume_buffer(token, 1);
         var_const = 0;
-        /* code */
     }
     else{
         ThrowError(2);
@@ -538,7 +560,6 @@ Node * Parse_variable_define(TokenBuffer* token){
     {
         c = Parse_func_call(token);
     }
-    
     else if (token->first->type == T_String)
     {
         c = Parse_string(token);
@@ -551,6 +572,11 @@ Node * Parse_variable_define(TokenBuffer* token){
 
     Node * ret = ThreeChildNode_new(VariableDefine_N, a, b, c);
     ret->data.var_or_const = var_const;
+
+    
+
+    insert_symbol(token->sym_table, a->data.id, b->data.data_type, create_sym_val(var_const, false, true, false, a->data.data_type));
+
     return ret;
 }
 
@@ -653,13 +679,34 @@ Node * Parse_if(TokenBuffer* token){
     buffer_check_first(token, T_L_Round_B);
     Node * a = Parse_expression(token);
     buffer_check_first(token, T_R_Round_B);
-    /**
-     * TODO: check for pipe
-     */
+    
+    if (token->first->type == T_Pipe)
+    {
+        consume_buffer(token, 1);
+        Node * b = Parse_id(token);
+        buffer_check_first(token, T_Pipe);
+
+        buffer_check_first(token, T_L_Curly_B);
+        Node * c = Parse_func_body(token);
+        buffer_check_first(token, T_R_Curly_B);
+
+        // TODO: else not mandatory?
+        buffer_check_first(token, T_else);
+        buffer_check_first(token, T_L_Curly_B);
+        Node * d = Parse_func_body(token);
+        buffer_check_first(token, T_R_Curly_B);
+
+        Node * ret = FourChildNode_new(If_N, a, b, c, d);
+        ret->data.has_not_null_id = true;
+        return ret;
+
+    }
+    
 
     buffer_check_first(token, T_L_Curly_B);
     Node * b = Parse_func_body(token);
     buffer_check_first(token, T_R_Curly_B);
+    // TODO: else not mandatory?
     buffer_check_first(token, T_else);
     buffer_check_first(token, T_L_Curly_B);
     Node * c = Parse_func_body(token);
@@ -668,33 +715,27 @@ Node * Parse_if(TokenBuffer* token){
     return ThreeChildNode_new(If_N, a, b, c);
 }
 
-// Node * Parse_if_not_null(TokenBuffer* token){
-//     buffer_check_first(token, T_if);
-//     buffer_check_first(token, T_L_Round_B);
-//     Node * a = Parse_expression(token);
-//     buffer_check_first(token, T_R_Round_B);
-//     /**
-//      * TODO: check for pipe
-//      */
-//     Node * b;
-//     buffer_check_first(token, T_L_Curly_B);
-//     Node * c = Parse_func_body(token);
-//     buffer_check_first(token, T_R_Curly_B);
-//     buffer_check_first(token, T_else);
-//     buffer_check_first(token, T_L_Curly_B);
-//     Node * d = Parse_func_body(token);
-//     buffer_check_first(token, T_R_Curly_B);
-//     return FourChildNode_new(If_N, a, b, c, d);
-// }
-
 Node * Parse_while(TokenBuffer* token){
     buffer_check_first(token, T_while);
     buffer_check_first(token, T_L_Round_B);
     Node * a = Parse_expression(token);
     buffer_check_first(token, T_R_Round_B);
-    /**
-     * TODO: check for pipe
-     */
+    
+    if (token->first->type == T_Pipe)
+    {
+        consume_buffer(token, 1);
+        Node * b = Parse_id(token);
+        buffer_check_first(token, T_Pipe);
+        buffer_check_first(token, T_L_Curly_B);
+        Node * c = Parse_func_body(token);
+
+        
+
+        Node * ret = ThreeChildNode_new(While_N, a, b, c);
+        ret->data.has_not_null_id = true;
+        return ret;
+
+    }
     
 
     buffer_check_first(token, T_L_Curly_B);
@@ -702,20 +743,6 @@ Node * Parse_while(TokenBuffer* token){
 
     return TwoChildNode_new(While_N, a, b);
 }
-
-// Node * Parse_while_not_null(TokenBuffer* token){
-//     buffer_check_first(token, T_while);
-//     buffer_check_first(token, T_L_Round_B);
-//     Node * a = Parse_expression(token);
-//     buffer_check_first(token, T_R_Round_B);
-//     /**
-//      * TODO: check for pipe
-//      */
-//     Node * b;
-//     buffer_check_first(token, T_L_Curly_B);
-//     Node * c = Parse_func_body(token);
-//     return ChildNode_new(While_N, a, b, c);
-// }
 
 Node * Parse_void_call(TokenBuffer* token){
 

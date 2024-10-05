@@ -1,7 +1,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdio.h>
-#include "../error/error.h"
+#include "error/error.h"
 #include "stringlib.h"
 
 String* create_empty_string() {

@@ -6,12 +6,21 @@
 #include <stdbool.h>
 
 typedef enum {
+    TYPE_UNDEFINED, // nedefinovana promenna
     TYPE_INT,      // i32
     TYPE_FLOAT,    // f64
     TYPE_STRING,   // []u8
-    TYPE_BOOL,     // bool
-    TYPE_UNDEFINED, // nedefinovana promenna
+    TYPE_VOID,     // void
+    TYPE_BOOL     // bool
 } VarType;
+
+typedef struct SymVal {
+    bool is_const;
+    bool is_func;
+    bool is_defined;
+    bool is_used;
+    int type;
+} SymbolValue;
 
 typedef struct {
     String* key;        // identifikator

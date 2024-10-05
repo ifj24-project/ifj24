@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <malloc.h>
-#include "../error/error.h"
+#include "error/error.h"
 #include "stringlib.h"
 #include "symtable.h"
 

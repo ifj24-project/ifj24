@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "symstack.h"
-#include "../error/error.h"
+#include "error/error.h"
 #include "stringlib.h"
 #include <malloc.h>
 

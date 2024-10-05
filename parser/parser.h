@@ -2,6 +2,7 @@
 #define PARSER_H 
 
 #include "../scanner.h"
+#include "../symtable.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -40,8 +41,8 @@ typedef enum NodeType {
 
 } NodeType;
 
-typedef int IdValue; // TODO: zmenit typ na ukazatel do symtable
-typedef char* StrValue;
+typedef String* IdValue; 
+typedef String* StrValue;
 typedef double FloatValue;
 typedef int IntValue;
 typedef int DataTypeValue;
@@ -86,6 +87,8 @@ typedef struct TokenBuffer
     Token* second;
     Token* third;
     Token* fourth;
+    SymbolTable* sym_table;
+
 }TokenBuffer;
 
 /**
@@ -116,7 +119,7 @@ Node * Parse_start(TokenBuffer* token);
 /**
  * Dale jen "pomocne" private fce
  */
-Node * IdNode_new(int *id_in_sym_table); // bude tam pointer na symtable
+Node * IdNode_new(char *symtable_key); 
 Node * StringNode_new(char *string);
 Node * FloatNode_new(double num);
 Node * IntNode_new(int num);
