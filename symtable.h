@@ -1,7 +1,7 @@
 #ifndef _SYMTABLE_H
 #define _SYMTABLE_H
 
-#include <stringlib.h>
+#include "stringlib.h"
 #include <stdio.h>
 #include <stdbool.h>
 
