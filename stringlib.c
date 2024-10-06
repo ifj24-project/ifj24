@@ -27,7 +27,7 @@ String* create_string(const char *initial_data) {
     }
     new_str->length = strlen(initial_data);
     new_str->capacity = new_str->length + 1;
-    new_str->data = (char *)malloc(new_str->capacity);
+    new_str->data = (char *)malloc(sizeof(char) * new_str->capacity);
     if (new_str->data == NULL) {
         free(new_str);
         ThrowError(99);
@@ -62,7 +62,7 @@ String* concat_strings(const String *str1, const String *str2) {
     new_str->length = str1->length + str2->length;
     new_str->capacity = new_str->length + 1;
 
-    new_str->data = (char *)malloc(new_str->capacity);
+    new_str->data = (char *)malloc(sizeof(char) * new_str->capacity);
     if (new_str->data == NULL) {
         free(new_str);
         ThrowError(99);
@@ -87,7 +87,7 @@ String* substring_string(const String *str, size_t start, size_t end) {
     substr->length = end - start;
     substr->capacity = substr->length + 1;
 
-    substr->data = (char *)malloc(substr->capacity);
+    substr->data = (char *)malloc(sizeof(char) * substr->capacity);
     if (substr->data == NULL) {
         free(substr);
         ThrowError(99);
