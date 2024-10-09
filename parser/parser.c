@@ -2,14 +2,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "parser.h"
-#include "../error/error.h"
+
 // #include "../scanner.h"
 // #include "../scanner.c"
 
 /**
  * TODO: 
  * provazat se sym-tablem
- * variable used
+ * variable used - kdy to urcit?
+ * 
  * parse variable define: fucn_call 
  */
 
@@ -274,6 +275,10 @@ Node * NoChildNode_new(int node_type){
         ThrowError(99);
     }
     x->type = node_type;
+    x->first = NULL;
+    x->second = NULL;
+    x->third = NULL;
+    x->fourth = NULL;
     return x;
 }
 Node * OneChildNode_new(int node_type, Node * first){
@@ -284,6 +289,9 @@ Node * OneChildNode_new(int node_type, Node * first){
     }
     x->type = node_type;
     x->first = first;
+    x->second = NULL;
+    x->third = NULL;
+    x->fourth = NULL;
     return x;
 }
 Node * TwoChildNode_new(int node_type, Node * first, Node * second){
@@ -295,6 +303,8 @@ Node * TwoChildNode_new(int node_type, Node * first, Node * second){
     x->type = node_type;
     x->first = first;
     x->second = second;
+    x->third = NULL;
+    x->fourth = NULL;
     return x;
 }
 Node * ThreeChildNode_new(int node_type, Node * first, Node * second, Node * third){
@@ -307,6 +317,7 @@ Node * ThreeChildNode_new(int node_type, Node * first, Node * second, Node * thi
     x->first = first;
     x->second = second;
     x->third = third;
+    x->fourth = NULL;
     return x;
 }
 Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * third, Node * fourth){
@@ -366,6 +377,10 @@ Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_String);
     buffer_check_first(token, T_R_Round_B);
     buffer_check_first(token, T_SemiC);
+
+    /**
+     * TODO: prefill sym table with ifj.functions
+     */
 
     return NoChildNode_new(ProgramProlog_N);
 }
@@ -432,7 +447,7 @@ Node * Parse_func_define(TokenBuffer* token){
     Node * d = Parse_func_body(token);
     buffer_check_first(token, T_R_Curly_B);
 
-    insert_symbol(token->sym_table, a->data.id, c->data.data_type, create_sym_val(NULL, true, true, false, c->data.data_type));
+    // insert_symbol(token->sym_table, a->data.id, c->data.data_type, create_sym_val(NULL, true, true, false, c->data.data_type));
 
     return FourChildNode_new(FuncDefine_N, a, b, c, d);
 }
@@ -575,7 +590,7 @@ Node * Parse_variable_define(TokenBuffer* token){
 
     
 
-    insert_symbol(token->sym_table, a->data.id, b->data.data_type, create_sym_val(var_const, false, true, false, a->data.data_type));
+    // insert_symbol(token->sym_table, a->data.id, b->data.data_type, create_sym_val(var_const, false, true, false, a->data.data_type));
 
     return ret;
 }
@@ -770,9 +785,3 @@ Node * Parse_return_statement(TokenBuffer* token){
     return OneChildNode_new(ReturnStatement_N, a);
 }
 
-Node * Parse_expression(TokenBuffer* token){
-    /**
-     * placeholder
-     */
-    return NULL;
-}

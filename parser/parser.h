@@ -3,6 +3,7 @@
 
 #include "../scanner.h"
 #include "../symtable.h"
+#include "../error/error.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -36,8 +37,12 @@ typedef enum NodeType {
     Str_N = 19,
     Float_N = 20,
     If_not_null = 21,
-    while_not_null =22
+    while_not_null =22,
     // doplnit EXPRESSION
+    Expression_N = 23,
+    Compared_N = 24,
+    Term_N = 25,
+    Factor_N = 26
 
 } NodeType;
 
@@ -157,7 +162,7 @@ Node * Parse_return_statement(TokenBuffer* token);
 
 
 
-Node * Parse_expression(TokenBuffer* token);  //nastudovat jak implementovat precedencni syntaktickou analyzu
+
 
 
 
