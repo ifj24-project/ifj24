@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "parser.h"
+#include "expressionparse.h"
 
 // #include "../scanner.h"
 // #include "../scanner.c"
@@ -179,6 +180,9 @@ const char * get_token_name(enum token_type token_id){
     case T_ERORR:
         return "T_ERROR";
         break;
+    case T_Pipe:
+        return "T_Pipe";
+        break;
     default:
         break;
     }
@@ -252,7 +256,7 @@ Node * FloatNode_new(double num){
     return x;
 }
 Node * IntNode_new(int num){
-        Node* x = malloc(sizeof(Node));
+    Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
         ThrowError(99);

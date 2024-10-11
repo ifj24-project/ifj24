@@ -1,6 +1,6 @@
 # Lets specify compiler
 CC = gcc
-CFLAGS = -std=gnu99 -c
+CFLAGS = -std=gnu99 -c -g
 
 # Source files.  We keep header files separate from the cpp files.
 # Recall that we will compile cpp files, but we do not compile

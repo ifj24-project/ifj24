@@ -1,7 +1,7 @@
 #include "parser/parser.h"
 #include "semantic/semantic.h"
 
-int main(int argc, char const *argv[])
+int main()
 {
     SymbolTable* symbol_table = create_symbol_table(20);
 

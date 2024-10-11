@@ -1,10 +1,151 @@
 #include "expressionparse.h"
 
 Node * Parse_expression(TokenBuffer* token){
-    /**
-     * placeholder
-     */
-    return NULL;
+    // shift == 1
+    // reduce == 0
+    // error == -1
+    // accept == 2
+    int prec_table[P_all_types][P_all_types] = {
+        {-1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 0},
+        {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 1, 1, -1, -1, -1, -1, -1, -1, 0, 0},
+        {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, -1, -1, -1, -1, 0, 0},
+        {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
+        {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
+        {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
+        {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 0, -1},
+        {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
+        {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, 2}
+    };
+
+    PrecStack * stack = prec_stack_init();
+    PrecStackItem * input = next_prec_item(token);
+
+    while (true)
+    {
+        if ((stack->top->type == P_expression && stack->count == 2) && input->type == P_$)
+        {
+            Node* ret = stack->top->node;
+            prec_stack_free(stack);
+            free(input);
+            return ret;
+        }
+        printf("stack type: %d\n", stack->top->type);
+        printf("input type: %d\n\n", input->type);
+
+        if (prec_table[stack->top->type][input->type] == 1) // shift
+        {
+            prec_push_item(stack, input);
+            input = next_prec_item(token);
+        }
+        else if (prec_table[stack->top->type][input->type] == 0) // reduce
+        {
+            reduce(stack);
+        }
+        else if (prec_table[stack->top->type][input->type] == -1) // bad syntax
+        {
+            printf("bad stack type: %d\n", stack->top->type);
+            printf("bad input type: %d\n", input->type);
+            printf("loop tady %d \n", prec_table[stack->top->type][input->type]);
+            ThrowError(2);
+        }
+        else
+        {   
+            // printf("stack type: %d\n", stack->top->type);
+            // printf("input type: %d\n", input->type);
+            // printf("loop tady %d \n", prec_table[stack->top->type][input->type]);
+            ThrowError(2);
+        }
+    }
+}
+
+PrecStackItem * next_prec_item(TokenBuffer * token){
+    Node* node;
+    switch (token->first->type)
+    {
+    case T_Greater:
+        consume_buffer(token, 1);
+        return create_prec_item(P_greater, NULL);
+    
+    case T_Great_Eq:
+        consume_buffer(token, 1);
+        return create_prec_item(P_greatereq, NULL);
+    
+    case T_Lesser:
+        consume_buffer(token, 1);
+        return create_prec_item(P_lesser, NULL);
+
+    case T_Less_Eq:
+        consume_buffer(token, 1);
+        return create_prec_item(P_lessereq, NULL);
+
+    case T_Equal:
+        consume_buffer(token, 1);
+        return create_prec_item(P_eq, NULL);
+    
+    case T_Not_Eq:
+        consume_buffer(token, 1);
+        return create_prec_item(P_noteq, NULL);
+
+    case T_Plus:
+        consume_buffer(token, 1);
+        return create_prec_item(P_plus, NULL);
+
+    case T_Minus:
+        consume_buffer(token, 1);
+        return create_prec_item(P_minus, NULL);
+
+    case T_Mul:
+        consume_buffer(token, 1);
+        return create_prec_item(P_times, NULL);
+    
+    case T_Div:
+        consume_buffer(token, 1);
+        return create_prec_item(P_divide, NULL);
+
+    case T_ID:
+        node = Parse_id(token);
+        return create_prec_item(P_id, node);
+
+    case T_Integer:
+        node = IntNode_new(token->first->value.integer);
+        consume_buffer(token, 1);
+        return create_prec_item(P_int, node);
+
+    case T_Float:
+        node = FloatNode_new(token->first->value.Float);
+        return create_prec_item(P_float, node);
+
+    case T_L_Round_B:
+        consume_buffer(token, 1);
+        return create_prec_item(P_L_RoundB, NULL);
+
+    case T_R_Round_B:
+        if (token->second->type == T_L_Curly_B || token->second->type == T_Pipe || token->second->type == T_SemiC)
+        {
+            return create_prec_item(P_$, NULL);
+        }
+        consume_buffer(token, 1);
+        return create_prec_item(P_R_RoundB, NULL);
+    
+    case T_SemiC:
+        // consume_buffer(token, 1);
+        return create_prec_item(P_$, NULL);
+
+    default:
+        ThrowError(2);
+        break;
+    }
 }
 
 PrecStack* prec_stack_init(){
@@ -39,8 +180,31 @@ void prec_stack_push(PrecStack * stack, Prectype type, Node * data){
     return;
 }
 
+PrecStackItem* create_prec_item(Prectype type, Node * data){
+    PrecStackItem* item = malloc(sizeof(PrecStackItem));
+    if (item == NULL)
+    {
+        ThrowError(99);
+    }
+
+    item->next = NULL;
+    item->node = data;
+    item->type = type;
+
+    return item;
+}
+
+void prec_push_item(PrecStack * stack, PrecStackItem* item){
+    item->next = stack->top;
+
+    stack->top = item;
+    stack->count++;
+    
+    return;
+}
+
 void prec_stack_pop(PrecStack * stack){
-    if (stack->count < 0)
+    if (stack->count == 0)
     {
         ThrowError(2);
     }
@@ -58,10 +222,190 @@ void prec_stack_free(PrecStack * stack){
     {
         prec_stack_pop(stack);
     }
-    
+
+    free(stack);
+
     return;
 }
 
 void reduce(PrecStack * stack){
+    PrecStackItem* item;
+    Node* new_node;
+    PrecStackItem* top = stack->top;
 
+    switch (stack->top->type)
+    {
+    case P_compared:
+        if (stack->top->next->type == P_greater)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(Greater_N, top->next->next->node, top->node);
+            item = create_prec_item(P_expression, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else if (stack->top->next->type == P_greatereq)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(GreaterEq_N, top->next->next->node, top->node);
+            item = create_prec_item(P_expression, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else if (stack->top->next->type == P_lesser)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(Lesser_N, top->next->next->node, top->node);
+            item = create_prec_item(P_expression, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else if (stack->top->next->type == P_lessereq)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(LesserEq_N, top->next->next->node, top->node);
+            item = create_prec_item(P_expression, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else if (stack->top->next->type == P_eq)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(Eq_N, top->next->next->node, top->node);
+            item = create_prec_item(P_expression, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else if (stack->top->next->type == P_noteq)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(NotEq_N, top->next->next->node, top->node);
+            item = create_prec_item(P_expression, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else
+        {
+            item = create_prec_item(P_expression, top->node);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+
+
+    case P_term:
+        if (stack->top->next->type == P_plus)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(Plus_N, top->next->next->node, top->node);
+            item = create_prec_item(P_compared, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else if (stack->top->next->type == P_minus)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(Minus_N, top->next->next->node, top->node);
+            item = create_prec_item(P_compared, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else
+        {
+            item = create_prec_item(P_compared, top->node);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+
+    case P_factor:
+        if (stack->top->next->type == P_times)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(Times_N, top->next->next->node, top->node);
+            item = create_prec_item(P_term, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else if (stack->top->next->type == P_divide)
+        {   
+            if (stack->count < 3){ThrowError(2);}
+            new_node = TwoChildNode_new(Divide_N, top->next->next->node, top->node);
+            item = create_prec_item(P_term, new_node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        else
+        {
+            item = create_prec_item(P_term, top->node);
+            prec_stack_pop(stack);
+            prec_push_item(stack, item);
+            break;
+        }
+        
+    
+        
+
+    case P_id:
+    case P_int:
+    case P_float:
+        item = create_prec_item(P_factor, stack->top->node);
+        prec_stack_pop(stack);
+        prec_push_item(stack, item);
+        break;
+
+    case P_R_RoundB:
+        if (stack->count < 3)
+        {
+            ThrowError(2);
+        }
+
+        if (stack->top->next->type == P_expression && stack->top->next->next->type == P_L_RoundB)
+        {
+            item = create_prec_item(P_factor, stack->top->next->node);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+
+            prec_push_item(stack, item);
+            break;
+        }
+        
+    
+    default:
+        ThrowError(2); // cant reduce
+        break;
+    }
+
+    return;
 }

@@ -38,11 +38,21 @@ typedef enum NodeType {
     Float_N = 20,
     If_not_null = 21,
     while_not_null =22,
-    // doplnit EXPRESSION
+    // EXPRESSION
     Expression_N = 23,
     Compared_N = 24,
     Term_N = 25,
-    Factor_N = 26
+    Factor_N = 26,
+    Lesser_N = 27,
+    LesserEq_N = 28,
+    Greater_N = 29,
+    GreaterEq_N = 30,
+    Eq_N = 31,
+    NotEq_N = 32,
+    Plus_N = 33,
+    Minus_N = 34,
+    Times_N = 35,
+    Divide_N = 36
 
 } NodeType;
 
