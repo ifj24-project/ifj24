@@ -40,8 +40,8 @@ Node * Parse_expression(TokenBuffer* token){
             free(input);
             return ret;
         }
-        printf("stack type: %d\n", stack->top->type);
-        printf("input type: %d\n\n", input->type);
+        // printf("\nstack type: %d\n", stack->top->type);
+        // printf("input type: %d\n", input->type);
 
         if (prec_table[stack->top->type][input->type] == 1) // shift
         {
@@ -54,9 +54,9 @@ Node * Parse_expression(TokenBuffer* token){
         }
         else if (prec_table[stack->top->type][input->type] == -1) // bad syntax
         {
-            printf("bad stack type: %d\n", stack->top->type);
-            printf("bad input type: %d\n", input->type);
-            printf("loop tady %d \n", prec_table[stack->top->type][input->type]);
+            // printf("bad stack type: %d\n", stack->top->type);
+            // printf("bad input type: %d\n", input->type);
+            // printf("loop tady %d \n", prec_table[stack->top->type][input->type]);
             ThrowError(2);
         }
         else
@@ -124,6 +124,7 @@ PrecStackItem * next_prec_item(TokenBuffer * token){
 
     case T_Float:
         node = FloatNode_new(token->first->value.Float);
+        consume_buffer(token, 1);
         return create_prec_item(P_float, node);
 
     case T_L_Round_B:

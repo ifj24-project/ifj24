@@ -204,7 +204,7 @@ SymbolValue* create_sym_val(bool is_const, bool is_func, bool is_defined, bool i
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
-        printf("token: %s\n",get_token_name(token->first->type));
+        // printf("token: %s\n",get_token_name(token->first->type));
         free(token->first);
         token->first = token->second;
         token->second = token->third;
@@ -218,6 +218,10 @@ void buffer_check_first(TokenBuffer* token, token_type num){
     if (token->first->type != num)
     {
         printf("Expected token type: %s got: %s\n", get_token_name(num), get_token_name(token->first->type));
+        printf("next tokens:\n");
+        printf("%s\n", get_token_name(token->second->type));
+        printf("%s\n", get_token_name(token->third->type));
+        printf("%s\n", get_token_name(token->fourth->type));
         ThrowError(2);
     }
     consume_buffer(token, 1);
@@ -747,6 +751,7 @@ Node * Parse_while(TokenBuffer* token){
         buffer_check_first(token, T_Pipe);
         buffer_check_first(token, T_L_Curly_B);
         Node * c = Parse_func_body(token);
+        buffer_check_first(token, T_R_Curly_B);
 
         
 
@@ -759,6 +764,7 @@ Node * Parse_while(TokenBuffer* token){
 
     buffer_check_first(token, T_L_Curly_B);
     Node * b = Parse_func_body(token);
+    buffer_check_first(token, T_R_Curly_B);
 
     return TwoChildNode_new(While_N, a, b);
 }
