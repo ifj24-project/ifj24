@@ -60,10 +60,29 @@ void insert_function(SymbolTable* table, String* key, VarType return_type, Funct
         table->table[index].key = copy_string(key);
         table->table[index].type = TYPE_FUNCTION;
         table->table[index].func_info.return_type = return_type;
-        table->table[index].func_info.params = malloc(sizeof(FunctionParam) * param_count);
+        
+        FunctionParam* current_param = NULL; // ukazatel na aktualni parametr
         for (int i = 0; i < param_count; i++) {
-        table->table[index].func_info.params[i] = params[i];
+            FunctionParam* new_param = malloc(sizeof(FunctionParam)); // allokujeme pamet pro novy parametr
+            if (new_param == NULL) {
+                ThrowError(99); // chyba pri allokace pameti
+            }
+
+            new_param->name = copy_string(params[i].name); // kopirujeme jmeno parametru
+            new_param->type = params[i].type; // nastavime typ parametru
+            new_param->next = NULL; // inicializace ukazatelu na nasledujici parametr
+
+            // pridavame parametr do seznamu
+            if (current_param == NULL) {
+                table->table[index].func_info.params = new_param;
+                current_param = new_param;
+            } else {
+                // spojime s predchozim parametrem
+                current_param->next = new_param;
+                current_param = new_param;
+            }
         }
+        
         table->table[index].func_info.param_count = param_count;
         table->table[index].is_occupied = true;
         table->count++;
@@ -99,6 +118,17 @@ void mark_variable_as_used(SymbolTable* table, String* key) {
     if (index != -1 && table->table[index].is_occupied && table->table[index].type == TYPE_VARIABLE) {
         table->table[index].var_info.is_used = true;  // oznacime promennou jako pouzitou 
     }
+}
+
+FunctionInfo* find_symbol(SymbolTable* table, String* key) {
+    int index = find_slot(table, key);
+    if (index != -1 && table->table[index].is_occupied) {
+        // pokud element je funkce
+        if (table->table[index].type == TYPE_FUNCTION) {
+            return &table->table[index].func_info;  // vratime ukazatel na informace o funkci
+        }
+    }
+    return NULL;  // nenasli jsme symbol nebo neni to funkce
 }
 
 void delete_symbol(SymbolTable* table, String* key) {
@@ -170,7 +200,13 @@ void free_symbol_table(SymbolTable* table) {
         if (table->table[i].is_occupied) {
             free_string(table->table[i].key);  // uvolnujeme klic
             if (table->table[i].type == TYPE_FUNCTION) {
-                free(table->table[i].func_info.params);  // uvolnujeme parametry funkce
+                FunctionParam* current_param = table->table[i].func_info.params;
+                while (current_param != NULL) {
+                    FunctionParam* temp = current_param; // docasny ukazatel
+                    current_param = current_param->next;  // prechod do dalsiho parametru
+                    free_string(temp->name); // uvolnujeme jmeno parametru
+                    free(temp); // uvolnujeme parametr
+                }
             }
         }
     }
