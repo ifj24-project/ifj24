@@ -149,6 +149,17 @@ VarType get_symbol_type(SymbolTable* table, String* key);
 void mark_variable_as_used(SymbolTable* table, String* key);
 
 /**
+ * @brief Finds a symbol in the symbol table.
+ * 
+ * Searches for a symbol by its key in the symbol table. If found, returns a pointer to its FunctionInfo.
+ * 
+ * @param table The symbol table to search in.
+ * @param key The key (identifier) of the symbol to search for.
+ * @return FunctionInfo* Pointer to the symbol's FunctionInfo, or NULL if the symbol is not found or not a function.
+ */
+FunctionInfo* find_symbol(SymbolTable* table, String* key);
+
+/**
  * @brief Deletes a symbol from the symbol table.
  * 
  * Removes a symbol from the symbol table by its key. Frees memory associated with the key and parameters.
