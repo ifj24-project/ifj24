@@ -19,6 +19,7 @@ typedef enum {
 typedef struct {
     String* name;   // jmeno parametru
     VarType type;   // typ
+    FunctionParam * next;  // ukazatel na nasledujici parametr
 } FunctionParam;
 
 // Struktura funkce
