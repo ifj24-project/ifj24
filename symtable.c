@@ -136,7 +136,13 @@ void delete_symbol(SymbolTable* table, String* key) {
     if (index != -1 && table->table[index].is_occupied) {
         free_string(table->table[index].key);
         if (table->table[index].type == TYPE_FUNCTION) {
-            free(table->table[index].func_info.params);  // uvolnujeme parametry funkce
+           FunctionParam* current_param = table->table[index].func_info.params;
+            while (current_param != NULL) {
+                FunctionParam* temp = current_param;       // docasny ukazatel na aktualni parametr 
+                current_param = current_param->next;       // prechod do dalsiho parametru
+                free_string(temp->name);                  // uvolnujeme jmeno parametru
+                free(temp);                // uvolnujeme parametr
+            }
         }
         table->table[index].is_occupied = false;
         table->count--;
