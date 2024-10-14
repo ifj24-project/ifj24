@@ -172,12 +172,33 @@ void resize_table(SymbolTable* table, int new_size) {
             if (old_table[i].type == TYPE_FUNCTION) {
                 table->table[new_index].func_info.return_type = old_table[i].func_info.return_type;
                 table->table[new_index].func_info.param_count = old_table[i].func_info.param_count;
-                
-                // Allokujeme pamet pro parametry a kopirujeme je 
-                table->table[new_index].func_info.params = malloc(sizeof(FunctionParam) * old_table[i].func_info.param_count);
-                for (int j = 0; j < old_table[i].func_info.param_count; j++) {
-                    table->table[new_index].func_info.params[j] = old_table[i].func_info.params[j];
+                // kopirujeme parametry jako vazany seznam
+                FunctionParam* old_params = old_table[i].func_info.params;
+                FunctionParam* new_params_head = NULL;
+                FunctionParam* new_params_tail = NULL;
+
+                while (old_params != NULL) {
+                    FunctionParam* new_param = malloc(sizeof(FunctionParam)); // pridelime pamet pro novy parametr
+                    if (new_param == NULL) {
+                        ThrowError(99); // chyba allokace
+                    }
+                    new_param->name = copy_string(old_params->name); // kopirovani jmena parametru
+                    new_param->type = old_params->type; // kopirovani typu parametru
+                    new_param->next = NULL; // inicializace ukazatelu na dalsi element
+
+                    // dodavame novy parametr do seznamu
+                    if (new_params_head == NULL) {
+                        new_params_head = new_param; // 1. parametr
+                        new_params_tail = new_param;
+                    } else {
+                        new_params_tail->next = new_param; /
+                        new_params_tail = new_param; 
+                    }
+                    old_params = old_params->next; // prechod do dalsiho parametru
                 }
+                // novy seznam parametru
+                table->table[new_index].func_info.params = new_params_head;
+                
             } else if (old_table[i].type == TYPE_VARIABLE) {
                 // pokud je to promenna, kopirujeme jeji informace
                 table->table[new_index].var_info.data_type = old_table[i].var_info.data_type;
