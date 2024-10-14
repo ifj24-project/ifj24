@@ -16,10 +16,10 @@ typedef enum {
 } VarType;
 
 // Struktura parametru funkce
-typedef struct {
+typedef struct FunctionParam {
     String* name;   // jmeno parametru
     VarType type;   // typ
-    FunctionParam * next;  // ukazatel na nasledujici parametr
+    struct FunctionParam *next;  // ukazatel na nasledujici parametr
 } FunctionParam;
 
 // Struktura funkce
