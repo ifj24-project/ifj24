@@ -151,13 +151,17 @@ void mark_variable_as_used(SymbolTable* table, String* key);
 /**
  * @brief Finds a symbol in the symbol table.
  * 
- * Searches for a symbol by its key in the symbol table. If found, returns a pointer to its FunctionInfo.
+ * Searches for a symbol by its key in the symbol table. If found, returns a pointer to its associated information.
+ * If the symbol is a function, it returns a pointer to its FunctionInfo.
+ * If the symbol is a variable, it returns a pointer to its VariableInfo.
  * 
  * @param table The symbol table to search in.
  * @param key The key (identifier) of the symbol to search for.
- * @return FunctionInfo* Pointer to the symbol's FunctionInfo, or NULL if the symbol is not found or not a function.
+ * @return void* A pointer to the symbol's FunctionInfo if it's a function, 
+ *               or a pointer to the symbol's VariableInfo if it's a variable, 
+ *               or NULL if the symbol is not found.
  */
-FunctionInfo* find_symbol(SymbolTable* table, String* key);
+void* find_symbol(SymbolTable* table, String* key);
 
 /**
  * @brief Deletes a symbol from the symbol table.
