@@ -120,15 +120,19 @@ void mark_variable_as_used(SymbolTable* table, String* key) {
     }
 }
 
-FunctionInfo* find_symbol(SymbolTable* table, String* key) {
+void* find_symbol(SymbolTable* table, String* key) {
     int index = find_slot(table, key);
     if (index != -1 && table->table[index].is_occupied) {
         // pokud element je funkce
         if (table->table[index].type == TYPE_FUNCTION) {
             return &table->table[index].func_info;  // vratime ukazatel na informace o funkci
         }
+        // pokud element je promenna
+        else if (table->table[index].type == TYPE_VARIABLE) {
+            return &table->table[index].var_info;    // vracime ukazatel na informace o promenne
+        }
     }
-    return NULL;  // nenasli jsme symbol nebo neni to funkce
+    return NULL;  // nenasli jsme symbol 
 }
 
 void delete_symbol(SymbolTable* table, String* key) {
