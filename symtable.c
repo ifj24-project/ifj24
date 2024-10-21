@@ -51,97 +51,172 @@ int find_slot(SymbolTable* table, String* key) {
     return index;
 }
 
-void insert_symbol(SymbolTable* table, String* key, VarType type, void* value) {
-     if (table->count >= table->size * 0.75) {  // pokud tabulka je vyplena vic nez 75%, rozsirujeme
-        resize_table(table, table->size * 2);  // rozsireni tabulky 
+void insert_function(SymbolTable* table, String* key, VarType return_type, FunctionParam* params, int param_count) {
+    if (table->count >= table->size * 0.75) {  // pokud tabulka je vyplena vic nez 75%, rozsirujeme
+    resize_table(table, table->size * 2);  // rozsireni tabulky 
     }
-  
     int index = find_slot(table, key);
-        if (!table->table[index].is_occupied) {
-            table->table[index].key = copy_string(key);
-            table->table[index].type = type;
-            switch (type) {
-            case TYPE_INT:
-            case TYPE_FLOAT:
-            case TYPE_BOOL:
-                table->table[index].value = value;   // value se predava primo
-                break;
+    if (!table->table[index].is_occupied) {
+        table->table[index].key = copy_string(key);
+        table->table[index].type = TYPE_FUNCTION;
+        table->table[index].func_info.return_type = return_type;
+        
+        FunctionParam* current_param = NULL; // ukazatel na aktualni parametr
+        for (int i = 0; i < param_count; i++) {
+            FunctionParam* new_param = malloc(sizeof(FunctionParam)); // allokujeme pamet pro novy parametr
+            if (new_param == NULL) {
+                ThrowError(99); // chyba pri allokace pameti
+            }
 
-            case TYPE_STRING:
-                table->table[index].value = copy_string((String*)value); // kopirovani stringu
-                break;
+            new_param->name = copy_string(params[i].name); // kopirujeme jmeno parametru
+            new_param->type = params[i].type; // nastavime typ parametru
+            new_param->next = NULL; // inicializace ukazatelu na nasledujici parametr
 
-            default:
-                table->table[index].value = NULL; // pro undefined typ 
-                break;
+            // pridavame parametr do seznamu
+            if (current_param == NULL) {
+                table->table[index].func_info.params = new_param;
+                current_param = new_param;
+            } else {
+                // spojime s predchozim parametrem
+                current_param->next = new_param;
+                current_param = new_param;
+            }
         }
-            table->table[index].is_occupied = true;
-            table->count++;
-        }
+        
+        table->table[index].func_info.param_count = param_count;
+        table->table[index].is_occupied = true;
+        table->count++;
+    }
+}
+
+void insert_variable(SymbolTable* table, String* key, VarType data_type, bool is_const) {
+    if (table->count >= table->size * 0.75) {  // pokud tabulka je vyplena vic nez 75%, rozsirujeme
+    resize_table(table, table->size * 2);  // rozsireni tabulky 
+    }
+    int index = find_slot(table, key);
+    if (!table->table[index].is_occupied) {
+        table->table[index].key = copy_string(key);
+        table->table[index].type = TYPE_VARIABLE;
+        table->table[index].var_info.data_type = data_type;
+        table->table[index].var_info.is_const = is_const;
+        table->table[index].var_info.is_used = false;
+        table->table[index].is_occupied = true;
+        table->count++;
+    }
+}
+
+VarType get_symbol_type(SymbolTable* table, String* key) {
+    int index = find_slot(table, key);
+    if (index != -1 && table->table[index].is_occupied) {
+        return table->table[index].type;
+    }
+    return TYPE_UNDEFINED;  // nenasli jsme symbol
+}
+
+void mark_variable_as_used(SymbolTable* table, String* key) {
+    int index = find_slot(table, key);
+    if (index != -1 && table->table[index].is_occupied && table->table[index].type == TYPE_VARIABLE) {
+        table->table[index].var_info.is_used = true;  // oznacime promennou jako pouzitou 
+    }
 }
 
 void* find_symbol(SymbolTable* table, String* key) {
     int index = find_slot(table, key);
     if (index != -1 && table->table[index].is_occupied) {
-        return table->table[index].value; // vratime hodnotu prvku
+        // pokud element je funkce
+        if (table->table[index].type == TYPE_FUNCTION) {
+            return &table->table[index].func_info;  // vratime ukazatel na informace o funkci
+        }
+        // pokud element je promenna
+        else if (table->table[index].type == TYPE_VARIABLE) {
+            return &table->table[index].var_info;    // vracime ukazatel na informace o promenne
+        }
     }
-    //  ThrowError(3);
-    return NULL; // nenasli jsme prvek 
+    return NULL;  // nenasli jsme symbol 
 }
 
 void delete_symbol(SymbolTable* table, String* key) {
     int index = find_slot(table, key);
     if (index != -1 && table->table[index].is_occupied) {
         free_string(table->table[index].key);
-        free_value(&(table->table[index]));   
-        table->table[index].key = NULL; // nastaveni ukazatelu na NULL po uvolneni
-        table->table[index].value = NULL; // nastaveni hodnoty na NULL 
+        if (table->table[index].type == TYPE_FUNCTION) {
+           FunctionParam* current_param = table->table[index].func_info.params;
+            while (current_param != NULL) {
+                FunctionParam* temp = current_param;       // docasny ukazatel na aktualni parametr 
+                current_param = current_param->next;       // prechod do dalsiho parametru
+                free_string(temp->name);                  // uvolnujeme jmeno parametru
+                free(temp);                // uvolnujeme parametr
+            }
+        }
         table->table[index].is_occupied = false;
         table->count--;
     }
 }
 
-// rozsireni tabulky
 void resize_table(SymbolTable* table, int new_size) {
-    SymbolTableEntry* old_table = table->table;  // ulozime starou verzi tabulky
+    // ukladame starou tabulku
+    SymbolTableEntry* old_table = table->table;  
     int old_size = table->size;
 
-    // vytvorime novou tabulku o vetsi velikosti
+    // vytvarime novou tabulku s vetsi velikosti
     table->table = calloc(new_size, sizeof(SymbolTableEntry));
-    table->size = new_size;
-    table->count = 0;
+    if (table->table == NULL) {
+        free(old_table); // uvolnujeme starou tabulku v pripade chyby
+        ThrowError(99);  // chyba allokace 
+    }
 
-    // dodavame prvky stare tabulky do nove
+    table->size = new_size; // aktualizujeme velikost tabulky
+    table->count = 0;       // resetujeme altualni pocet elementu
+
+    // prenosime elementy ze stare tabulky do nove
     for (int i = 0; i < old_size; i++) {
         if (old_table[i].is_occupied) {
+            // hledame slot
             int new_index = find_slot(table, old_table[i].key);
-
+            
             // kopirujeme klic
             table->table[new_index].key = copy_string(old_table[i].key);
+            table->table[new_index].type = old_table[i].type;
 
-            // kopirujeme hodnotu (zalezi na typu)
-            switch (old_table[i].type) {
-                case TYPE_STRING:
-                    table->table[new_index].value = copy_string((String*)old_table[i].value);
-                    break;
-                case TYPE_INT:
-                    table->table[new_index].value = malloc(sizeof(int));
-                    *(int*)(table->table[new_index].value) = *(int*)(old_table[i].value);
-                    break;
-                case TYPE_FLOAT:
-                    table->table[new_index].value = malloc(sizeof(float));
-                    *(float*)(table->table[new_index].value) = *(float*)(old_table[i].value);
-                    break;
-                case TYPE_BOOL:
-                    table->table[new_index].value = malloc(sizeof(bool));
-                    *(bool*)(table->table[new_index].value) = *(bool*)(old_table[i].value);
-                    break;
-                default:
-                    table->table[new_index].value = NULL;
-                    break;
+            // pokud je to funkce, kopirujeme parametry a navratovy typ
+            if (old_table[i].type == TYPE_FUNCTION) {
+                table->table[new_index].func_info.return_type = old_table[i].func_info.return_type;
+                table->table[new_index].func_info.param_count = old_table[i].func_info.param_count;
+                // kopirujeme parametry jako vazany seznam
+                FunctionParam* old_params = old_table[i].func_info.params;
+                FunctionParam* new_params_head = NULL;
+                FunctionParam* new_params_tail = NULL;
+
+                while (old_params != NULL) {
+                    FunctionParam* new_param = malloc(sizeof(FunctionParam)); // pridelime pamet pro novy parametr
+                    if (new_param == NULL) {
+                        ThrowError(99); // chyba allokace
+                    }
+                    new_param->name = copy_string(old_params->name); // kopirovani jmena parametru
+                    new_param->type = old_params->type; // kopirovani typu parametru
+                    new_param->next = NULL; // inicializace ukazatelu na dalsi element
+
+                    // dodavame novy parametr do seznamu
+                    if (new_params_head == NULL) {
+                        new_params_head = new_param; // 1. parametr
+                        new_params_tail = new_param;
+                    } else {
+                        new_params_tail->next = new_param; 
+                        new_params_tail = new_param; 
+                    }
+                    old_params = old_params->next; // prechod do dalsiho parametru
+                }
+                // novy seznam parametru
+                table->table[new_index].func_info.params = new_params_head;
+                
+            } else if (old_table[i].type == TYPE_VARIABLE) {
+                // pokud je to promenna, kopirujeme jeji informace
+                table->table[new_index].var_info.data_type = old_table[i].var_info.data_type;
+                table->table[new_index].var_info.is_const = old_table[i].var_info.is_const;
+                table->table[new_index].var_info.is_used = old_table[i].var_info.is_used;
             }
 
-            table->table[new_index].type = old_table[i].type;
+            // oznacime novy element jako obsazeny
             table->table[new_index].is_occupied = true;
             table->count++;
         }
@@ -151,24 +226,21 @@ void resize_table(SymbolTable* table, int new_size) {
     free(old_table);
 }
 
-void free_value(SymbolTableEntry* entry) {
-    switch (entry->type) {
-        case TYPE_STRING:
-            free_string((String*)(entry->value));  // uvolnujeme string
-            break;
-        // jine typy - int, bool, float nepotrebuji uvolneni
-        default:
-            break;
-    }
-}
-
 void free_symbol_table(SymbolTable* table) {
     for (int i = 0; i < table->size; i++) {
         if (table->table[i].is_occupied) {
-            free_string(table->table[i].key);      // uvolnujeme string
-            free_value(&(table->table[i]));   // uvolnujeme value, pokud je dynamicky allokovano 
+            free_string(table->table[i].key);  // uvolnujeme klic
+            if (table->table[i].type == TYPE_FUNCTION) {
+                FunctionParam* current_param = table->table[i].func_info.params;
+                while (current_param != NULL) {
+                    FunctionParam* temp = current_param; // docasny ukazatel
+                    current_param = current_param->next;  // prechod do dalsiho parametru
+                    free_string(temp->name); // uvolnujeme jmeno parametru
+                    free(temp); // uvolnujeme parametr
+                }
+            }
         }
     }
-    free(table->table);         // uvolnujeme pole prvku
-    free(table);                // uvolnujeme tabulku
+    free(table->table);  // uvolnujeme tabulku
+    free(table);
 }

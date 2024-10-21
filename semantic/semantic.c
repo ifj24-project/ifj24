@@ -5,7 +5,12 @@
 #include <stdbool.h>
 #include "../error/error.h"
 
-void semantic_scan(Node* node){
+void semantic_scan(Node* node, SymbolTable* global_table){
+    if (node == NULL)
+    {
+        return;
+    }
+    
     switch (node->type)
     {
     case Start_N:

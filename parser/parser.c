@@ -39,6 +39,34 @@ void buffer_dtor(TokenBuffer * token){
     return;
 }
 
+void free_parse_tree(Node* tree){
+    if (tree == NULL)
+    {
+        return;
+    }
+
+    switch (tree->type)
+    {
+    case Id_N:
+        free_string(tree->data.id);
+        break;
+    case Str_N:
+        free_string(tree->data.str);
+    
+    default:
+        break;
+    }
+
+    free_parse_tree(tree->first);
+    free_parse_tree(tree->second);
+    free_parse_tree(tree->third);
+    free_parse_tree(tree->fourth);
+
+    free(tree);
+    
+    return;
+}
+
 const char * get_token_name(enum token_type token_id){
     switch (token_id)
     {
@@ -188,18 +216,66 @@ const char * get_token_name(enum token_type token_id){
     }
 }
 
-SymbolValue* create_sym_val(bool is_const, bool is_func, bool is_defined, bool is_used, int type){
-    SymbolValue* value = malloc(sizeof(SymbolValue));
-    if (value == NULL) {
-        ThrowError(99);
+void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
+    if (param_node == NULL)
+    {
+        return;
+    }
+    
+    FunctionParam param;
+    param.name = param_node->first->data.id;
+    switch (param_node->second->data.data_type)
+    {
+    case 1: //i32
+        param.type = TYPE_INT;
+        break;
+    case 2: //f64
+        param.type = TYPE_FLOAT;
+        break;
+    case 3: //u8
+        param.type = TYPE_STRING;
+        break;
+    case 4: //void
+        param.type = TYPE_VOID;
+        break;
+    case 5: //bool
+        param.type = TYPE_BOOL;
+        break;
+    case -1: //odvozeny?
+        param.type = TYPE_UNDEFINED;
+        break;
+    default:
+        printf("sym_push_params something went wrong\n");
+
+        break;
     }
 
-    value->is_const = is_const;
-    value->is_func = is_func;
-    value->is_defined = is_defined;
-    value->is_used = is_used;
-    value->type = type;
+    // params_push(table, func_key, param);  
+
+    sym_push_params(table, func_key, param_node->third); // rekurzivne volam
+
+    return;
 }
+
+// FunctionParam* sym_get_params(Node* param){
+//     if (param == NULL)
+//     {
+//         return NULL;
+//     }
+    
+// }
+// FunctionParam* sym_new_param(String* name, VarType type, FunctionParam* next){
+//     FunctionParam* new_p = malloc(sizeof(FunctionParam));
+//     if (new_p == NULL)
+//     {
+//         ThrowError(99);
+//     }
+//     new_p->name = name;
+//     new_p->type = type;
+//     new_p->next = next;
+
+//     return new_p;
+// }
 
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
@@ -456,6 +532,7 @@ Node * Parse_func_define(TokenBuffer* token){
     buffer_check_first(token, T_R_Curly_B);
 
     // insert_symbol(token->sym_table, a->data.id, c->data.data_type, create_sym_val(NULL, true, true, false, c->data.data_type));
+    
 
     return FourChildNode_new(FuncDefine_N, a, b, c, d);
 }
@@ -624,16 +701,26 @@ Node * Parse_variable_assign(TokenBuffer* token){
 }
 
 Node * Parse_func_call(TokenBuffer* token){
+    bool is_ifj = false;
     if (token->second->type == T_Dot)
     {
-        buffer_check_first(token, T_ID); // TODO: check if ifj.func
+        buffer_check_first(token, T_ID); //check if ifj.func
         buffer_check_first(token, T_Dot);
+        is_ifj = true;
     }
     
     Node * a = Parse_id(token); 
     buffer_check_first(token, T_L_Round_B);
     Node * b = Parse_params(token);
     buffer_check_first(token, T_R_Round_B);
+
+    if (is_ifj)
+    {
+        String* ifj = create_string("ifj.");
+        a->data.id = concat_strings(ifj, a->data.id);
+        free_string(ifj);
+    }
+    
 
     return TwoChildNode_new(FuncCall_N, a, b);
 }
@@ -770,11 +857,13 @@ Node * Parse_while(TokenBuffer* token){
 }
 
 Node * Parse_void_call(TokenBuffer* token){
+    bool is_ifj = false;
 
     if (token->second->type == T_Dot)
-    {
-        buffer_check_first(token, T_ID);
+    {   
+        buffer_check_first(token, T_ID); // check if ifj
         buffer_check_first(token, T_Dot);
+        is_ifj = true;
     }
     
     Node * a = Parse_id(token);
@@ -783,6 +872,14 @@ Node * Parse_void_call(TokenBuffer* token){
     Node * b = Parse_params(token);
     buffer_check_first(token, T_R_Round_B);
     buffer_check_first(token, T_SemiC);
+
+    if (is_ifj)
+    {
+        String* ifj = create_string("ifj.");
+        a->data.id = concat_strings(ifj, a->data.id);
+        free_string(ifj);
+    }
+    
     
     return TwoChildNode_new(VoidCall_N, a, b);
 }

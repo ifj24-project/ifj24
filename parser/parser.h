@@ -73,7 +73,7 @@ typedef union DataValue
     StrValue str; // value pro string node
     FloatValue flt; // value pro float node
     IntValue integer; // value pro int node
-    DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void 
+    DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void , 5==bool
     VariableDefineValue var_or_const; // 0==var, 1==const
     Not_null_statement has_not_null_id; // true== ma o dite navic, node.second dite je |id| v te pipe
 
@@ -131,6 +131,8 @@ void consume_buffer(TokenBuffer* token, size_t n);
  */
 Node * Parse_start(TokenBuffer* token);
 
+void free_parse_tree(Node* tree);
+
 /**
  * Dale jen "pomocne" private fce
  */
@@ -138,6 +140,11 @@ Node * IdNode_new(char *symtable_key);
 Node * StringNode_new(char *string);
 Node * FloatNode_new(double num);
 Node * IntNode_new(int num);
+
+
+void sym_push_params(SymbolTable* table, String* func_key, Node* param_node);
+// FunctionParam* sym_get_params(Node* param);
+// FunctionParam* sym_new_param(String* name, VarType type, FunctionParam* next);
 
 
 

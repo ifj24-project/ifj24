@@ -6,29 +6,49 @@
 #include <stdbool.h>
 
 typedef enum {
-    TYPE_UNDEFINED, // nedefinovana promenna
     TYPE_INT,      // i32
     TYPE_FLOAT,    // f64
     TYPE_STRING,   // []u8
-    TYPE_VOID,     // void
-    TYPE_BOOL     // bool
+    TYPE_BOOL,     // bool
+    TYPE_UNDEFINED, // nedefinovana promenna
+    TYPE_FUNCTION,  // funkce
+    TYPE_VARIABLE,  // promenna
+    TYPE_VOID
 } VarType;
 
-typedef struct SymVal {
-    bool is_const;
-    bool is_func;
-    bool is_defined;
-    bool is_used;
-    int type;
-} SymbolValue;
+// Struktura parametru funkce
+typedef struct FunctionParam {
+    String* name;   // jmeno parametru
+    VarType type;   // typ
+    struct FunctionParam *next;  // ukazatel na nasledujici parametr
+} FunctionParam;
 
+// Struktura funkce
 typedef struct {
-    String* key;        // identifikator
-    VarType type;       // datovy typ
-    void* value;        // hodnota promenne nebo funkci
-    bool is_occupied;   // overi, zda uz obsazeno 
+    VarType return_type;       // navratovy typ
+    FunctionParam* params;     // parametry funkce
+    int param_count;           // pocet parametru
+} FunctionInfo;
+
+// Struktura promenne
+typedef struct {
+    VarType data_type;   // datovy typ promenne
+    bool is_const;       // je-li promenna konstantni 
+    bool is_used;        // je-li promenna pouzita
+} VariableInfo;
+
+// Struktura pro zapis do tabulky symbolu
+typedef struct {
+    String* key;         // identifikator (klic)
+    VarType type;        // typ (promenna nebo funkce)
+    union {              // informace o funkci nebo promenne
+        FunctionInfo func_info;
+        VariableInfo var_info;
+    };
+    bool is_occupied;    // overi, zda uz obsazeno 
 } SymbolTableEntry;
 
+// Struktura tabulky
 typedef struct {
     SymbolTableEntry* table; // pole pro ukladani prvku tabulky
     int size;                // velikost tabulky
@@ -82,43 +102,82 @@ unsigned int second_hash(String* key, int table_size);
 int find_slot(SymbolTable* table, String* key);
 
 /**
- * @brief Inserts a symbol into the symbol table.
+ * @brief Inserts a function into the symbol table.
  * 
- * Inserts a new symbol with its key, data type, and value into the symbol table.
+ * Inserts a new function with its identifier, return type, and parameters into the symbol table.
  * If the table is full, it resizes the table to accommodate more entries.
  * 
- * @param table The symbol table where the symbol will be inserted.
- * @param key The key (identifier) of the symbol.
- * @param type The data type of the symbol.
- * @param value Pointer to the value associated with the symbol.
+ * @param table The symbol table where the function will be inserted.
+ * @param key The identifier (key) of the function.
+ * @param return_type The return type of the function.
+ * @param params The parameters of the function.
+ * @param param_count The number of parameters.
  */
-void insert_symbol(SymbolTable* table, String* key, VarType type, void* value);
+void insert_function(SymbolTable* table, String* key, VarType return_type, FunctionParam* params, int param_count);
+
+/**
+ * @brief Inserts a variable into the symbol table.
+ * 
+ * Inserts a new variable with its identifier, data type, and constness information into the symbol table.
+ * If the table is full, it resizes the table to accommodate more entries.
+ * 
+ * @param table The symbol table where the variable will be inserted.
+ * @param key The identifier (key) of the variable.
+ * @param data_type The data type of the variable.
+ * @param is_const Indicates whether the variable is a constant.
+ */
+void insert_variable(SymbolTable* table, String* key, VarType data_type, bool is_const);
+
+/**
+ * @brief Gets the type of a symbol from the symbol table.
+ * 
+ * Searches for a symbol by its key in the symbol table. If found, returns its type.
+ * 
+ * @param table The symbol table to search in.
+ * @param key The identifier (key) of the symbol to search for.
+ * @return VarType The type of the symbol, or TYPE_UNDEFINED if the symbol is not found.
+ */
+VarType get_symbol_type(SymbolTable* table, String* key);
+
+/**
+ * @brief Marks a variable as used.
+ * 
+ * Sets a flag indicating that the variable has been used in the code.
+ * 
+ * @param table The symbol table in which to mark the variable.
+ * @param key The identifier (key) of the variable to mark.
+ */
+void mark_variable_as_used(SymbolTable* table, String* key);
 
 /**
  * @brief Finds a symbol in the symbol table.
  * 
- * Searches for a symbol by its key in the symbol table. If found, it returns a pointer to its value.
+ * Searches for a symbol by its key in the symbol table. If found, returns a pointer to its associated information.
+ * If the symbol is a function, it returns a pointer to its FunctionInfo.
+ * If the symbol is a variable, it returns a pointer to its VariableInfo.
  * 
  * @param table The symbol table to search in.
  * @param key The key (identifier) of the symbol to search for.
- * @return void* Pointer to the symbol's value, or NULL if the symbol is not found.
+ * @return void* A pointer to the symbol's FunctionInfo if it's a function, 
+ *               or a pointer to the symbol's VariableInfo if it's a variable, 
+ *               or NULL if the symbol is not found.
  */
 void* find_symbol(SymbolTable* table, String* key);
 
 /**
  * @brief Deletes a symbol from the symbol table.
  * 
- * Removes a symbol from the symbol table by its key. Frees memory associated with the key and the value.
+ * Removes a symbol from the symbol table by its key. Frees memory associated with the key and parameters.
  * 
  * @param table The symbol table from which the symbol will be removed.
- * @param key The key (identifier) of the symbol to remove.
+ * @param key The identifier (key) of the symbol to remove.
  */
 void delete_symbol(SymbolTable* table, String* key);
 
 /**
- * @brief Resizes the symbol table to a new size.
+ * @brief Resizes the symbol table.
  * 
- * This function is used to expand the symbol table when it becomes too full. It reallocates the table with a larger size and reinserts all existing entries.
+ * This function is used to expand the symbol table when it becomes too full.
  * 
  * @param table The symbol table to resize.
  * @param new_size The new size for the table.
@@ -126,18 +185,9 @@ void delete_symbol(SymbolTable* table, String* key);
 void resize_table(SymbolTable* table, int new_size);
 
 /**
- * @brief Frees the memory associated with a symbol table entry's value.
+ * @brief Frees the memory associated with the symbol table.
  * 
- * This function frees the memory of the value stored in a symbol table entry. It is used internally when deleting or resizing the table.
- * 
- * @param entry The entry whose value needs to be freed.
- */
-void free_value(SymbolTableEntry* entry);
-
-/**
- * @brief Frees the memory associated with a symbol table.
- * 
- * Frees all entries in the symbol table, including keys and values, and then frees the table itself.
+ * Frees all entries in the symbol table, including keys and parameters, and then frees the table itself.
  * 
  * @param table The symbol table to free.
  */
