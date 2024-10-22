@@ -3,6 +3,6 @@
 
 #include "../parser/parser.h"
 
-void semantic_scan(Node* parse_tree, SymbolTable* global_sym_table);
+void semantic_scan(Node* parse_tree, SymbolTable* global_sym_table, SymbolTable* local_sym_table);
 
 #endif

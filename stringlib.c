@@ -38,6 +38,7 @@ String* create_string(const char *initial_data) {
 
 void free_string(String* str) {
     if (str != NULL) {
+        printf("string %s\n", str->data);
         free(str->data);  
         free(str);       
     }

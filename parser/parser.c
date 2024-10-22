@@ -52,7 +52,7 @@ void free_parse_tree(Node* tree){
         break;
     case Str_N:
         free_string(tree->data.str);
-    
+        break;
     default:
         break;
     }
@@ -216,6 +216,44 @@ const char * get_token_name(enum token_type token_id){
     }
 }
 
+
+int sym_get_type(int type){
+        switch (type)
+    {
+    case DT_I32: //i32
+        return TYPE_INT;
+        break;
+    case DT_F64: //f64
+        return TYPE_FLOAT;
+        break;
+    case DT_U8: //u8
+        return TYPE_STRING;
+        break;
+    case DT_VOID: //void
+        return TYPE_VOID;
+        break;
+    case DT_BOOL: //bool
+        return TYPE_BOOL;
+        break;
+    case DT_UNDEFINED: //odvozeny?
+        return TYPE_UNDEFINED;
+        break;
+    case DT_I32_NULL:
+        return TYPE_INT_NULL;
+        break;
+    case DT_F64_NULL:
+        return TYPE_FLOAT_NULL;
+        break;
+    case DT_U8_NULL:
+        return TYPE_STRING_NULL;
+        break;
+    default:
+        printf("sym_get_type: something went wrong\n");
+
+        break;
+    }
+}
+
 void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
     if (param_node == NULL)
     {
@@ -226,23 +264,32 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
     param.name = param_node->first->data.id;
     switch (param_node->second->data.data_type)
     {
-    case 1: //i32
+    case DT_I32: //i32
         param.type = TYPE_INT;
         break;
-    case 2: //f64
+    case DT_F64: //f64
         param.type = TYPE_FLOAT;
         break;
-    case 3: //u8
+    case DT_U8: //u8
         param.type = TYPE_STRING;
         break;
-    case 4: //void
+    case DT_VOID: //void
         param.type = TYPE_VOID;
         break;
-    case 5: //bool
+    case DT_BOOL: //bool
         param.type = TYPE_BOOL;
         break;
-    case -1: //odvozeny?
+    case DT_UNDEFINED: //odvozeny?
         param.type = TYPE_UNDEFINED;
+        break;
+    case DT_I32_NULL:
+        param.type = TYPE_INT_NULL;
+        break;
+    case DT_F64_NULL:
+        param.type = TYPE_FLOAT_NULL;
+        break;
+    case DT_U8_NULL:
+        param.type = TYPE_STRING_NULL;
         break;
     default:
         printf("sym_push_params something went wrong\n");
@@ -250,32 +297,13 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
         break;
     }
 
-    // params_push(table, func_key, param);  
+    push_parameter(table, func_key, param);  
 
     sym_push_params(table, func_key, param_node->third); // rekurzivne volam
 
     return;
 }
 
-// FunctionParam* sym_get_params(Node* param){
-//     if (param == NULL)
-//     {
-//         return NULL;
-//     }
-    
-// }
-// FunctionParam* sym_new_param(String* name, VarType type, FunctionParam* next){
-//     FunctionParam* new_p = malloc(sizeof(FunctionParam));
-//     if (new_p == NULL)
-//     {
-//         ThrowError(99);
-//     }
-//     new_p->name = name;
-//     new_p->type = type;
-//     new_p->next = next;
-
-//     return new_p;
-// }
 
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
@@ -312,17 +340,19 @@ Node * IdNode_new(char* id_string){
     }
     x->type = Id_N;
     x->data.id = create_string(id_string); 
+    free(id_string);
     return x;
 } 
 
 Node * StringNode_new(char *string){
-        Node* x = malloc(sizeof(Node));
+    Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
         ThrowError(99);
     }
-    x->type = Id_N;
+    x->type = Str_N;
     x->data.str = create_string(string);
+    free(string);
     return x;
 }
 Node * FloatNode_new(double num){
@@ -331,7 +361,7 @@ Node * FloatNode_new(double num){
     {
         ThrowError(99);
     }
-    x->type = Id_N;
+    x->type = Float_N;
     x->data.flt = num;
     return x;
 }
@@ -341,7 +371,7 @@ Node * IntNode_new(int num){
     {
         ThrowError(99);
     }
-    x->type = Id_N;
+    x->type = Int_N;
     x->data.integer = num;
     return x;
 }
@@ -453,7 +483,7 @@ Node * Parse_string(TokenBuffer* token){
 
 Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_const);
-    buffer_check_first(token, T_ID);
+    buffer_check_first(token, T_ID); //check if ifj
     buffer_check_first(token, T_Assign);
     buffer_check_first(token, T_At);
     buffer_check_first(token, T_import);
@@ -463,8 +493,124 @@ Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_SemiC);
 
     /**
-     * TODO: prefill sym table with ifj.functions
+     * sym table with ifj.functions
      */
+    String* temp = create_string("ifj.readstr");
+    insert_function(token->sym_table, temp, TYPE_STRING_NULL);
+    free_string(temp);
+
+    temp = create_string("ifj.readi32");
+    insert_function(token->sym_table, temp, TYPE_INT_NULL);
+    free_string(temp);
+
+    temp = create_string("ifj.readf64");
+    insert_function(token->sym_table, temp, TYPE_FLOAT_NULL);
+    free_string(temp);
+
+    temp = create_string("ifj.write");
+    insert_function(token->sym_table, temp, TYPE_VOID);
+    FunctionParam param;
+    param.name = create_string("term");
+    param.type = TYPE_UNDEFINED;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.i2f");
+    insert_function(token->sym_table, temp, TYPE_FLOAT);
+    param.name = create_string("term");
+    param.type = TYPE_INT;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.f2i");
+    insert_function(token->sym_table, temp, TYPE_INT);
+    param.name = create_string("term");
+    param.type = TYPE_FLOAT;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.string");
+    insert_function(token->sym_table, temp, TYPE_STRING);
+    param.name = create_string("term");
+    param.type = TYPE_UNDEFINED;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.length");
+    insert_function(token->sym_table, temp, TYPE_INT);
+    param.name = create_string("s");
+    param.type = TYPE_STRING;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.concat");
+    insert_function(token->sym_table, temp, TYPE_STRING);
+    param.name = create_string("s1");
+    param.type = TYPE_STRING;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    param.name = create_string("s2");
+    param.type = TYPE_STRING;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.substring");
+    insert_function(token->sym_table, temp, TYPE_STRING_NULL);
+    param.name = create_string("s");
+    param.type = TYPE_STRING;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    param.name = create_string("i");
+    param.type = TYPE_INT;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    param.name = create_string("j");
+    param.type = TYPE_INT;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.strcmp");
+    insert_function(token->sym_table, temp, TYPE_INT);
+    param.name = create_string("s1");
+    param.type = TYPE_STRING;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    param.name = create_string("s2");
+    param.type = TYPE_STRING;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    temp = create_string("ifj.ord");
+    insert_function(token->sym_table, temp, TYPE_INT);
+    param.name = create_string("s");
+    param.type = TYPE_STRING;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    param.name = create_string("i");
+    param.type = TYPE_INT;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
+
+    // temp = create_string("ifj.chr");
+    // /**
+    //  * @bug find_slot hodi error pri zavolani insert_function
+    //  */
+    // insert_function(token->sym_table, temp, TYPE_STRING); 
+    // param.name = create_string("s1");
+    // param.type = TYPE_INT;
+    // param.next = NULL;
+    // push_parameter(token->sym_table, temp, param);
+    // free_string(temp);
+    
 
     return NoChildNode_new(ProgramProlog_N);
 }
@@ -481,25 +627,31 @@ Node * Parse_program(TokenBuffer* token){
 }
 
 Node * Parse_datatype(TokenBuffer* token){
-    int x;
+    int x = 0;
+    if (token->first->type == T_Question) //null data types
+    {
+        consume_buffer(token, 1);
+        x = x + 5;
+    }
+    
 
     switch (token->first->type)
     {
     case T_i32:
         consume_buffer(token,1);
-        x = 1;
+        x = x + 1;
         break;
     
     case T_f64:
         consume_buffer(token, 1);
-        x = 2;
+        x = x + 2;
         break;
         
     case T_L_Square_B:
         buffer_check_first(token, T_L_Square_B);
         buffer_check_first(token,T_R_Square_B);
         buffer_check_first(token, T_u8);
-        x = 3;
+        x = x + 3;
         break;
     
     case T_void:
@@ -531,7 +683,8 @@ Node * Parse_func_define(TokenBuffer* token){
     Node * d = Parse_func_body(token);
     buffer_check_first(token, T_R_Curly_B);
 
-    // insert_symbol(token->sym_table, a->data.id, c->data.data_type, create_sym_val(NULL, true, true, false, c->data.data_type));
+    insert_function(token->sym_table, a->data.id, sym_get_type(c->data.data_type));
+    sym_push_params(token->sym_table, a->data.id, b);
     
 
     return FourChildNode_new(FuncDefine_N, a, b, c, d);
@@ -717,7 +870,9 @@ Node * Parse_func_call(TokenBuffer* token){
     if (is_ifj)
     {
         String* ifj = create_string("ifj.");
-        a->data.id = concat_strings(ifj, a->data.id);
+        String* tmp = a->data.id;
+        a->data.id = concat_strings(ifj, tmp);
+        free_string(tmp);
         free_string(ifj);
     }
     
@@ -876,7 +1031,9 @@ Node * Parse_void_call(TokenBuffer* token){
     if (is_ifj)
     {
         String* ifj = create_string("ifj.");
-        a->data.id = concat_strings(ifj, a->data.id);
+        String* tmp = a->data.id;
+        a->data.id = concat_strings(ifj, tmp);
+        free_string(tmp);
         free_string(ifj);
     }
     

@@ -52,9 +52,25 @@ typedef enum NodeType {
     Plus_N = 33,
     Minus_N = 34,
     Times_N = 35,
-    Divide_N = 36
+    Divide_N = 36,
+
+    Int_N = 37
 
 } NodeType;
+
+typedef enum DataTypeEnum{
+    DT_UNDEFINED = -1,
+    DT_I32 = 1,
+    DT_F64 = 2,
+    DT_U8 = 3,
+    DT_VOID = 4,
+    DT_BOOL = 5,
+    DT_I32_NULL = 6,
+    DT_F64_NULL = 7,
+    DT_U8_NULL = 8,
+    DT_BOOL_NULL = 9
+
+} DataTypeEnum;
 
 typedef String* IdValue; 
 typedef String* StrValue;
@@ -143,8 +159,7 @@ Node * IntNode_new(int num);
 
 
 void sym_push_params(SymbolTable* table, String* func_key, Node* param_node);
-// FunctionParam* sym_get_params(Node* param);
-// FunctionParam* sym_new_param(String* name, VarType type, FunctionParam* next);
+int sym_get_type(int type);
 
 
 

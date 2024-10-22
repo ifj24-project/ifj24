@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include "../error/error.h"
 
-void semantic_scan(Node* node, SymbolTable* global_table){
+void semantic_scan(Node* node, SymbolTable* global_table, SymbolTable* local_table){
     if (node == NULL)
     {
         return;
