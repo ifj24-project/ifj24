@@ -51,41 +51,57 @@ int find_slot(SymbolTable* table, String* key) {
     return index;
 }
 
-void insert_function(SymbolTable* table, String* key, VarType return_type, FunctionParam* params, int param_count) {
-    if (table->count >= table->size * 0.75) {  // pokud tabulka je vyplena vic nez 75%, rozsirujeme
-    resize_table(table, table->size * 2);  // rozsireni tabulky 
+void insert_function(SymbolTable* table, String* key, VarType return_type) {
+    if (table->count >= table->size * 0.75) {   // pokud tabulka je vyplena vic nez 75%, rozsirujeme
+        resize_table(table, table->size * 2);  // rozsireni tabulky
     }
+    
     int index = find_slot(table, key);
     if (!table->table[index].is_occupied) {
         table->table[index].key = copy_string(key);
         table->table[index].type = TYPE_FUNCTION;
         table->table[index].func_info.return_type = return_type;
-        
-        FunctionParam* current_param = NULL; // ukazatel na aktualni parametr
-        for (int i = 0; i < param_count; i++) {
-            FunctionParam* new_param = malloc(sizeof(FunctionParam)); // allokujeme pamet pro novy parametr
-            if (new_param == NULL) {
-                ThrowError(99); // chyba pri allokace pameti
-            }
-
-            new_param->name = copy_string(params[i].name); // kopirujeme jmeno parametru
-            new_param->type = params[i].type; // nastavime typ parametru
-            new_param->next = NULL; // inicializace ukazatelu na nasledujici parametr
-
-            // pridavame parametr do seznamu
-            if (current_param == NULL) {
-                table->table[index].func_info.params = new_param;
-                current_param = new_param;
-            } else {
-                // spojime s predchozim parametrem
-                current_param->next = new_param;
-                current_param = new_param;
-            }
-        }
-        
-        table->table[index].func_info.param_count = param_count;
+        table->table[index].func_info.params = NULL;  // zpocatku nejsou zadne parametry
+        table->table[index].func_info.param_count = 0;  // nastaveni poctu parametru na 0
         table->table[index].is_occupied = true;
         table->count++;
+    } else {
+        // pokud funkce jiz existuje
+        ThrowError(99);  
+    }
+}
+
+void push_parameter(SymbolTable* table, String* key, FunctionParam new_param) {
+    int index = find_slot(table, key);
+    
+    if (index != -1 && table->table[index].is_occupied && table->table[index].type == TYPE_FUNCTION) {
+        // pridavame parametr funkci
+        FunctionParam* current_param = table->table[index].func_info.params;
+        FunctionParam* new_param_ptr = malloc(sizeof(FunctionParam));
+        if (new_param_ptr == NULL) {
+            ThrowError(99);  // chyba allokace
+        }
+
+        new_param_ptr->name = copy_string(new_param.name);  // kopirujeme jmeno parametru
+        new_param_ptr->type = new_param.type;  // nastavime typ parametru
+        new_param_ptr->next = NULL;  //  inicializace ukazatelu na dalsi parametr
+
+        if (current_param == NULL) {
+            // pokud je to prvni parametr
+            table->table[index].func_info.params = new_param_ptr;
+        } else {
+            // hledame posledni parametr
+            while (current_param->next != NULL) {
+                current_param = current_param->next;
+            }
+            current_param->next = new_param_ptr;  // pridavame novy parametr na konec seznamu
+        }
+
+        // zvetsime pocet parametru
+        table->table[index].func_info.param_count++;
+    } else {
+        // pokud jsme nenasli funkce
+        ThrowError(99);  
     }
 }
 
