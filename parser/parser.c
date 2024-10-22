@@ -600,16 +600,16 @@ Node * Parse_prolog(TokenBuffer* token){
     push_parameter(token->sym_table, temp, param);
     free_string(temp);
 
-    // temp = create_string("ifj.chr");
-    // /**
-    //  * @bug find_slot hodi error pri zavolani insert_function
-    //  */
-    // insert_function(token->sym_table, temp, TYPE_STRING); 
-    // param.name = create_string("s1");
-    // param.type = TYPE_INT;
-    // param.next = NULL;
-    // push_parameter(token->sym_table, temp, param);
-    // free_string(temp);
+    temp = create_string("ifj.chr");
+    /**
+     * @bug find_slot hodi error pri zavolani insert_function
+     */
+    insert_function(token->sym_table, temp, TYPE_STRING); 
+    param.name = create_string("s1");
+    param.type = TYPE_INT;
+    param.next = NULL;
+    push_parameter(token->sym_table, temp, param);
+    free_string(temp);
     
 
     return NoChildNode_new(ProgramProlog_N);
