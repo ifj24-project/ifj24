@@ -102,18 +102,26 @@ unsigned int second_hash(String* key, int table_size);
 int find_slot(SymbolTable* table, String* key);
 
 /**
- * @brief Inserts a function into the symbol table.
+ * @brief Inserts a function into the symbol table without parameters.
  * 
- * Inserts a new function with its identifier, return type, and parameters into the symbol table.
- * If the table is full, it resizes the table to accommodate more entries.
+ * This function inserts a function with a given key and return type into the symbol table.
  * 
  * @param table The symbol table where the function will be inserted.
- * @param key The identifier (key) of the function.
+ * @param key The key (identifier) of the function.
  * @param return_type The return type of the function.
- * @param params The parameters of the function.
- * @param param_count The number of parameters.
  */
-void insert_function(SymbolTable* table, String* key, VarType return_type, FunctionParam* params, int param_count);
+void insert_function(SymbolTable* table, String* key, VarType return_type);
+
+/**
+ * @brief Adds a parameter to an existing function in the symbol table.
+ * 
+ * This function adds a new parameter to an already existing function in the symbol table.
+ * 
+ * @param table The symbol table where the function is stored.
+ * @param key The key (identifier) of the function to which the parameter will be added.
+ * @param new_param The new parameter to be added to the function.
+ */
+void push_parameter(SymbolTable* table, String* key, FunctionParam new_param);
 
 /**
  * @brief Inserts a variable into the symbol table.
