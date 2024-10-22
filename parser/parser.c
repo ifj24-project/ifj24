@@ -9,7 +9,6 @@
 
 /**
  * TODO: 
- * provazat se sym-tablem
  * variable used - kdy to urcit?
  * 
  * parse variable define: fucn_call 
@@ -602,7 +601,7 @@ Node * Parse_prolog(TokenBuffer* token){
 
     temp = create_string("ifj.chr");
     /**
-     * @bug find_slot hodi error pri zavolani insert_function
+     * @bug find_slot hodi error pri zavolani insert_function pokud je pocatecni velikost tabulky 20
      */
     insert_function(token->sym_table, temp, TYPE_STRING); 
     param.name = create_string("s1");
@@ -792,9 +791,6 @@ Node * Parse_variable_define(TokenBuffer* token){
     /** odvozeny typ z fce */
     if (token->first->type == T_Assign)
     {  
-        /**
-         * TODO: vyhledat fci v sym-table a odvodit typ
-         */
         b = NoChildNode_new(DataType_N);
         b->data.data_type = -1; //zjistit datatype z sym-table
     }
