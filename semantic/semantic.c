@@ -227,7 +227,10 @@ int semantic_check_expr(Node* node, SymbolTable* global_table, String* global_fu
 
     int x = semantic_check_expr(node->first, global_table, global_func_key, local_table);
     int y = semantic_check_expr(node->second, global_table, global_func_key, local_table);
-    if (x != y)
+    /**
+     * TODO convert type
+     */
+    if (x != y) // if not same type
     {
         ThrowError(7);
     }

@@ -307,7 +307,7 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
-        // printf("token: %s\n",get_token_name(token->first->type));
+        printf("token: %s\n",get_token_name(token->first->type));
         free(token->first);
         token->first = token->second;
         token->second = token->third;
