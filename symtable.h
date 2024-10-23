@@ -93,14 +93,17 @@ unsigned int hash(String* key, int table_size);
 unsigned int second_hash(String* key, int table_size);
 
 /**
- * @brief Finds the appropriate slot for a symbol in the table.
+ * @brief Finds the appropriate slot for a symbol in the table using double hashing.
  * 
- * This function uses double hashing to find an empty slot or a slot with the given key in the symbol table.
+ * This function locates an empty slot or the slot with the given key using double hashing 
+ * to resolve collisions. If the table is full, it throws an error.
  * 
  * @param table The symbol table to search in.
  * @param key The key for which a slot is being found.
- * @return int The index of the found slot, or an error if the table is full.
- * @throws 99 If the table is full and no slot is found.
+ * 
+ * @return int The index of the found slot (empty or containing the symbol with the matching key).
+ * 
+ * @throws 99 If the symbol table is full and no free slot is found.
  */
 int find_slot(SymbolTable* table, String* key);
 

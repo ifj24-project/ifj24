@@ -40,11 +40,14 @@ int find_slot(SymbolTable* table, String* key) {
     int index = hash(key, table->size); // 1. hash funkce
     int step = second_hash(key, table->size); // 2. hash funkce
     int original_index = index;
-
+    int checked_slots = 0;  // pocitadlo prochazenych slotu
+    
     // dvojite hashovani
     while (table->table[index].is_occupied && compare_strings(table->table[index].key, key) != 0) {
         index = (index + step) % table->size; // posuvame se o "step" pozici v pripade kolize
-        if (index == original_index) {
+        checked_slots++;
+        
+        if (index == original_index && checked_slots >= table->size) {
             ThrowError(99); // tabulka je plna
         }
     }
