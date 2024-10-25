@@ -4,3 +4,5 @@
 //
 
 #include "generator.h"
+#include "../error/error.h"
+#include "../symtable.h"
