@@ -3,22 +3,22 @@
 
 #include "symtable.h"
 
-// element tabulky symbolu
+// Element tabulky symbolu
 typedef struct symbol_stack_item {
-    String* key;               // klic
-    VarType type;              // typ
+    String* key;               // Klic
+    VarType type;              // Typ
     
-    union {                    // informace o symbolu
+    union {                    // Informace o symbolu
         FunctionInfo func_info; 
         VariableInfo var_info; 
     };
 
-    struct symbol_stack_item* next;  // ukazatel na dalsi element
+    struct symbol_stack_item* next;  // Ukazatel na dalsi element
 } SymbolStackItem;
 
-// zasobnik symbolu
+// Zasobnik symbolu
 typedef struct {
-    SymbolStackItem* top;  // ukazatel na vrchol
+    SymbolStackItem* top;  // Ukazatel na vrchol
 } SymbolStack;
 
 SymbolStack* create_symbol_stack();
