@@ -11,12 +11,13 @@ typedef enum {
     TYPE_STRING,   // []u8
     TYPE_BOOL,     // bool
     TYPE_UNDEFINED, // nedefinovana promenna
-    TYPE_INT_NULL,
-    TYPE_FLOAT_NULL,
-    TYPE_STRING_NULL,
+    TYPE_INT_NULL, // ?i32
+    TYPE_FLOAT_NULL, // ?f64
+    TYPE_STRING_NULL, // ?[]u8
     TYPE_FUNCTION,  // funkce
     TYPE_VARIABLE,  // promenna
-    TYPE_VOID
+    TYPE_VOID, // void
+    TYPE_NULL // null
 } VarType;
 
 // Struktura parametru funkce

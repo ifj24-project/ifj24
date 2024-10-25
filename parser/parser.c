@@ -307,7 +307,7 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
-        printf("token: %s\n",get_token_name(token->first->type));
+        // printf("token: %s\n",get_token_name(token->first->type));
         free(token->first);
         token->first = token->second;
         token->second = token->third;
@@ -448,6 +448,11 @@ Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * thir
 }
 
 Node * Parse_start(TokenBuffer* token){
+    // prefill global variables (null as global variable)
+    String* temp = create_string("null");
+    insert_variable(token->sym_table, temp, TYPE_NULL, true);
+    free_string(temp);
+    
     Node * first = Parse_prolog(token);
     Node * second = Parse_program(token);
 
@@ -492,7 +497,7 @@ Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_SemiC);
 
     /**
-     * sym table with ifj.functions
+     * prefill sym table with ifj.functions
      */
     String* temp = create_string("ifj.readstr");
     insert_function(token->sym_table, temp, TYPE_STRING_NULL);

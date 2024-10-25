@@ -81,6 +81,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 node->second->data.data_type = DT_UNDEFINED;
                 break;
             default:
+                ThrowError(8);
                 break;
             }
         }
