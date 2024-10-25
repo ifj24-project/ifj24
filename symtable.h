@@ -175,6 +175,19 @@ void mark_variable_as_used(SymbolTable* table, String* key);
 void* find_symbol(SymbolTable* table, String* key);
 
 /**
+ * @brief Checks for unused variables in the symbol table.
+ * 
+ * This function iterates through the symbol table and checks for variables
+ * that have not been used. If all variables have been used, it returns 0.
+ * If there are any unused variables, it triggers ThrowError with error code 9.
+ * 
+ * @param table Pointer to the symbol table.
+ * @return int Returns 0 if all variables have been used.
+ * @throws 9 If there are unused variables in the symbol table.
+ */
+int check_unused_variables(SymbolTable* table);
+
+/**
  * @brief Deletes a symbol from the symbol table.
  * 
  * Removes a symbol from the symbol table by its key. Frees memory associated with the key and parameters.
