@@ -7,19 +7,15 @@
 
 /**
  * TODO:
- * check assignment to const
  * return
  * include expr assignment
  * include getting type from expr
  * 
  * mark vars as used
- * include unused var check
- * 
- * while |assing var in pipes + add to local_table|
+ * include unused var check (symtable function)
  * 
  * if only true false expr
- * if |assing var in pipes + add to local_table|
- * 
+ * while check contition (viz. zadani)
  * 
  * expr:
  * give expr type
@@ -114,11 +110,67 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         
         insert_variable(local_table, node->first->data.id, sym_get_type(node->second->data.data_type), node->data.var_or_const);
         
-        semantic_scan(node->third, global_table, global_func_key,local_table); // co se tam assignuje
+        semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
         break;
-    // case VariableAssign_N:
+    case VariableAssign_N:
+        // function not defined
+        var_info = find_symbol(local_table, node->first->data.id);
+        if (var_info == NULL)
+        {
+            ThrowError(3);
+        }
+        else if (var_info->is_const == true)
+        {
+            ThrowError(5);
+        }
+
+        if (node->second->type == Expression_N)
+        {
+            // TODO: check expr type
+        }
+        else if (node->second->type == Str_N)
+        {
+            if (var_info->data_type != TYPE_STRING_NULL && var_info->data_type != TYPE_STRING) ThrowError(7);
+        }
         
-    //     break;
+        else if (node->second->type == FuncCall_N)
+        {
+            func_info = find_symbol(global_table, node->second->first->data.id);
+            if (func_info != NULL) // if func is defined
+            {
+                // assign types not compatible
+                switch (var_info->data_type)
+                {
+                case TYPE_INT:
+                    if (func_info->return_type != TYPE_INT) ThrowError(7);
+                    break;
+                case TYPE_INT_NULL:
+                    if (func_info->return_type != TYPE_INT_NULL && func_info->return_type != TYPE_INT) ThrowError(7);
+                    break;
+                case TYPE_FLOAT:
+                    if (func_info->return_type != TYPE_FLOAT) ThrowError(7);
+                    break;
+                case TYPE_FLOAT_NULL:
+                    if (func_info->return_type != TYPE_FLOAT_NULL && func_info->return_type != TYPE_FLOAT) ThrowError(7);
+                    break;
+                case TYPE_STRING:
+                    if (func_info->return_type != TYPE_STRING) ThrowError(7);
+                    break;
+                case TYPE_STRING_NULL:
+                    if (func_info->return_type != TYPE_STRING_NULL && func_info->return_type != TYPE_STRING) ThrowError(7);
+                    break;
+                case TYPE_UNDEFINED:
+                    // undefined loophole
+                    break;
+                default:
+                    ThrowError(7);
+                    break;
+                }
+            }
+        }
+        
+        semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
+        break;
     case FuncCall_N:
         // function not defined
         if (find_symbol(global_table, node->first->data.id) == NULL)
@@ -184,12 +236,6 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             ThrowError(4);
         }
         break;
-    // case Params_N:
-        
-    //     break;
-    // case ParamsNext_N:
-        
-    //     break;
     case If_N:
         if (node->data.has_not_null_id == true)
         {
@@ -208,8 +254,8 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     case While_N:
         if (node->data.has_not_null_id == true)
         {
-            //TODO: get type from expr
-            insert_variable(local_table, node->second->data.id, TYPE_UNDEFINED, node->data.var_or_const);
+            //TODO: get type from expr for pipe var
+            insert_variable(local_table, node->second->data.id, TYPE_UNDEFINED, node->data.var_or_const); // TODO: |is var or const?| + remove loophole
             semantic_scan(node->third, global_table, global_func_key, local_table);
             delete_symbol(local_table, node->second->data.id);
         }
@@ -281,25 +327,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
 
         break;
     // case ReturnStatement_N:
-        
     //     break;
-    // case Id_N:
-        
-    //     break;
-    // case Str_N:
-        
-    //     break;
-    // case Float_N:
-        
-    //     break;
-    // case If_not_null:
-        
-    //     break;
-        
-    // case while_not_null:
-        
-    //     break;
-    
     default:
         semantic_scan(node->first, global_table, global_func_key, local_table);
         semantic_scan(node->second, global_table, global_func_key, local_table);
