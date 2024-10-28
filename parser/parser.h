@@ -52,9 +52,25 @@ typedef enum NodeType {
     Plus_N = 33,
     Minus_N = 34,
     Times_N = 35,
-    Divide_N = 36
+    Divide_N = 36,
+
+    Int_N = 37
 
 } NodeType;
+
+typedef enum DataTypeEnum{
+    DT_UNDEFINED = -1,
+    DT_I32 = 1,
+    DT_F64 = 2,
+    DT_U8 = 3,
+    DT_VOID = 4,
+    DT_BOOL = 5,
+    DT_I32_NULL = 6,
+    DT_F64_NULL = 7,
+    DT_U8_NULL = 8,
+    DT_BOOL_NULL = 9
+
+} DataTypeEnum;
 
 typedef String* IdValue; 
 typedef String* StrValue;
@@ -73,7 +89,7 @@ typedef union DataValue
     StrValue str; // value pro string node
     FloatValue flt; // value pro float node
     IntValue integer; // value pro int node
-    DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void 
+    DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void , 5==bool
     VariableDefineValue var_or_const; // 0==var, 1==const
     Not_null_statement has_not_null_id; // true== ma o dite navic, node.second dite je |id| v te pipe
 
@@ -131,6 +147,8 @@ void consume_buffer(TokenBuffer* token, size_t n);
  */
 Node * Parse_start(TokenBuffer* token);
 
+void free_parse_tree(Node* tree);
+
 /**
  * Dale jen "pomocne" private fce
  */
@@ -138,6 +156,10 @@ Node * IdNode_new(char *symtable_key);
 Node * StringNode_new(char *string);
 Node * FloatNode_new(double num);
 Node * IntNode_new(int num);
+
+
+void sym_push_params(SymbolTable* table, String* func_key, Node* param_node);
+int sym_get_type(int type);
 
 
 

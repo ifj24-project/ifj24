@@ -1,4 +1,4 @@
 *.o
 compiler
 .vscode
-.idea
+input4.txt

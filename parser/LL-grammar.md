@@ -50,18 +50,18 @@
 44) <void_call> -> "id"(<params>);
 45) <return_statement> -> return <EXPRESSION>;
 
-46) <EXPRESSION> -> <compared> > <EXPRESSION>
-47) <EXPRESSION>-><compared> >= <EXPRESSION>
-48) <EXPRESSION>-><compared> < <EXPRESSION>
-49) <EXPRESSION>-><compared> <= <EXPRESSION>
-50) <EXPRESSION>-><compared> == <EXPRESSION>
-51) <EXPRESSION>-><compared> != <EXPRESSION>
+46) <EXPRESSION> -> <EXPRESSION> > <compared>
+47) <EXPRESSION>-> <EXPRESSION> >= <compared>
+48) <EXPRESSION>-> <EXPRESSION> < <compared>
+49) <EXPRESSION>-> <EXPRESSION> <= <compared>
+50) <EXPRESSION>-> <EXPRESSION> == <compared>
+51) <EXPRESSION>-> <EXPRESSION> != <compared>
 52) <EXPRESSION>-><compared>
-53) <compared> -> <term> + <compared>
-54) <compared> -> <term> - <compared>
+53) <compared> -> <compared> + <term>
+54) <compared> -> <compared> - <term>
 55) <compared> -> <term>
-56) <term> -> <factor> * <term>
-57) <term> -> <factor> / <term>
+56) <term> -> <term> * <factor>
+57) <term> -> <term> / <factor>
 58) <term> -> <factor>
 59) <factor> -> "id"
 60) <factor> -> "int"

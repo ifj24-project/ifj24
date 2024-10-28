@@ -100,6 +100,11 @@ Token* Create_ID_or_Keyword(char first){
         //printf("%s==%s \n", keywords[i], token->value.ID_name);
         if(strcmp(keywords[i], token->value.ID_name) == 0) {
             //printf("we found KW\n");
+            if (strcmp(token->value.ID_name, "null") == 0) {
+                token->type = T_ID;
+                return token;
+            }
+            
             // 39 is the first keyword, so I flipped list of keywords and minused the position of the index
             token->type = 39 - i;
             return token;

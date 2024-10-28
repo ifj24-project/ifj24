@@ -35,13 +35,11 @@ Node * Parse_expression(TokenBuffer* token){
     {
         if ((stack->top->type == P_expression && stack->count == 2) && input->type == P_$)
         {
-            Node* ret = stack->top->node;
+            Node* ret = OneChildNode_new(Expression_N, stack->top->node);
             prec_stack_free(stack);
             free(input);
             return ret;
         }
-        // printf("\nstack type: %d\n", stack->top->type);
-        // printf("input type: %d\n", input->type);
 
         if (prec_table[stack->top->type][input->type] == 1) // shift
         {
@@ -54,9 +52,6 @@ Node * Parse_expression(TokenBuffer* token){
         }
         else if (prec_table[stack->top->type][input->type] == -1) // bad syntax
         {
-            // printf("bad stack type: %d\n", stack->top->type);
-            // printf("bad input type: %d\n", input->type);
-            // printf("loop tady %d \n", prec_table[stack->top->type][input->type]);
             ThrowError(2);
         }
         else
