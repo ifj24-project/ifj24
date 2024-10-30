@@ -85,7 +85,7 @@ typedef bool Not_null_statement;
  */
 typedef union DataValue
 {
-    IdValue id; // TODO: value pro id
+    IdValue id; // value pro id
     StrValue str; // value pro string node
     FloatValue flt; // value pro float node
     IntValue integer; // value pro int node
@@ -106,7 +106,7 @@ struct Node
     Node *third; /**< ukazatal na treti uzel (treti dite) */
     Node *fourth; /**< ukazatal na ctvrty uzel (ctvrte dite) */
     Data_value data; /**< nektere node typy maji specialni value. Node muze mit pouze jedny data */
-
+    // bool need_converting; /**< bandaid fix pro zaznamenani konverze v id (jinak bude potreva refaktorovat vsechno) */
 };
 
 /**
