@@ -818,7 +818,12 @@ Node * Parse_variable_define(TokenBuffer* token){
     {
         c = Parse_string(token);
     }
-    else {
+    else if (token->first->type == T_ID && token->second->type == T_SemiC)
+    {
+        c = Parse_id(token);
+    }
+    else
+    {
         c = Parse_expression(token);
     }
 
@@ -842,11 +847,20 @@ Node * Parse_variable_assign(TokenBuffer* token){
     {
         b = Parse_func_call(token);
     }
+    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
+    {
+        b = Parse_func_call(token);
+    }
     else if (token->first->type == T_String)
     {
         b = Parse_string(token);
     }
-    else {
+    else if (token->first->type == T_ID && token->second->type == T_SemiC)
+    {
+        b = Parse_id(token);
+    }
+    else
+    {
         b = Parse_expression(token);
     }
 
@@ -1044,7 +1058,33 @@ Node * Parse_void_call(TokenBuffer* token){
 
 Node * Parse_return_statement(TokenBuffer* token){
     buffer_check_first(token, T_return);
-    Node * a = Parse_expression(token);
+    Node * a;
+
+    if (token->first->type == T_SemiC)
+    {
+        a = NULL;
+    }
+    else if (token->first->type == T_ID && token->second->type == T_Dot)
+    {
+        a = Parse_func_call(token);
+    }
+    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
+    {
+        a = Parse_func_call(token);
+    }
+    else if (token->first->type == T_String)
+    {
+        a = Parse_string(token);
+    }
+    else if (token->first->type == T_ID && token->second->type == T_SemiC)
+    {
+        a = Parse_id(token);
+    }
+    else
+    {
+        a = Parse_expression(token);
+    }
+    
     buffer_check_first(token, T_SemiC);
 
     return OneChildNode_new(ReturnStatement_N, a);

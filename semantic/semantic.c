@@ -7,8 +7,6 @@
 
 /**
  * TODO:
- * return
- * check void type in void call
  * include expr assignment
  * include getting type from expr
  * 
@@ -54,11 +52,17 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         func_info = find_symbol(global_table, node->first->data.id);
         def_param = func_info->params;
         local_table = create_symbol_table(100);
-        while (def_param != NULL)
+        while (def_param != NULL) // nacti parametry do lokalni tabulky jako promenne
         {
             insert_variable(local_table, def_param->name, def_param->type, false);
 
             def_param = def_param->next;
+        }
+
+        //check return
+        if (func_info->return_type != TYPE_VOID)
+        {
+            if (find_ret_statement(node) == false) ThrowError(6);
         }
         
         semantic_scan(node->fourth, global_table, node->first->data.id, local_table);
@@ -125,6 +129,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             ThrowError(5);
         }
 
+        // assign - check type compatibility
         if (node->second->type == Expression_N)
         {
             // TODO: check expr type
@@ -133,13 +138,11 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         {
             if (var_info->data_type != TYPE_STRING_NULL && var_info->data_type != TYPE_STRING) ThrowError(7);
         }
-        
         else if (node->second->type == FuncCall_N)
         {
             func_info = find_symbol(global_table, node->second->first->data.id);
             if (func_info != NULL) // if func is defined
             {
-                // assign types not compatible
                 switch (var_info->data_type)
                 {
                 case TYPE_INT:
@@ -174,10 +177,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         break;
     case FuncCall_N:
         // function not defined
-        if (find_symbol(global_table, node->first->data.id) == NULL)
-        {
-            ThrowError(3);
-        }
+        if (find_symbol(global_table, node->first->data.id) == NULL) ThrowError(3);
 
         // check for error 4 (check params)
         func_info = find_symbol(global_table, node->first->data.id);
@@ -193,18 +193,14 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 }
                 else if (called_param->first->type == Id_N)
                 {
-                    if (def_param->type)
+                    var_info = find_symbol(local_table, called_param->first->data.id);
+                    if (var_info == NULL) ThrowError(3);
+                    // if (var_info->data_type != def_param->type) ThrowError(4);
+                    if (var_info->data_type == def_param->type || var_info->data_type == TYPE_UNDEFINED)
                     {
-                        var_info = find_symbol(local_table, called_param->first->data.id);
-                        if (var_info == NULL) ThrowError(3);
-                        // if (var_info->data_type != def_param->type) ThrowError(4);
-                        if (var_info->data_type == def_param->type || var_info->data_type == TYPE_UNDEFINED)
-                        {
-                            // undefined loophole
-                        }
-                        else { ThrowError(4); }
+                        // undefined loophole
                     }
-                    
+                    else { ThrowError(4); }
                 }
                 else if (called_param->first->type == Int_N)
                 {
@@ -225,17 +221,16 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             }
             else
             {
-                if (called_param->first->type == Id_N && find_symbol(local_table, called_param->first->data.id) == NULL) ThrowError(3); // check if called param is defined
+                // check if called param is defined
+                if (called_param->first->type == Id_N && find_symbol(local_table, called_param->first->data.id) == NULL) ThrowError(3); 
             }
             
             called_param = called_param->second;
             def_param = def_param->next;
         }
 
-        if (def_param != NULL || called_param != NULL) // different num of params
-        {
-            ThrowError(4);
-        }
+        // different num of params
+        if (def_param != NULL || called_param != NULL) ThrowError(4);
         break;
     case If_N:
         if (node->data.has_not_null_id == true)
@@ -271,9 +266,10 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         {
             ThrowError(3);
         }
+        func_info = find_symbol(global_table, node->first->data.id);
+        if (func_info->return_type != TYPE_VOID) ThrowError(4);
 
         // check for error 4 (check params)
-        func_info = find_symbol(global_table, node->first->data.id);
         def_param = func_info->params;
         called_param = node->second;
         while (def_param != NULL && called_param != NULL)
@@ -286,15 +282,15 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 }
                 else if (called_param->first->type == Id_N)
                 {
-                        var_info = find_symbol(local_table, called_param->first->data.id);
-                        if (var_info == NULL) ThrowError(3);
-                        // if (var_info->data_type != def_param->type) ThrowError(4);
-                        if (var_info->data_type == def_param->type || var_info->data_type == TYPE_UNDEFINED)
-                        {
-                            // undefined loophole
-                            // TODO: remove when if |pipes| is done
-                        }
-                        else { ThrowError(4); }
+                    var_info = find_symbol(local_table, called_param->first->data.id);
+                    if (var_info == NULL) ThrowError(3);
+                    // if (var_info->data_type != def_param->type) ThrowError(4);
+                    if (var_info->data_type == def_param->type || var_info->data_type == TYPE_UNDEFINED)
+                    {
+                        // undefined loophole
+                        // TODO: remove when if |pipes| is done
+                    }
+                    else { ThrowError(4); }
                 }
                 else if (called_param->first->type == Int_N)
                 {
@@ -313,7 +309,8 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     semantic_scan(called_param->first, global_table, global_func_key, local_table);
                 }
             }
-            else { // takes any type, check if defined
+            else // takes any type, check if defined (undefined loophole) 
+            {
                 if (called_param->first->type == Id_N && find_symbol(local_table, called_param->first->data.id) == NULL) ThrowError(3); // check if called param is defined
             }
 
@@ -321,14 +318,37 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             def_param = def_param->next;
         }
 
-        if (def_param != NULL || called_param != NULL) // different num of params
+        // different num of params
+        if (def_param != NULL || called_param != NULL) ThrowError(4);
+        break;
+    case ReturnStatement_N:
+        func_info = find_symbol(global_table, global_func_key);
+        if (node->first == NULL)
         {
-            ThrowError(4);
+            if (func_info->return_type != TYPE_VOID) ThrowError(4);
+            semantic_scan(node->first, global_table, global_func_key, local_table);
+            break;
+        }
+        
+        // vraci spravny datatype podle definice funkce?
+        switch (node->first->type)
+        {
+        case Expression_N:
+            // TODO: expr check
+            break;
+        case Id_N:
+            var_info = find_symbol(local_table, node->first->data.id);
+            if (var_info->data_type != func_info->return_type) ThrowError(4);
+            break;
+        case Str_N:
+            if (func_info->return_type != TYPE_STRING && func_info->return_type != TYPE_STRING_NULL) ThrowError(4);
+            break;
+        default:
+            break;
         }
 
+        semantic_scan(node->first, global_table, global_func_key, local_table);
         break;
-    // case ReturnStatement_N:
-    //     break;
     default:
         semantic_scan(node->first, global_table, global_func_key, local_table);
         semantic_scan(node->second, global_table, global_func_key, local_table);
@@ -338,6 +358,31 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     }
 
     return;
+}
+
+bool find_ret_statement(Node* node){
+    if (node == NULL) return false;
+
+    bool a;
+    bool b;
+    bool c;
+    bool d;
+
+    switch (node->type)
+    {
+    case ReturnStatement_N:
+        return true;
+        break;
+    
+    default:
+        a = find_ret_statement(node->first);
+        b = find_ret_statement(node->second);
+        c = find_ret_statement(node->third);
+        d = find_ret_statement(node->fourth);
+        break;
+    }
+    if (a == true || b == true || c == true || d == true) return true;
+    else return false;
 }
 
 
