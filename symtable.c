@@ -154,6 +154,24 @@ void* find_symbol(SymbolTable* table, String* key) {
     return NULL;  // nenasli jsme symbol 
 }
 
+int check_unused_variables(SymbolTable* table) {
+    int unused_count = 0;
+    for (int i = 0; i < table->size; i++) {
+        if (table->table[i].is_occupied && table->table[i].type == TYPE_VARIABLE) {
+            // kontrola pouziti promenne 
+            if (!table->table[i].var_info.is_used) {
+                unused_count++;  // zvetsime pocitadlo nepouzitych promennych
+            }
+        }
+    }
+    
+    if (unused_count > 0) {      // pokud jsou nepouzite promenne, volame error
+        ThrowError(9);
+    }
+
+    return 0;  // vsechny promenne jsou pouzite
+}
+
 void delete_symbol(SymbolTable* table, String* key) {
     int index = find_slot(table, key);
     if (index != -1 && table->table[index].is_occupied) {
