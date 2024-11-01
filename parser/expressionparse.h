@@ -54,6 +54,8 @@ PrecStackItem * next_prec_item(TokenBuffer * token);
 
 void reduce(PrecStack * stack);
 
+int first_terminal_type(PrecStack* stack);
+
 Node * Parse_expression(TokenBuffer* token);
 
 #endif
