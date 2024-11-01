@@ -55,11 +55,12 @@ void generate(Node* node) {
             printf("LABEL $$main\n");
             printf("CREATEFRAME\n");
           } else {
-          printf("LABEL $%s\n", node->first->data.id->data);
-          printf("PUSHFRAME\n");
-          generate(node->second);
-          printf("POPFRAME\n");
-          printf("RETURN\n");
+            printf("LABEL $%s\n", node->first->data.id->data);
+            printf("PUSHFRAME\n");
+            generate(node->second);
+            printf("POPFRAME\n");
+            printf("RETURN\n");
+          }
         }
 
         generate(node->first);
