@@ -50,7 +50,7 @@ void prec_push_item(PrecStack * stack, PrecStackItem* item);
 void prec_stack_pop(PrecStack * stack);
 void prec_stack_free(PrecStack * stack);
 
-PrecStackItem * next_prec_item(TokenBuffer * token);
+PrecStackItem * next_prec_item(TokenBuffer * token, int* bracket_cnt);
 
 void reduce(PrecStack * stack);
 
