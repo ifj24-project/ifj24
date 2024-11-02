@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 #include "../error/error.h"
 
 /**
@@ -385,6 +386,185 @@ bool find_ret_statement(Node* node){
     else return false;
 }
 
+bool is_whole_float(double value) {
+    return floor(value) == value;
+}
 
+VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_table) {
+    if (!node) {
+        ThrowError(7); // chyba: prazdny uzel
+    }
 
+    // vytvarime retezec pro porovnani pri identifikaci typu null
+    String* null_str = create_string("null");
 
+    // kontrola typu uzlu 
+    switch (node->type) {
+        case Int_N:
+            free_string(null_str);
+            return TYPE_INT;
+        case Float_N:
+            free_string(null_str);
+            return TYPE_FLOAT;
+        case Id_N: {
+            // kontrola na null
+            if (compare_strings(node->data.id, null_str) == 0) {
+                free_string(null_str);
+                return TYPE_NULL;
+            }
+            
+            // dostavame typ promenne z tabulky symbolu
+            SymbolTableEntry* entry = find_symbol(local_table, node->data.id);
+            if (!entry) entry = find_symbol(global_table, node->data.id);
+            if (!entry) {
+                free_string(null_str);
+                ThrowError(7); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni
+            }
+            free_string(null_str);
+            return entry->type;
+        }
+
+        case Plus_N: case Minus_N: case Times_N: case Divide_N: {
+            // rekurzivne najdeme datove typy prvniho a druheho uzlu
+            VarType left_type = semantic_expr(node->first, global_table, local_table);
+            VarType right_type = semantic_expr(node->second, global_table, local_table);
+
+            // kontrola kompatibility typu pro aritmeticke operace
+            if (left_type == TYPE_INT && right_type == TYPE_INT) return TYPE_INT;
+            if (left_type == TYPE_FLOAT && right_type == TYPE_FLOAT) return TYPE_FLOAT;
+
+            // konverzi int na float, pokud operandy maji ruzny typ
+            if (left_type == TYPE_INT && right_type == TYPE_FLOAT) {
+                node->first->type = Float_N;
+                return TYPE_FLOAT;
+            }
+            if (left_type == TYPE_FLOAT && right_type == TYPE_INT) {
+                node->second->type = Float_N;
+                return TYPE_FLOAT;
+            }
+
+            ThrowError(7); // chyba nekompatibility typu
+        }
+
+        case Eq_N: case NotEq_N: {
+            VarType left_type = semantic_expr(node->first, global_table, local_table);
+            VarType right_type = semantic_expr(node->second, global_table, local_table);
+
+            // zpracovani null == null
+            if (left_type == TYPE_NULL && right_type == TYPE_NULL) {
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+
+            // porovnani null s typy zahrnujici null
+            if ((left_type == TYPE_INT_NULL && right_type == TYPE_NULL) ||
+                (left_type == TYPE_FLOAT_NULL && right_type == TYPE_NULL) ||
+                (left_type == TYPE_STRING_NULL && right_type == TYPE_NULL) ||
+                (right_type == TYPE_INT_NULL && left_type == TYPE_NULL) ||
+                (right_type == TYPE_FLOAT_NULL && left_type == TYPE_NULL) ||
+                (right_type == TYPE_STRING_NULL && left_type == TYPE_NULL)) {
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+
+            // zpracovani typu zahrnujicich null
+            if ((left_type == TYPE_INT_NULL && right_type == TYPE_INT) ||
+                (left_type == TYPE_INT && right_type == TYPE_INT_NULL) ||
+                (left_type == TYPE_FLOAT_NULL && right_type == TYPE_FLOAT) ||
+                (left_type == TYPE_FLOAT && right_type == TYPE_FLOAT_NULL)) {
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+
+            // lze porovnavat promenne stejnych ciselnych typu 
+            if (left_type == TYPE_INT && right_type == TYPE_INT) {
+            free_string(null_str);
+            return TYPE_BOOL;
+            }
+
+            if (left_type == TYPE_FLOAT && right_type == TYPE_FLOAT) {
+            free_string(null_str);
+            return TYPE_BOOL;
+            }
+            // porovnani s konverzi typu
+            if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
+                (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
+                if (left_type == TYPE_INT) node->first->type = Float_N;
+                if (right_type == TYPE_INT) node->second->type = Float_N;
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+            // konverzi f64 s nulovou desetinnou casti na i32
+            if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
+                node->first->type = Int_N;
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+             if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
+                node->second->type = Int_N;
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+            free_string(null_str);
+            ThrowError(7); // chyba nekompatibility typu
+        }
+
+        case Lesser_N: case Greater_N: case LesserEq_N: case GreaterEq_N: {
+            VarType left_type = semantic_expr(node->first, global_table, local_table);
+            VarType right_type = semantic_expr(node->second, global_table, local_table);
+
+            // pokud typ operandu null, nemuzeme porovnovat 
+            if (left_type == TYPE_NULL || right_type == TYPE_NULL) {
+                free_string(null_str);
+                ThrowError(7); // chyba: nepovolena operace
+            }
+
+            // nemuzeme porovnovat typy zahrnujici null
+            if (left_type == TYPE_INT_NULL || left_type == TYPE_FLOAT_NULL || 
+            right_type == TYPE_INT_NULL || right_type == TYPE_FLOAT_NULL) {
+            free_string(null_str);
+            ThrowError(7); // chyba: nepovolena operace
+            }
+
+            // lze porovnavat promenne stejnych ciselnych typu 
+            if (left_type == TYPE_INT && right_type == TYPE_INT) {
+            free_string(null_str);
+            return TYPE_BOOL;
+            }
+
+            if (left_type == TYPE_FLOAT && right_type == TYPE_FLOAT) {
+            free_string(null_str);
+            return TYPE_BOOL;
+            }
+
+            // lze porovnovat int a float s konverzi
+            if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
+                (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
+                if (left_type == TYPE_INT) node->first->type = Float_N;
+                if (right_type == TYPE_INT) node->second->type = Float_N;
+                free_string(null_str);
+                return TYPE_BOOL; 
+            }
+
+            // konverzi f64 s nulovou desetinnou casti na i32
+            if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
+                node->first->type = Int_N;
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+             if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
+                node->second->type = Int_N;
+                free_string(null_str);
+                return TYPE_BOOL;
+            }
+
+        }
+
+        default:
+            free_string(null_str);
+            ThrowError(7); 
+    }
+
+    free_string(null_str);
+    return TYPE_UNDEFINED; 
+}
