@@ -468,14 +468,14 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             }
             
             // dostavame typ promenne z tabulky symbolu
-            SymbolTableEntry* entry = find_symbol(local_table, node->data.id);
+            VariableInfo* entry = find_symbol(local_table, node->data.id);
             if (!entry) entry = find_symbol(global_table, node->data.id);
             if (!entry) {
                 free_string(null_str);
                 ThrowError(7); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni
             }
             free_string(null_str);
-            return entry->type;
+            return entry->data_type;
         }
 
         case Plus_N: case Minus_N: case Times_N: case Divide_N: {
