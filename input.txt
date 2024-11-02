@@ -13,7 +13,7 @@ pub fn main() void {
             var d: f64 = ifj.i2f(val);
             var vysl: f64 = 1.0;
             while (d > 0) {
-                vysl = vysl * d;
+                //vysl = vysl * d;
                 d = d - 1.0;
             }
             ifj.write("Vysledek: "); ifj.write(vysl); ifj.write(" = ");

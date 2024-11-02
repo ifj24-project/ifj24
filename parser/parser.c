@@ -4,15 +4,6 @@
 #include "parser.h"
 #include "expressionparse.h"
 
-// #include "../scanner.h"
-// #include "../scanner.c"
-
-/**
- * TODO: 
- * variable used - kdy to urcit?
- * 
- * parse variable define: fucn_call 
- */
 
 TokenBuffer * buffer_ctor(){
     TokenBuffer * x = malloc(sizeof(TokenBuffer));
@@ -605,9 +596,6 @@ Node * Parse_prolog(TokenBuffer* token){
     free_string(temp);
 
     temp = create_string("ifj.chr");
-    /**
-     * @bug find_slot hodi error pri zavolani insert_function pokud je pocatecni velikost tabulky 20
-     */
     insert_function(token->sym_table, temp, TYPE_STRING); 
     param.name = create_string("s1");
     param.type = TYPE_INT;
