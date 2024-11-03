@@ -113,9 +113,8 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 break;
             }
         }
-        else
+        else // check type compatibility
         {
-            // check type compatibility
             if (node->third->type == Expression_N)
             {
                 // check expr type

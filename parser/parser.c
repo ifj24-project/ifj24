@@ -760,6 +760,29 @@ Node * Parse_statement(TokenBuffer* token){
     return OneChildNode_new(Statement_N, a);
 }
 
+Node* Parse_rhs(TokenBuffer* token){
+    if (token->first->type == T_ID && token->second->type == T_Dot) //TODO: && id is function
+    {
+        return Parse_func_call(token);
+    }
+    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
+    {
+        return Parse_func_call(token);
+    }
+    else if (token->first->type == T_String)
+    {
+        return Parse_string(token);
+    }
+    else if (token->first->type == T_ID && token->second->type == T_SemiC)
+    {
+        return Parse_id(token);
+    }
+    else
+    {
+        return Parse_expression(token);
+    }
+}
+
 Node * Parse_variable_define(TokenBuffer* token){
     Node * a;
     Node * b;
@@ -794,63 +817,21 @@ Node * Parse_variable_define(TokenBuffer* token){
 
     buffer_check_first(token, T_Assign);
 
-    if (token->first->type == T_ID && token->second->type == T_Dot)
-    {
-        c = Parse_func_call(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
-    {
-        c = Parse_func_call(token);
-    }
-    else if (token->first->type == T_String)
-    {
-        c = Parse_string(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_SemiC)
-    {
-        c = Parse_id(token);
-    }
-    else
-    {
-        c = Parse_expression(token);
-    }
+    c = Parse_rhs(token);
 
     buffer_check_first(token, T_SemiC);
 
     Node * ret = ThreeChildNode_new(VariableDefine_N, a, b, c);
     ret->data.var_or_const = var_const;
 
-    
-
-    // insert_symbol(token->sym_table, a->data.id, b->data.data_type, create_sym_val(var_const, false, true, false, a->data.data_type));
-
     return ret;
 }
+
 
 Node * Parse_variable_assign(TokenBuffer* token){
     Node * a = Parse_id(token);
     buffer_check_first(token, T_Assign);
-    Node * b;
-    if (token->first->type == T_ID && token->second->type == T_Dot) //TODO: && id is function
-    {
-        b = Parse_func_call(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
-    {
-        b = Parse_func_call(token);
-    }
-    else if (token->first->type == T_String)
-    {
-        b = Parse_string(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_SemiC)
-    {
-        b = Parse_id(token);
-    }
-    else
-    {
-        b = Parse_expression(token);
-    }
+    Node * b = Parse_rhs(token);
 
     buffer_check_first(token, T_SemiC);
     return TwoChildNode_new(VariableAssign_N, a, b);
@@ -858,9 +839,11 @@ Node * Parse_variable_assign(TokenBuffer* token){
 
 Node * Parse_func_call(TokenBuffer* token){
     bool is_ifj = false;
+    String* ifj;
     if (token->second->type == T_Dot)
     {
-        buffer_check_first(token, T_ID); //check if ifj.func
+        ifj = create_string(token->first->value.ID_name);
+        buffer_check_first(token, T_ID); 
         buffer_check_first(token, T_Dot);
         is_ifj = true;
     }
@@ -872,9 +855,12 @@ Node * Parse_func_call(TokenBuffer* token){
 
     if (is_ifj)
     {
-        String* ifj = create_string("ifj.");
+        String* dot = create_string(".");
+        String* ifj_dot = concat_strings(ifj, dot);
         String* tmp = a->data.id;
-        a->data.id = concat_strings(ifj, tmp);
+        a->data.id = concat_strings(ifj_dot, tmp);
+        free(dot);
+        free(ifj_dot);
         free_string(tmp);
         free_string(ifj);
     }
@@ -883,29 +869,40 @@ Node * Parse_func_call(TokenBuffer* token){
     return TwoChildNode_new(FuncCall_N, a, b);
 }
 
+Node * Parse_rhs_param(TokenBuffer * token){
+    if (token->first->type == T_String)
+    {
+        return Parse_string(token);
+    }
+    else if ((token->first->type == T_ID) && (token->second->type == T_Comma))
+    {
+        return Parse_id(token);
+    }
+    else if ((token->first->type == T_ID) && (token->second->type == T_R_Round_B))
+    {
+        return Parse_id(token);
+    }
+    else if (token->first->type == T_ID && token->second->type == T_Dot)
+    {
+        return Parse_func_call(token);
+    }
+    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
+    {
+        return Parse_func_call(token);
+    }
+    else 
+    {
+        return Parse_expression(token);
+    }
+}
+
 Node * Parse_params(TokenBuffer* token){
     if (token->first->type == T_R_Round_B)
     {
         return NULL;
     }
 
-    Node * a;
-
-    if (token->first->type == T_String)
-    {
-        a = Parse_string(token);
-    }
-    else if ((token->first->type == T_ID) && (token->second->type == T_Comma))
-    {
-        a = Parse_id(token);
-    }
-    else if ((token->first->type == T_ID) && (token->second->type == T_R_Round_B))
-    {
-        a = Parse_id(token);
-    }
-    else {
-        a = Parse_expression(token);
-    }
+    Node * a = Parse_rhs_param(token);
     
     Node * b = Parse_params_next(token);
 
@@ -913,29 +910,14 @@ Node * Parse_params(TokenBuffer* token){
 }
 
 Node * Parse_params_next(TokenBuffer* token){
-        if (token->first->type == T_R_Round_B)
+    if (token->first->type == T_R_Round_B)
     {
         return NULL;
     }
 
     buffer_check_first(token, T_Comma);
-    Node * a;
-
-    if (token->first->type == T_String)
-    {
-        a = Parse_string(token);
-    }
-    else if ((token->first->type == T_ID) && (token->second->type == T_Comma))
-    {
-        a = Parse_id(token);
-    }
-    else if ((token->first->type == T_ID) && (token->second->type == T_R_Round_B))
-    {
-        a = Parse_id(token);
-    }
-    else {
-        a = Parse_expression(token);
-    }
+    
+    Node * a = Parse_rhs_param(token);
     
     Node * b = Parse_params_next(token);
 
@@ -998,14 +980,10 @@ Node * Parse_while(TokenBuffer* token){
         Node * c = Parse_func_body(token);
         buffer_check_first(token, T_R_Curly_B);
 
-        
-
         Node * ret = ThreeChildNode_new(While_N, a, b, c);
         ret->data.has_not_null_id = true;
         return ret;
-
     }
-    
 
     buffer_check_first(token, T_L_Curly_B);
     Node * b = Parse_func_body(token);
@@ -1016,10 +994,11 @@ Node * Parse_while(TokenBuffer* token){
 
 Node * Parse_void_call(TokenBuffer* token){
     bool is_ifj = false;
-
+    String* ifj;
     if (token->second->type == T_Dot)
     {   
-        buffer_check_first(token, T_ID); // check if ifj
+        ifj = create_string(token->first->value.ID_name);
+        buffer_check_first(token, T_ID);
         buffer_check_first(token, T_Dot);
         is_ifj = true;
     }
@@ -1033,9 +1012,12 @@ Node * Parse_void_call(TokenBuffer* token){
 
     if (is_ifj)
     {
-        String* ifj = create_string("ifj.");
+        String* dot = create_string(".");
+        String* ifj_dot = concat_strings(ifj, dot);
         String* tmp = a->data.id;
-        a->data.id = concat_strings(ifj, tmp);
+        a->data.id = concat_strings(ifj_dot, tmp);
+        free(dot);
+        free(ifj_dot);
         free_string(tmp);
         free_string(ifj);
     }
