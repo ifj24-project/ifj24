@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include <string.h>
 #include "../error/error.h"
 
 /**
@@ -31,11 +32,11 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     switch (node->type)
     {
     case Start_N:
-        String* temp = create_string("main");
-        FunctionInfo* info = find_symbol(global_table, temp);
+        String* main = create_string("main");
+        FunctionInfo* info = find_symbol(global_table, main);
         if (info == NULL) ThrowError(3); // main doesnt exits
         if (info->param_count != 0) ThrowError(4); // main has parametrs
-        free_string(temp);
+        free_string(main);
 
         semantic_scan(node->second, global_table, global_func_key,local_table);
         
@@ -84,6 +85,11 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             {
                 temp = semantic_expr(node->third->first, global_table, local_table);
             }
+            else if (node->third->type == Id_N)
+            {
+                temp = semantic_expr(node->third, global_table, local_table);
+            }
+            
             
             switch (temp)
             {
@@ -119,6 +125,20 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             {
                 // check expr type
                 if (sym_get_type(node->second->data.data_type) != semantic_expr(node->third->first, global_table, local_table)) ThrowError(7);
+            }
+            else if (node->third->type == Id_N)
+            {
+                VarType id_type = semantic_expr(node->third, global_table, local_table);
+                if (id_type == TYPE_NULL)
+                {
+                    if (node->second->data.data_type != DT_U8_NULL && 
+                        node->second->data.data_type != DT_F64_NULL && 
+                        node->second->data.data_type != DT_I32_NULL) ThrowError(7);
+                }
+                else
+                {
+                    if (sym_get_type(node->second->data.data_type) != id_type) ThrowError(7);
+                }
             }
             else if (node->third->type == Str_N)
             {
@@ -182,6 +202,20 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             // check expr type
             VarType temp = semantic_expr(node->second->first, global_table, local_table);
             if (var_info->data_type != temp) ThrowError(7);
+        }
+        else if (node->second->type == Id_N)
+        {
+            VarType id_type = semantic_expr(node->second, global_table, local_table);
+            if (id_type == TYPE_NULL)
+            {
+                if (var_info->data_type != TYPE_INT_NULL && 
+                    var_info->data_type != TYPE_FLOAT_NULL && 
+                    var_info->data_type != TYPE_STRING_NULL) ThrowError(7);
+            }
+            else
+            {
+                if (var_info->data_type != id_type) ThrowError(7);
+            }
         }
         else if (node->second->type == Str_N)
         {
