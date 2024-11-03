@@ -530,7 +530,7 @@ Node * Parse_prolog(TokenBuffer* token){
     temp = create_string("ifj.string");
     insert_function(token->sym_table, temp, TYPE_STRING);
     param.name = create_string("term");
-    param.type = TYPE_UNDEFINED;
+    param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
     free_string(temp);
@@ -1022,7 +1022,6 @@ Node * Parse_void_call(TokenBuffer* token){
         free_string(ifj);
     }
     
-    
     return TwoChildNode_new(VoidCall_N, a, b);
 }
 
@@ -1034,26 +1033,10 @@ Node * Parse_return_statement(TokenBuffer* token){
     {
         a = NULL;
     }
-    else if (token->first->type == T_ID && token->second->type == T_Dot)
-    {
-        a = Parse_func_call(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
-    {
-        a = Parse_func_call(token);
-    }
-    else if (token->first->type == T_String)
-    {
-        a = Parse_string(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_SemiC)
-    {
-        a = Parse_id(token);
-    }
     else
     {
-        a = Parse_expression(token);
-    }
+        a = Parse_rhs(token);
+    } 
     
     buffer_check_first(token, T_SemiC);
 
