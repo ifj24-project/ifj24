@@ -180,99 +180,179 @@ void generate(Node *node) {
       generate(node->fourth);
       break;
 
-    // EXPRESSION
-    case Expression_N:
-      generate(node->first);
-      generate(node->second);
-      break;
+    // case Lesser_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case Compared_N:
-      generate(node->first);
-      generate(node->second);
-      break;
+    // case LesserEq_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case Term_N:
-      generate(node->first);
-      generate(node->second);
-      break;
+    // case Greater_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case Factor_N:
-      generate(node->first);
-      break;
+    // case GreaterEq_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case Lesser_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
+    // case Eq_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case LesserEq_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
+    // case NotEq_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case Greater_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
+    // case Plus_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case GreaterEq_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
+    // case Minus_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case Eq_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
+    // case Times_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
-    case NotEq_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
-
-    case Plus_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
-
-    case Minus_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
-
-    case Times_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
-
-    case Divide_N:
-      generate(node->first);
-      generate(node->second);
-      generate(node->third);
-      generate(node->fourth);
-      break;
+    // case Divide_N:
+    //   generate(node->first);
+    //   generate(node->second);
+    //   generate(node->third);
+    //   generate(node->fourth);
+    //   break;
 
     default:
+      generate(node->first);
+      generate(node->second);
+      generate(node->third);
+      generate(node->fourth);
       break;
   }
   // Exit succes
   //printf("EXIt in@0\n");
+}
+
+
+
+/**
+ * doporucuju udelat ty expressions zvlast
+ * pak byt postorderem prochazel
+ * 
+ * TODO: vymenit "var" v printech za nejaky temp register
+ */
+void generate_expr(Node* node, VarType expr_type){
+  if (node == NULL) return; // break
+
+  switch (node->type)
+  {
+   case Id_N:
+      // TODO: nejak tam tu promennou dat misto "symbol"
+      printf("PUSHS   symbol\n");
+      break;
+
+    case Float_N:
+      printf("PUSHS %f\n", node->data.flt);
+      break;
+
+    case Int_N:
+      printf("PUSHS %d\n", node->data.integer);
+      break;
+
+    case Lesser_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      // do something
+      break;
+
+    case LesserEq_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      // do something
+      break;
+
+    case Greater_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      // do something
+      break;
+
+    case GreaterEq_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      // do something
+      break;
+
+    case Eq_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      // do something
+      break;
+
+    case NotEq_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      // do something
+      break;
+
+    case Plus_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      printf("ADD var \n");
+      break;
+
+    case Minus_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      printf("SUB var \n");
+      break;
+
+    case Times_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      printf("MUL var \n");
+      break;
+
+    case Divide_N:
+      generate_expr(node->first, expr_type);
+      generate_expr(node->second, expr_type);
+      
+      // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
+      printf("DIV var \n");
+      break;
+
+    default:
+      ThrowError(99);
+      break;
+  }
+
+return;
 }
