@@ -40,20 +40,8 @@ void generate(Node *node) {
       break;
 
     case FuncDefine_N:
-      if (node->first->data.data_type == DT_VOID) {
+      if (node->third->data.data_type == DT_VOID) {
         // void function
-        printf("JUMP skip$%d\n", label_counter++);
-        printf("LABEL $%s\n", node->first->data.id->data);
-        printf("CREATEFRAME\n");
-
-        generate(node->second);
-        generate(node->third);
-        generate(node->fourth);
-
-        printf("POPFRAME\n");
-        printf("RETURN\n\n");
-      } else {
-        // non-void function
         // if main
         if (strcmp(node->first->data.id->data, "main") == 0) {
           printf("LABEL $$main\n");
@@ -61,7 +49,7 @@ void generate(Node *node) {
         } else {
           printf("JUMP skip$%d\n", label_counter++);
           printf("LABEL $%s\n", node->first->data.id->data);
-          printf("PUSHFRAME\n");
+          printf("CREATEFRAME\n");
 
           generate(node->second);
           generate(node->third);
@@ -70,6 +58,27 @@ void generate(Node *node) {
           printf("POPFRAME\n");
           printf("RETURN\n\n");
         }
+      } else {
+        // non-void function
+          printf("JUMP skip$%d\n", label_counter++);
+          printf("LABEL $%s\n", node->first->data.id->data);
+          printf("PUSHFRAME\n");
+          printf("JUMP vardef$%s%d\n", node->first->data.id->data, label_counter);
+          // pop all params
+
+          generate(node->second);
+          generate(node->third);
+          generate(node->fourth);
+
+          printf("LABEL return$%s%d\n", node->first->data.id->data, label_counter);
+
+          // return value
+
+          printf("POPFRAME\n");
+          printf("RETURN\n\n");
+
+          printf("LABEL vardef$%s%d\n", node->first->data.id->data, label_counter);
+          // define all params
       }
       break;
 
@@ -103,6 +112,7 @@ void generate(Node *node) {
       break;
 
     case FuncCall_N:
+      printf("JUMP $%s\n", node->first->data.id->data);
       generate(node->first);
       break;
 
