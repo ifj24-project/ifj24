@@ -160,8 +160,6 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             }
         }
         
-        
-        
         insert_variable(local_table, node->first->data.id, sym_get_type(node->second->data.data_type), node->data.var_or_const);
         
         semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
@@ -227,7 +225,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
         break;
     
-        case VoidCall_N:
+    case VoidCall_N:
         // function not defined
         if (find_symbol(global_table, node->first->data.id) == NULL) ThrowError(3);
         func_info = find_symbol(global_table, node->first->data.id);

@@ -182,6 +182,8 @@ Node * Parse_params_define(TokenBuffer* token);
 Node * Parse_params_define_next(TokenBuffer* token);
 Node * Parse_func_body(TokenBuffer* token);
 Node * Parse_statement(TokenBuffer* token);
+Node * Parse_rhs(TokenBuffer* token);
+Node * Parse_rhs_param(TokenBuffer* token);
 Node * Parse_variable_define(TokenBuffer* token);
 Node * Parse_variable_assign(TokenBuffer* token);
 Node * Parse_func_call(TokenBuffer* token);

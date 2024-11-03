@@ -478,7 +478,7 @@ Node * Parse_string(TokenBuffer* token){
 
 Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_const);
-    buffer_check_first(token, T_ID); //check if ifj
+    buffer_check_first(token, T_ID); // TODO: check if ifj
     buffer_check_first(token, T_Assign);
     buffer_check_first(token, T_At);
     buffer_check_first(token, T_import);
@@ -626,7 +626,6 @@ Node * Parse_datatype(TokenBuffer* token){
         x = x + 5;
     }
     
-
     switch (token->first->type)
     {
     case T_i32:
@@ -761,7 +760,7 @@ Node * Parse_statement(TokenBuffer* token){
 }
 
 Node* Parse_rhs(TokenBuffer* token){
-    if (token->first->type == T_ID && token->second->type == T_Dot) //TODO: && id is function
+    if (token->first->type == T_ID && token->second->type == T_Dot)
     {
         return Parse_func_call(token);
     }
@@ -808,7 +807,7 @@ Node * Parse_variable_define(TokenBuffer* token){
     if (token->first->type == T_Assign)
     {  
         b = NoChildNode_new(DataType_N);
-        b->data.data_type = -1; //zjistit datatype z sym-table
+        b->data.data_type = -1;
     }
     else {
         buffer_check_first(token, T_Colon);
