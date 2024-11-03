@@ -372,14 +372,33 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     case If_N:
         if (node->data.has_not_null_id == true)
         {
-            //TODO: get type from expr
-            insert_variable(local_table, node->second->data.id, TYPE_UNDEFINED, node->data.var_or_const);
+            VarType s_null_type = semantic_expr(node->first->first, global_table, local_table);
+            VarType bez_null_type;
+            switch (s_null_type)
+            {
+            case TYPE_INT_NULL:
+                bez_null_type = TYPE_INT;
+                break;
+            case TYPE_FLOAT_NULL:
+                bez_null_type = TYPE_FLOAT;
+                break;
+            case TYPE_STRING_NULL:
+                bez_null_type = TYPE_STRING;
+            default:
+                ThrowError(7);
+                break;
+            }
+
+            insert_variable(local_table, node->second->data.id, bez_null_type, node->data.var_or_const);
             semantic_scan(node->third, global_table, global_func_key, local_table);
             delete_symbol(local_table, node->second->data.id);
             semantic_scan(node->fourth, global_table, global_func_key, local_table);
         }
         else
         {
+            VarType temp = semantic_expr(node->first->first, global_table, local_table);
+            if (temp != TYPE_BOOL) ThrowError(7);
+
             semantic_scan(node->second, global_table, global_func_key, local_table);
             semantic_scan(node->third, global_table, global_func_key, local_table);
         }
@@ -387,13 +406,32 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     case While_N:
         if (node->data.has_not_null_id == true)
         {
-            //TODO: get type from expr for pipe var
-            insert_variable(local_table, node->second->data.id, TYPE_UNDEFINED, node->data.var_or_const); // TODO: |is var or const?| + remove loophole
+            VarType s_null_type = semantic_expr(node->first->first, global_table, local_table);
+            VarType bez_null_type;
+            switch (s_null_type)
+            {
+            case TYPE_INT_NULL:
+                bez_null_type = TYPE_INT;
+                break;
+            case TYPE_FLOAT_NULL:
+                bez_null_type = TYPE_FLOAT;
+                break;
+            case TYPE_STRING_NULL:
+                bez_null_type = TYPE_STRING;
+                break;
+            default:
+                ThrowError(7);
+                break;
+            }
+
+            insert_variable(local_table, node->second->data.id, bez_null_type, node->data.var_or_const); // TODO: |is var or const?| + remove loophole
             semantic_scan(node->third, global_table, global_func_key, local_table);
             delete_symbol(local_table, node->second->data.id);
         }
         else
         {
+            VarType temp = semantic_expr(node->first->first, global_table, local_table);
+            if (temp != TYPE_BOOL) ThrowError(7);
             semantic_scan(node->second, global_table, global_func_key, local_table);
         }
         break;
