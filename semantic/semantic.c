@@ -412,7 +412,19 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         case Expression_N:
             // expr check
             VarType temp = semantic_expr(node->first->first, global_table, local_table);
-            if (func_info->return_type != temp) ThrowError(4);
+            if (!type_cmp(func_info->return_type, temp)) { 
+                if (temp == TYPE_INT)
+                {
+                    expr_to_flt(node->first->first, local_table);
+                    temp == TYPE_INT;
+                }
+                else if (temp == TYPE_FLOAT)
+                {
+                    expr_to_int(node->first->first, local_table);
+                    temp = TYPE_FLOAT;
+                }
+                else ThrowError(4);
+            }
             node->first->data.data_type = temp;
             break;
         case Id_N:
@@ -708,6 +720,9 @@ void expr_to_flt(Node * node, SymbolTable* local_table){
     }
 }
 
+/**
+ * compares only int and float for ma very specific usecase
+ */
 bool type_cmp(VarType x, VarType y){
     switch (x)
     {
