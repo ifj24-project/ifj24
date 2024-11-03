@@ -525,11 +525,13 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
             // konverzi int na float, pokud operandy maji ruzny typ
             if (left_type == TYPE_INT && right_type == TYPE_FLOAT) {
+                if (node->first->type == Id_N) ThrowError(7);
                 node->first->type = Float_N;
                 node->first->data.flt = node->first->data.integer;
                 return TYPE_FLOAT;
             }
             if (left_type == TYPE_FLOAT && right_type == TYPE_INT) {
+                if (node->second->type == Id_N) ThrowError(7);
                 node->second->type = Float_N;
                 node->second->data.flt = node->second->data.integer;
                 return TYPE_FLOAT;
@@ -582,10 +584,12 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
                 (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
                 if (left_type == TYPE_INT) {
+                    if (node->first->type == Id_N) ThrowError(7);
                     node->first->type = Float_N;
                     node->first->data.flt = node->first->data.integer;
                 }
                 if (right_type == TYPE_INT) {
+                    if (node->second->type == Id_N) ThrowError(7);
                     node->second->type = Float_N;
                     node->second->data.flt = node->second->data.integer;
                 }
@@ -594,12 +598,14 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             }
             // konverzi f64 s nulovou desetinnou casti na i32
             if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
+                if (node->first->type == Id_N) ThrowError(7);
                 node->first->type = Int_N;
                 node->first->data.integer = node->first->data.flt;
                 free_string(null_str);
                 return TYPE_BOOL;
             }
              if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
+                if (node->second->type == Id_N) ThrowError(7);
                 node->second->type = Int_N;
                 node->second->data.integer = node->second->data.flt;
                 free_string(null_str);
@@ -641,10 +647,12 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
                 (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
                 if (left_type == TYPE_INT) {
+                    if (node->first->type == Id_N) ThrowError(7);
                     node->first->type = Float_N;
                     node->first->data.flt = node->first->data.integer;
                 }
                 if (right_type == TYPE_INT) {
+                    if (node->second->type == Id_N) ThrowError(7);
                     node->second->type = Float_N;
                     node->second->data.flt = node->second->data.integer;
                 }
@@ -654,12 +662,14 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
             // konverzi f64 s nulovou desetinnou casti na i32
             if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
+                if (node->first->type == Id_N) ThrowError(7);
                 node->first->type = Int_N;
                 node->first->data.integer = node->first->data.flt;
                 free_string(null_str);
                 return TYPE_BOOL;
             }
              if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
+                if (node->second->type == Id_N) ThrowError(7);
                 node->second->type = Int_N;
                 node->second->data.integer = node->second->data.flt;
                 free_string(null_str);
