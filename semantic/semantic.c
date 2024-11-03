@@ -84,6 +84,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             else if (node->third->type == Expression_N)
             {
                 temp = semantic_expr(node->third->first, global_table, local_table);
+                node->third->data.data_type = temp;
             }
             else if (node->third->type == Id_N)
             {
@@ -124,7 +125,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             if (node->third->type == Expression_N)
             {
                 // check expr type
-                if (sym_get_type(node->second->data.data_type) != semantic_expr(node->third->first, global_table, local_table)) ThrowError(7);
+                VarType temp = semantic_expr(node->third->first, global_table, local_table);
+                if (sym_get_type(node->second->data.data_type) != temp) ThrowError(7);
+                node->third->data.data_type = temp;
             }
             else if (node->third->type == Id_N)
             {
@@ -202,6 +205,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             // check expr type
             VarType temp = semantic_expr(node->second->first, global_table, local_table);
             if (var_info->data_type != temp) ThrowError(7);
+            node->second->data.data_type = temp;
         }
         else if (node->second->type == Id_N)
         {
@@ -304,7 +308,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 else if (called_param->first->type == Expression_N)
                 {
                     //check expression type
-                    if (def_param->type != semantic_expr(called_param->first->first, global_table, local_table)) ThrowError(4);
+                    VarType temp = semantic_expr(called_param->first->first, global_table, local_table);
+                    if (def_param->type != temp) ThrowError(4);
+                    called_param->first->data.data_type;
                 }
                 else if (called_param->first->type == FuncCall_N)
                 {
@@ -366,7 +372,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         {
         case Expression_N:
             // expr check
-            if (func_info->return_type != semantic_expr(node->first->first, global_table, local_table)) ThrowError(4);
+            VarType temp = semantic_expr(node->first->first, global_table, local_table);
+            if (func_info->return_type != temp) ThrowError(4);
+            node->first->data.data_type = temp;
             break;
         case Id_N:
             var_info = find_symbol(local_table, node->first->data.id);
