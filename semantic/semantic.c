@@ -61,7 +61,8 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         }
         
         semantic_scan(node->fourth, global_table, node->first->data.id, local_table);
-        free_symbol_table(local_table);
+        node->data.sym_table = local_table;
+        // free_symbol_table(local_table);
         local_table = NULL;
         break;
 

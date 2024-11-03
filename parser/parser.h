@@ -79,6 +79,7 @@ typedef int IntValue;
 typedef int DataTypeValue;
 typedef int VariableDefineValue;
 typedef bool Not_null_statement;
+typedef SymbolTable* FuncDefineValue;
 
 /**
  * @brief specialni members pro nektere uzly
@@ -92,6 +93,8 @@ typedef union DataValue
     DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void , 5==bool
     VariableDefineValue var_or_const; // 0==var, 1==const
     Not_null_statement has_not_null_id; // true== ma o dite navic, node.second dite je |id| v te pipe
+    FuncDefineValue sym_table; // Dane: musis znova pushnout var v tech |pipech| protoze ja je popuju po jejich useku platnosti;
+    
 
 } Data_value;
 

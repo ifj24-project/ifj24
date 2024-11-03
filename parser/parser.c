@@ -43,6 +43,9 @@ void free_parse_tree(Node* tree){
     case Str_N:
         free_string(tree->data.str);
         break;
+    case FuncDefine_N:
+        free_symbol_table(tree->data.sym_table);
+        break;
     default:
         break;
     }
