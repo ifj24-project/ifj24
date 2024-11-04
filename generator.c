@@ -1,5 +1,6 @@
 /** @file generator.c
 * @author Daniel Geier (xgeierd00)
+* @autor Patrik Mokrusa (xmokru00)
 *
 * IFJ24
 *
@@ -14,9 +15,12 @@
 #include "symtable.h"
 #include "parser/parser.h"
 
+// TODO: zabalit fnc generate do dalsi, ktera bude kontrolovat a vyvolavat errory
+// pripadne pak upravit header soubor
+
 void generate(Node *node) {
   if (node == NULL) return;
-  static int label_counter = 0;
+  //static int label_counter = 0;
 
   switch (node->type) {
     case Start_N:
@@ -43,13 +47,15 @@ void generate(Node *node) {
       if (node->third->data.data_type == DT_VOID) {
         // void function
         // if main
+        // asi nemusi byt muzu proste nazacatku udelat main je kontrolovano jestli existuje
         if (strcmp(node->first->data.id->data, "main") == 0) {
           printf("LABEL $$main\n");
           printf("CREATEFRAME\n");
         } else {
-          printf("JUMP skip$%d\n", label_counter++);
+          printf("JUMP skip$%s\n", node->first->data.id->data);
           printf("LABEL $%s\n", node->first->data.id->data);
           printf("CREATEFRAME\n");
+          printf("PUSHFRAME\n");
 
           generate(node->second);
           generate(node->third);
@@ -57,34 +63,44 @@ void generate(Node *node) {
 
           printf("POPFRAME\n");
           printf("RETURN\n\n");
+          printf("LABEL skip$%s", node->first->data.id->data);
         }
       } else {
         // non-void function
-          printf("JUMP skip$%d\n", label_counter++);
+          printf("JUMP skip$%s\n", node->first->data.id->data);
           printf("LABEL $%s\n", node->first->data.id->data);
+          printf("CREATEFRAME\n");
           printf("PUSHFRAME\n");
-          printf("JUMP vardef$%s%d\n", node->first->data.id->data, label_counter);
-          // pop all params
+          printf("JUMP vardef$%s\n", node->first->data.id->data);
 
-          generate(node->second);
+          // zjistit pocet params
+          // pop all params
+          //generate(node->second);
+
           generate(node->third);
           generate(node->fourth);
 
-          printf("LABEL return$%s%d\n", node->first->data.id->data, label_counter);
+          // sem skoci vsechny returny funkce
+          printf("LABEL return$%s\n", node->first->data.id->data);
 
           // return value
 
           printf("POPFRAME\n");
           printf("RETURN\n\n");
 
-          printf("LABEL vardef$%s%d\n", node->first->data.id->data, label_counter);
+          printf("LABEL vardef$%s\n", node->first->data.id->data);
           // define all params
+          //generate(node->second);
+
+          printf("LABEL skip$%s", node->first->data.id->data);
       }
       break;
 
     case ParamsDefine_N:
+      //printf("DEFVAR LF@%s\n", node->first->data.id->data);
       generate(node->first);
       generate(node->second);
+      generate(node->third);
       break;
 
     case ParamsDefineNext_N:
@@ -114,6 +130,8 @@ void generate(Node *node) {
     case FuncCall_N:
       printf("JUMP $%s\n", node->first->data.id->data);
       generate(node->first);
+      // pushnout pocet parametru
+      generate(node->second);
       break;
 
     case Params_N:
@@ -344,7 +362,7 @@ void generate_expr(Node* node, VarType expr_type){
     case Divide_N:
       generate_expr(node->first, expr_type);
       generate_expr(node->second, expr_type);
-      
+
       // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
       printf("DIV var \n");
       break;
