@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "parser.h"
 #include "expressionparse.h"
 
@@ -35,6 +36,11 @@ void free_parse_tree(Node* tree){
         return;
     }
 
+    free_parse_tree(tree->first);
+    free_parse_tree(tree->second);
+    free_parse_tree(tree->third);
+    free_parse_tree(tree->fourth);
+
     switch (tree->type)
     {
     case Id_N:
@@ -49,11 +55,6 @@ void free_parse_tree(Node* tree){
     default:
         break;
     }
-
-    free_parse_tree(tree->first);
-    free_parse_tree(tree->second);
-    free_parse_tree(tree->third);
-    free_parse_tree(tree->fourth);
 
     free(tree);
     
@@ -302,6 +303,8 @@ void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
         // printf("token: %s\n",get_token_name(token->first->type));
+        if (token->first->type == T_String) free(token->first->value.stringVal);
+        if (token->first->type == T_ID) free(token->first->value.ID_name);
         free(token->first);
         token->first = token->second;
         token->second = token->third;
@@ -333,7 +336,7 @@ Node * IdNode_new(char* id_string){
     }
     x->type = Id_N;
     x->data.id = create_string(id_string); 
-    free(id_string);
+    // free(id_string);
     return x;
 } 
 
@@ -345,7 +348,7 @@ Node * StringNode_new(char *string){
     }
     x->type = Str_N;
     x->data.str = create_string(string);
-    free(string);
+    // free(string);
     return x;
 }
 Node * FloatNode_new(double num){
@@ -456,9 +459,10 @@ Node * Parse_start(TokenBuffer* token){
 Node * Parse_id(TokenBuffer* token){
     if (token->first->type == T_ID)
     {
-        char* id_string = token->first->value.ID_name;
+        // char* id_string = token->first->value.ID_name;
+        Node * ret = IdNode_new(token->first->value.ID_name);
         consume_buffer(token, 1);
-        return IdNode_new(id_string);
+        return ret;
     }
     else
     {
@@ -469,9 +473,10 @@ Node * Parse_id(TokenBuffer* token){
 Node * Parse_string(TokenBuffer* token){
     if (token->first->type == T_String)
     {
-        char* string = token->first->value.stringVal;
+        // char* string = token->first->value.stringVal;
+        Node* ret = StringNode_new(token->first->value.stringVal);
         consume_buffer(token, 1);
-        return StringNode_new(string);
+        return ret;
     }
     else
     {
@@ -512,6 +517,7 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_UNDEFINED;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.i2f");
@@ -520,6 +526,7 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_INT;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.f2i");
@@ -528,6 +535,7 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_FLOAT;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.string");
@@ -536,6 +544,7 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.length");
@@ -544,6 +553,7 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.concat");
@@ -552,10 +562,12 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     param.name = create_string("s2");
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.substring");
@@ -564,14 +576,17 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     param.name = create_string("i");
     param.type = TYPE_INT;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     param.name = create_string("j");
     param.type = TYPE_INT;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.strcmp");
@@ -580,10 +595,12 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     param.name = create_string("s2");
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.ord");
@@ -592,10 +609,12 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_STRING;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     param.name = create_string("i");
     param.type = TYPE_INT;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
 
     temp = create_string("ifj.chr");
@@ -604,6 +623,7 @@ Node * Parse_prolog(TokenBuffer* token){
     param.type = TYPE_INT;
     param.next = NULL;
     push_parameter(token->sym_table, temp, param);
+    free_string(param.name);
     free_string(temp);
     
 
@@ -861,8 +881,8 @@ Node * Parse_func_call(TokenBuffer* token){
         String* ifj_dot = concat_strings(ifj, dot);
         String* tmp = a->data.id;
         a->data.id = concat_strings(ifj_dot, tmp);
-        free(dot);
-        free(ifj_dot);
+        free_string(dot);
+        free_string(ifj_dot);
         free_string(tmp);
         free_string(ifj);
     }
@@ -1018,8 +1038,8 @@ Node * Parse_void_call(TokenBuffer* token){
         String* ifj_dot = concat_strings(ifj, dot);
         String* tmp = a->data.id;
         a->data.id = concat_strings(ifj_dot, tmp);
-        free(dot);
-        free(ifj_dot);
+        free_string(dot);
+        free_string(ifj_dot);
         free_string(tmp);
         free_string(ifj);
     }
