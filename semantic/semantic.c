@@ -11,6 +11,7 @@
  * TODO:
  * 
  * mark vars as used
+ * mark vars as changed
  * include unused var check (symtable function)
  * 
  */
