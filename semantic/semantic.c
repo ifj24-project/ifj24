@@ -13,9 +13,6 @@
  * mark vars as used
  * include unused var check (symtable function)
  * 
- * if only true false expr
- * while check contition (viz. zadani)
- * 
  */
 
 
@@ -130,12 +127,14 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 if (!type_cmp(node->second->data.data_type, temp)) {
                     if (temp == TYPE_INT)
                     {
-                        expr_to_flt(node->third->first, local_table);
+                        int converted = expr_to_flt(node->third->first, local_table);
+                        if (converted == -1) ThrowError(7);
                         temp == TYPE_INT;
                     }
                     else if (temp == TYPE_FLOAT)
                     {
-                        expr_to_int(node->third->first, local_table);
+                        int converted = expr_to_int(node->third->first, local_table);
+                        if (converted == -1) ThrowError(7);
                         temp = TYPE_FLOAT;
                     }
                     else ThrowError(7);
@@ -220,12 +219,14 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             if (!type_cmp(var_info->data_type, temp)) {
                 if (temp == TYPE_INT)
                 {
-                    expr_to_flt(node->second->first, local_table);
+                    int converted = expr_to_flt(node->second->first, local_table);
+                    if (converted == -1) ThrowError(7);
                     temp == TYPE_INT;
                 }
                 else if (temp == TYPE_FLOAT)
                 {
-                    expr_to_int(node->second->first, local_table);
+                    int converted = expr_to_int(node->second->first, local_table);
+                    if (converted == -1) ThrowError(7);
                     temp = TYPE_FLOAT;
                 }
                 else ThrowError(7);
@@ -339,12 +340,14 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     if (!type_cmp(def_param->type, temp)) {
                     if (temp == TYPE_INT)
                     {
-                        expr_to_flt(called_param->first->first, local_table);
+                        int converted = expr_to_flt(called_param->first->first, local_table);
+                        if (converted == -1) ThrowError(7);
                         temp == TYPE_INT;
                     }
                     else if (temp == TYPE_FLOAT)
                     {
-                        expr_to_int(called_param->first->first, local_table);
+                        int converted = expr_to_int(called_param->first->first, local_table);
+                        if (converted == -1) ThrowError(7);
                         temp = TYPE_FLOAT;
                     }
                     else ThrowError(4);
@@ -523,19 +526,17 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
         ThrowError(7); // chyba: prazdny uzel
     }
 
-    // vytvarime retezec pro porovnani pri identifikaci typu null
-    String* null_str = create_string("null");
+    
 
     // kontrola typu uzlu 
     switch (node->type) {
         case Int_N:
-            free_string(null_str);
             return TYPE_INT;
         case Float_N:
-            free_string(null_str);
             return TYPE_FLOAT;
         case Id_N: {
             // kontrola na null
+            String* null_str = create_string("null");
             if (compare_strings(node->data.id, null_str) == 0) {
                 free_string(null_str);
                 return TYPE_NULL;
@@ -545,7 +546,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             VariableInfo* var = find_symbol(local_table, node->data.id);
             if (!var) var = find_symbol(global_table, node->data.id);
             if (!var) {
-                free_string(null_str);
+
                 ThrowError(7); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni
             }
             free_string(null_str);
@@ -563,15 +564,25 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
             // konverzi int na float, pokud operandy maji ruzny typ
             if (left_type == TYPE_INT && right_type == TYPE_FLOAT) {
-                if (node->first->type == Id_N) ThrowError(7);
-                node->first->type = Float_N;
-                node->first->data.flt = node->first->data.integer;
+                // if (node->first->type == Id_N) ThrowError(7);
+                // node->first->type = Float_N;
+                // node->first->data.flt = node->first->data.integer;
+                int temp = expr_to_flt(node->first, local_table);
+                if (temp == -1) {
+                    temp = expr_to_int(node->second, local_table);
+                }
+                if (temp == -1) ThrowError(7);
                 return TYPE_FLOAT;
             }
             if (left_type == TYPE_FLOAT && right_type == TYPE_INT) {
-                if (node->second->type == Id_N) ThrowError(7);
-                node->second->type = Float_N;
-                node->second->data.flt = node->second->data.integer;
+                // if (node->second->type == Id_N) ThrowError(7);
+                // node->second->type = Float_N;
+                // node->second->data.flt = node->second->data.integer;
+                int temp = expr_to_flt(node->second, local_table);
+                if (temp == -1) {
+                    temp = expr_to_int(node->first, local_table);
+                }
+                if (temp == -1) ThrowError(7);
                 return TYPE_FLOAT;
             }
 
@@ -584,7 +595,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
             // zpracovani null == null
             if (left_type == TYPE_NULL && right_type == TYPE_NULL) {
-                free_string(null_str);
+
                 return TYPE_BOOL;
             }
 
@@ -595,7 +606,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
                 (right_type == TYPE_INT_NULL && left_type == TYPE_NULL) ||
                 (right_type == TYPE_FLOAT_NULL && left_type == TYPE_NULL) ||
                 (right_type == TYPE_STRING_NULL && left_type == TYPE_NULL)) {
-                free_string(null_str);
+
                 return TYPE_BOOL;
             }
 
@@ -604,52 +615,62 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
                 (left_type == TYPE_INT && right_type == TYPE_INT_NULL) ||
                 (left_type == TYPE_FLOAT_NULL && right_type == TYPE_FLOAT) ||
                 (left_type == TYPE_FLOAT && right_type == TYPE_FLOAT_NULL)) {
-                free_string(null_str);
+
                 return TYPE_BOOL;
             }
 
             // lze porovnavat promenne stejnych ciselnych typu 
             if (left_type == TYPE_INT && right_type == TYPE_INT) {
-            free_string(null_str);
             return TYPE_BOOL;
             }
 
             if (left_type == TYPE_FLOAT && right_type == TYPE_FLOAT) {
-            free_string(null_str);
             return TYPE_BOOL;
             }
             // porovnani s konverzi typu
             if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
                 (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
                 if (left_type == TYPE_INT) {
-                    if (node->first->type == Id_N) ThrowError(7);
-                    node->first->type = Float_N;
-                    node->first->data.flt = node->first->data.integer;
+                    // if (node->first->type == Id_N) ThrowError(7);
+                    // node->first->type = Float_N;
+                    // node->first->data.flt = node->first->data.integer;
+                    // expr_to_flt(node->first, local_table);
+                    int temp = expr_to_flt(node->first, local_table);
+                    if (temp == -1) {
+                        temp = expr_to_int(node->second, local_table);
+                    }
+                    if (temp == -1) ThrowError(7);
                 }
                 if (right_type == TYPE_INT) {
-                    if (node->second->type == Id_N) ThrowError(7);
-                    node->second->type = Float_N;
-                    node->second->data.flt = node->second->data.integer;
+                    // if (node->second->type == Id_N) ThrowError(7);
+                    // node->second->type = Float_N;
+                    // node->second->data.flt = node->second->data.integer;
+                    // expr_to_flt(node->second, local_table);
+                    int temp = expr_to_flt(node->second, local_table);
+                    if (temp == -1) {
+                        temp = expr_to_int(node->first, local_table);
+                    }
+                    if (temp == -1) ThrowError(7);
                 }
-                free_string(null_str);
+
                 return TYPE_BOOL;
             }
             // konverzi f64 s nulovou desetinnou casti na i32
-            if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
-                if (node->first->type == Id_N) ThrowError(7);
-                node->first->type = Int_N;
-                node->first->data.integer = node->first->data.flt;
-                free_string(null_str);
-                return TYPE_BOOL;
-            }
-             if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
-                if (node->second->type == Id_N) ThrowError(7);
-                node->second->type = Int_N;
-                node->second->data.integer = node->second->data.flt;
-                free_string(null_str);
-                return TYPE_BOOL;
-            }
-            free_string(null_str);
+            // if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
+            //     // if (node->first->type == Id_N) ThrowError(7);
+            //     // node->first->type = Int_N;
+            //     // node->first->data.integer = node->first->data.flt;
+            //     expr_to_int(node->first, local_table);
+
+            //     return TYPE_BOOL;
+            // }
+            //  if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
+            //     // if (node->second->type == Id_N) ThrowError(7);
+            //     // node->second->type = Int_N;
+            //     // node->second->data.integer = node->second->data.flt;
+            //     expr_to_int(node->second, local_table);
+            //     return TYPE_BOOL;
+            // }
             ThrowError(7); // chyba nekompatibility typu
         }
 
@@ -659,25 +680,22 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
             // pokud typ operandu null, nemuzeme porovnovat 
             if (left_type == TYPE_NULL || right_type == TYPE_NULL) {
-                free_string(null_str);
+
                 ThrowError(7); // chyba: nepovolena operace
             }
 
             // nemuzeme porovnovat typy zahrnujici null
             if (left_type == TYPE_INT_NULL || left_type == TYPE_FLOAT_NULL || 
             right_type == TYPE_INT_NULL || right_type == TYPE_FLOAT_NULL) {
-            free_string(null_str);
-            ThrowError(7); // chyba: nepovolena operace
+                ThrowError(7); // chyba: nepovolena operace
             }
 
             // lze porovnavat promenne stejnych ciselnych typu 
             if (left_type == TYPE_INT && right_type == TYPE_INT) {
-            free_string(null_str);
             return TYPE_BOOL;
             }
 
             if (left_type == TYPE_FLOAT && right_type == TYPE_FLOAT) {
-            free_string(null_str);
             return TYPE_BOOL;
             }
 
@@ -685,49 +703,63 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
                 (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
                 if (left_type == TYPE_INT) {
-                    if (node->first->type == Id_N) ThrowError(7);
-                    node->first->type = Float_N;
-                    node->first->data.flt = node->first->data.integer;
+                    // if (node->first->type == Id_N) ThrowError(7);
+                    // node->first->type = Float_N;
+                    // node->first->data.flt = node->first->data.integer;
+                    // expr_to_flt(node->first, local_table);
+                    int temp = expr_to_flt(node->first, local_table);
+                    if (temp == -1) {
+                        temp = expr_to_int(node->first, local_table);
+                    }
+                    if (temp == -1) ThrowError(7);
                 }
                 if (right_type == TYPE_INT) {
-                    if (node->second->type == Id_N) ThrowError(7);
-                    node->second->type = Float_N;
-                    node->second->data.flt = node->second->data.integer;
+                    // if (node->second->type == Id_N) ThrowError(7);
+                    // node->second->type = Float_N;
+                    // node->second->data.flt = node->second->data.integer;
+                    // expr_to_flt(node->second, local_table);
+                    int temp = expr_to_flt(node->second, local_table);
+                    if (temp == -1) {
+                        temp = expr_to_int(node->second, local_table);
+                    }
+                    if (temp == -1) ThrowError(7);
                 }
-                free_string(null_str);
+
                 return TYPE_BOOL; 
             }
 
-            // konverzi f64 s nulovou desetinnou casti na i32
-            if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
-                if (node->first->type == Id_N) ThrowError(7);
-                node->first->type = Int_N;
-                node->first->data.integer = node->first->data.flt;
-                free_string(null_str);
-                return TYPE_BOOL;
-            }
-             if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
-                if (node->second->type == Id_N) ThrowError(7);
-                node->second->type = Int_N;
-                node->second->data.integer = node->second->data.flt;
-                free_string(null_str);
-                return TYPE_BOOL;
-            }
+            // // konverzi f64 s nulovou desetinnou casti na i32
+            // if ((left_type == TYPE_FLOAT && is_whole_float(node->first->data.flt)) && right_type == TYPE_INT) {
+            //     // if (node->first->type == Id_N) ThrowError(7);
+            //     // node->first->type = Int_N;
+            //     // node->first->data.integer = node->first->data.flt;
+            //     expr_to_int(node->first, local_table);
 
+            //     return TYPE_BOOL;
+            // }
+            //  if ((right_type == TYPE_FLOAT && is_whole_float(node->second->data.flt)) && left_type == TYPE_INT) {
+            //     // if (node->second->type == Id_N) ThrowError(7);
+            //     // node->second->type = Int_N;
+            //     // node->second->data.integer = node->second->data.flt;
+            //     expr_to_int(node->second, local_table);
+
+            //     return TYPE_BOOL;
+            // }
+            ThrowError(7);
         }
 
         default:
-            free_string(null_str);
             ThrowError(7); 
     }
-
-    free_string(null_str);
     return TYPE_UNDEFINED; 
 }
 
 
-void expr_to_int(Node* node, SymbolTable* local_table){
-    if (node == NULL) return;
+int expr_to_int(Node* node, SymbolTable* local_table){
+    if (node == NULL) return 0;
+
+    int a;
+    int b;
 
     switch (node->type)
     {
@@ -737,35 +769,46 @@ void expr_to_int(Node* node, SymbolTable* local_table){
             node->type = Int_N;
             node->data.integer = node->data.flt;    
         }
-        else ThrowError(7);
+        else return -1;
+        return 0;
         break;
     case Id_N:
         VariableInfo* var = find_symbol(local_table, node->data.id);
-        if (var->data_type == TYPE_FLOAT || var->data_type == TYPE_FLOAT_NULL) ThrowError(7);
+        if (var->data_type == TYPE_FLOAT || var->data_type == TYPE_FLOAT_NULL) return -1;
+        return 0;
     default:
-        expr_to_int(node->first, local_table);
-        expr_to_int(node->second, local_table);
+        a = expr_to_int(node->first, local_table);
+        b = expr_to_int(node->second, local_table);
         break;
     }
+    if (a != b) return -1;
+    return 0;
 }
 
-void expr_to_flt(Node * node, SymbolTable* local_table){
-    if (node == NULL) return;
+int expr_to_flt(Node * node, SymbolTable* local_table){
+    if (node == NULL) return 0;
+
+    int a;
+    int b;
 
     switch (node->type)
     {
     case Int_N:
         node->type = Float_N;
-        node->data.flt = node->data.integer;    
+        node->data.flt = node->data.integer;  
+        return 0;  
         break;
     case Id_N:
         VariableInfo* var = find_symbol(local_table, node->data.id);
-        if (var->data_type == TYPE_INT || var->data_type == TYPE_INT_NULL) ThrowError(7);
+        if (var->data_type == TYPE_INT || var->data_type == TYPE_INT_NULL) return -1;
+        return 0;
     default:
-        expr_to_flt(node->first, local_table);
-        expr_to_flt(node->second, local_table);
+        a = expr_to_flt(node->first, local_table);
+        b = expr_to_flt(node->second, local_table);
         break;
     }
+    if (a != b) return -1;
+    return 0;
 }
 
 /**
