@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "../error/error.h"
 #include "parser.h"
 #include "expressionparse.h"
 
@@ -242,7 +243,7 @@ int sym_get_type(int type){
         return TYPE_STRING_NULL;
         break;
     default:
-        printf("sym_get_type: something went wrong\n");
+        fprintf(stderr, "sym_get_type: something went wrong\n");
 
         break;
     }
@@ -286,7 +287,7 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
         param.type = TYPE_STRING_NULL;
         break;
     default:
-        printf("sym_push_params something went wrong\n");
+        fprintf(stderr, "sym_push_params something went wrong\n");
 
         break;
     }
@@ -317,11 +318,11 @@ void consume_buffer(TokenBuffer* token, size_t n){
 void buffer_check_first(TokenBuffer* token, token_type num){
     if (token->first->type != num)
     {
-        printf("Expected token type: %s got: %s\n", get_token_name(num), get_token_name(token->first->type));
-        printf("next tokens:\n");
-        printf("%s\n", get_token_name(token->second->type));
-        printf("%s\n", get_token_name(token->third->type));
-        printf("%s\n", get_token_name(token->fourth->type));
+        fprintf(stderr, "Expected token type: %s got: %s\n", get_token_name(num), get_token_name(token->first->type));
+        fprintf(stderr, "next tokens:\n");
+        fprintf(stderr, "%s\n", get_token_name(token->second->type));
+        fprintf(stderr, "%s\n", get_token_name(token->third->type));
+        fprintf(stderr, "%s\n", get_token_name(token->fourth->type));
         ThrowError(2);
     }
     consume_buffer(token, 1);
@@ -674,7 +675,7 @@ Node * Parse_datatype(TokenBuffer* token){
         break;
 
     default:
-        printf("Expected data_type_token, got: %s\n",get_token_name(token->first->type));
+        fprintf(stderr, "Expected data_type_token, got: %s\n",get_token_name(token->first->type));
         ThrowError(2);
         break;
     }
@@ -774,7 +775,7 @@ Node * Parse_statement(TokenBuffer* token){
         a = Parse_return_statement(token);
         break;
     default:
-        printf("expected statement_token got: %s \n",get_token_name(token->first->type));
+        fprintf(stderr, "expected statement_token got: %s \n",get_token_name(token->first->type));
         ThrowError(2);
         break;
     }

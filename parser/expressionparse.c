@@ -1,4 +1,5 @@
 #include "expressionparse.h"
+#include "../error/error.h"
 
 Node * Parse_expression(TokenBuffer* token){
     // shift == 1 == <
@@ -53,6 +54,7 @@ Node * Parse_expression(TokenBuffer* token){
     };
 
     int bracket_cnt = 0;
+    
     PrecStack * stack = prec_stack_init();
     PrecStackItem * input = next_prec_item(token, &bracket_cnt);
     Prectype first_terminal;
