@@ -198,7 +198,9 @@ void resize_table(SymbolTable* table, int new_size) {
     // vytvarime novou tabulku s vetsi velikosti
     table->table = calloc(new_size, sizeof(SymbolTableEntry));
     if (table->table == NULL) {
-        free(old_table); // uvolnujeme starou tabulku v pripade chyby
+        //??
+        SymbolTable temp_table = {old_table, old_size, table->count};
+        free_symbol_table(&temp_table);  // uvolnujeme starou tabulku v pripade chyby
         ThrowError(99);  // chyba allokace 
     }
 
@@ -208,59 +210,23 @@ void resize_table(SymbolTable* table, int new_size) {
     // prenosime elementy ze stare tabulky do nove
     for (int i = 0; i < old_size; i++) {
         if (old_table[i].is_occupied) {
-            // hledame slot
-            int new_index = find_slot(table, old_table[i].key);
-            
-            // kopirujeme klic
-            table->table[new_index].key = copy_string(old_table[i].key);
-            table->table[new_index].type = old_table[i].type;
-
             // pokud je to funkce, kopirujeme parametry a navratovy typ
             if (old_table[i].type == TYPE_FUNCTION) {
-                table->table[new_index].func_info.return_type = old_table[i].func_info.return_type;
-                table->table[new_index].func_info.param_count = old_table[i].func_info.param_count;
-                // kopirujeme parametry jako vazany seznam
-                FunctionParam* old_params = old_table[i].func_info.params;
-                FunctionParam* new_params_head = NULL;
-                FunctionParam* new_params_tail = NULL;
-
-                while (old_params != NULL) {
-                    FunctionParam* new_param = malloc(sizeof(FunctionParam)); // pridelime pamet pro novy parametr
-                    if (new_param == NULL) {
-                        ThrowError(99); // chyba allokace
-                    }
-                    new_param->name = copy_string(old_params->name); // kopirovani jmena parametru
-                    new_param->type = old_params->type; // kopirovani typu parametru
-                    new_param->next = NULL; // inicializace ukazatelu na dalsi element
-
-                    // dodavame novy parametr do seznamu
-                    if (new_params_head == NULL) {
-                        new_params_head = new_param; // 1. parametr
-                        new_params_tail = new_param;
-                    } else {
-                        new_params_tail->next = new_param; 
-                        new_params_tail = new_param; 
-                    }
-                    old_params = old_params->next; // prechod do dalsiho parametru
-                }
-                // novy seznam parametru
-                table->table[new_index].func_info.params = new_params_head;
+                insert_function(table, old_table[i].key, old_table[i].func_info.return_type);
+                table->table[find_slot(table, old_table[i].key)].func_info.params = old_table[i].func_info.params;
+                table->table[find_slot(table, old_table[i].key)].func_info.param_count = old_table[i].func_info.param_count;
                 
             } else if (old_table[i].type == TYPE_VARIABLE) {
                 // pokud je to promenna, kopirujeme jeji informace
-                table->table[new_index].var_info.data_type = old_table[i].var_info.data_type;
-                table->table[new_index].var_info.is_const = old_table[i].var_info.is_const;
-                table->table[new_index].var_info.is_used = old_table[i].var_info.is_used;
+                 insert_variable(table, old_table[i].key, old_table[i].var_info.data_type, old_table[i].var_info.is_const);
+                 int index = find_slot(table, old_table[i].key);
+                 table->table[index].var_info.is_used = old_table[i].var_info.is_used;
             }
-
-            // oznacime novy element jako obsazeny
-            table->table[new_index].is_occupied = true;
-            table->count++;
         }
     }
-
     // uvolnujeme starou tabulku
-    free(old_table);
+    SymbolTable temp_table = {old_table, old_size, table->count};
+    free_symbol_table(&temp_table);
 }
 
 void free_symbol_table(SymbolTable* table) {
