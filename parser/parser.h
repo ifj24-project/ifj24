@@ -146,6 +146,8 @@ void node_stack_push(NodeStack* stack, Node* node);
 void node_stack_free(NodeStack* stack);
 void node_stack_free_keep_nodes(NodeStack* stack);
 
+void parse_wrapper_ThrowError(int code);
+
 /**
  * @brief ctor pro buffer na tokeny, ktery se musi passnout parse_start() fci
  * @return ukazatel na onen buffer

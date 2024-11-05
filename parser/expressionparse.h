@@ -43,6 +43,8 @@ typedef struct PrecStack
     PrecStackItem * top;
 } PrecStack;
 
+void expr_wrapper_ThrowError(int code);
+
 PrecStack* prec_stack_init();
 void prec_stack_push(PrecStack * stack, Prectype type, Node * data);
 PrecStackItem* create_prec_item(Prectype type, Node * data);

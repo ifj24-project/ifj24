@@ -6,6 +6,10 @@
 #include "parser.h"
 #include "expressionparse.h"
 
+/**
+ * ERROR HANDLING
+ */
+
 TokenBuffer * PARSER_TOKEN_BUFFER = NULL;
 NodeStack * PARSER_NODE_STACK = NULL;
 
@@ -89,6 +93,10 @@ TokenBuffer * buffer_ctor(){
 
     return x;
 }
+
+/**
+ * HELPERS & UTILS
+ */
 
 void buffer_dtor(TokenBuffer * token){
     if (token->first->type == T_String) free(token->first->value.stringVal);
@@ -406,6 +414,10 @@ void buffer_check_first(TokenBuffer* token, token_type num){
     return;
 }
 
+/**
+ * NODE ALOCATION
+ */
+
 Node * IdNode_new(char* id_string){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
@@ -558,6 +570,10 @@ Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * thir
     x->fourth = fourth;
     return x;
 }
+
+/**
+ * RECURSIVE DESCEND
+ */
 
 Node * Parse_start(TokenBuffer* token){
     // cleanup if error
@@ -759,6 +775,7 @@ Node * Parse_program(TokenBuffer* token){
     }
 
     Node* x = Parse_func_define(token);
+    // x->data.sym_table = NULL;
     Node* y = Parse_program(token);
 
     return TwoChildNode_new(Program_N, x, y);
