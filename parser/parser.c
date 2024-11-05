@@ -6,12 +6,81 @@
 #include "parser.h"
 #include "expressionparse.h"
 
+TokenBuffer * PARSER_TOKEN_BUFFER = NULL;
+NodeStack * PARSER_NODE_STACK = NULL;
+
+void parse_wrapper_ThrowError(int code){
+
+    if (PARSER_NODE_STACK != NULL) node_stack_free(PARSER_NODE_STACK);
+    
+    if (PARSER_TOKEN_BUFFER != NULL) {
+        free_symbol_table(PARSER_TOKEN_BUFFER->sym_table);
+        buffer_dtor(PARSER_TOKEN_BUFFER);
+    }
+    ThrowError(code);
+}
+
+
+NodeStack* node_stack_init(){
+    NodeStack* stack = (NodeStack*) malloc(sizeof(NodeStack));
+    if (stack == NULL) parse_wrapper_ThrowError(99);
+    stack->count = 0;
+    stack->first = NULL;
+    return stack;
+}
+
+void node_stack_push(NodeStack* stack, Node* node){
+    NodeStackItem* item = (NodeStackItem*) malloc(sizeof(NodeStackItem));
+    if (item == NULL) parse_wrapper_ThrowError(99);
+
+    item->data = node;
+    item->next = stack->first;
+    stack->first = item;
+    stack->count++;
+}
+
+void node_stack_free(NodeStack* stack){
+    NodeStackItem* item = stack->first;
+    NodeStackItem* temp;
+    while (item != NULL)
+    {
+        temp = item->next;
+        switch (item->data->type)
+        {
+        case Id_N:
+            free_string(item->data->data.id);
+            break;
+        case Str_N:
+            free_string(item->data->data.str);
+            break;
+        default:
+            break;
+        }
+        free(item->data);
+        
+        free(item);
+        item = temp;
+    }
+    free(stack);
+}
+
+void node_stack_free_keep_nodes(NodeStack* stack){
+    NodeStackItem* item = stack->first;
+    NodeStackItem* temp;
+    while (item != NULL)
+    {
+        temp = item->next;
+        free(item);
+        item = temp;
+    }
+    free(stack);
+}
 
 TokenBuffer * buffer_ctor(){
     TokenBuffer * x = malloc(sizeof(TokenBuffer));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
     x->first = scan();
     x->second = scan();
@@ -22,9 +91,17 @@ TokenBuffer * buffer_ctor(){
 }
 
 void buffer_dtor(TokenBuffer * token){
+    if (token->first->type == T_String) free(token->first->value.stringVal);
+    if (token->first->type == T_ID) free(token->first->value.ID_name);
     free(token->first);
+    if (token->second->type == T_String) free(token->second->value.stringVal);
+    if (token->second->type == T_ID) free(token->second->value.ID_name);
     free(token->second);
+    if (token->third->type == T_String) free(token->third->value.stringVal);
+    if (token->third->type == T_ID) free(token->third->value.ID_name);
     free(token->third);
+    if (token->fourth->type == T_String) free(token->fourth->value.stringVal);
+    if (token->fourth->type == T_ID) free(token->fourth->value.ID_name);
     free(token->fourth);
     free(token);
 
@@ -323,7 +400,7 @@ void buffer_check_first(TokenBuffer* token, token_type num){
         fprintf(stderr, "%s\n", get_token_name(token->second->type));
         fprintf(stderr, "%s\n", get_token_name(token->third->type));
         fprintf(stderr, "%s\n", get_token_name(token->fourth->type));
-        ThrowError(2);
+        parse_wrapper_ThrowError(2);
     }
     consume_buffer(token, 1);
     return;
@@ -333,8 +410,12 @@ Node * IdNode_new(char* id_string){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+    
     x->type = Id_N;
     x->data.id = create_string(id_string); 
     // free(id_string);
@@ -345,19 +426,28 @@ Node * StringNode_new(char *string){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+
     x->type = Str_N;
     x->data.str = create_string(string);
     // free(string);
     return x;
 }
 Node * FloatNode_new(double num){
-        Node* x = malloc(sizeof(Node));
+    Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+
     x->type = Float_N;
     x->data.flt = num;
     return x;
@@ -366,8 +456,12 @@ Node * IntNode_new(int num){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+
     x->type = Int_N;
     x->data.integer = num;
     return x;
@@ -383,8 +477,12 @@ Node * NoChildNode_new(int node_type){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+    
     x->type = node_type;
     x->first = NULL;
     x->second = NULL;
@@ -396,8 +494,12 @@ Node * OneChildNode_new(int node_type, Node * first){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+
     x->type = node_type;
     x->first = first;
     x->second = NULL;
@@ -409,8 +511,12 @@ Node * TwoChildNode_new(int node_type, Node * first, Node * second){
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+
     x->type = node_type;
     x->first = first;
     x->second = second;
@@ -422,8 +528,12 @@ Node * ThreeChildNode_new(int node_type, Node * first, Node * second, Node * thi
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+
     x->type = node_type;
     x->first = first;
     x->second = second;
@@ -435,8 +545,12 @@ Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * thir
     Node* x = malloc(sizeof(Node));
     if (x == NULL)
     {
-        ThrowError(99);
+        parse_wrapper_ThrowError(99);
     }
+
+    node_stack_push(PARSER_NODE_STACK, x);
+
+
     x->type = node_type;
     x->first = first;
     x->second = second;
@@ -446,6 +560,10 @@ Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * thir
 }
 
 Node * Parse_start(TokenBuffer* token){
+    // cleanup if error
+    PARSER_TOKEN_BUFFER = token;
+    PARSER_NODE_STACK = node_stack_init();
+
     // prefill global variables (null as global variable)
     String* temp = create_string("null");
     insert_variable(token->sym_table, temp, TYPE_NULL, true);
@@ -454,7 +572,11 @@ Node * Parse_start(TokenBuffer* token){
     Node * first = Parse_prolog(token);
     Node * second = Parse_program(token);
 
-    return TwoChildNode_new(Start_N,first, second);
+    Node * ret = TwoChildNode_new(Start_N,first, second);
+
+    node_stack_free_keep_nodes(PARSER_NODE_STACK);
+
+    return ret;
 }
 
 Node * Parse_id(TokenBuffer* token){
@@ -676,7 +798,7 @@ Node * Parse_datatype(TokenBuffer* token){
 
     default:
         fprintf(stderr, "Expected data_type_token, got: %s\n",get_token_name(token->first->type));
-        ThrowError(2);
+        parse_wrapper_ThrowError(2);
         break;
     }
 
@@ -776,7 +898,7 @@ Node * Parse_statement(TokenBuffer* token){
         break;
     default:
         fprintf(stderr, "expected statement_token got: %s \n",get_token_name(token->first->type));
-        ThrowError(2);
+        parse_wrapper_ThrowError(2);
         break;
     }
 
@@ -822,7 +944,7 @@ Node * Parse_variable_define(TokenBuffer* token){
         var_const = 0;
     }
     else{
-        ThrowError(2);
+        parse_wrapper_ThrowError(2);
     }
     
     a = Parse_id(token);

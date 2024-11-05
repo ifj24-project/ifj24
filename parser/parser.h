@@ -124,6 +124,28 @@ typedef struct TokenBuffer
 
 }TokenBuffer;
 
+typedef struct NodeStackItem
+{
+    Node* data;
+    struct NodeStackItem * next;
+
+} NodeStackItem;
+
+
+typedef struct NodeStack
+{
+    int count;
+    NodeStackItem* first;
+
+} NodeStack;
+
+
+
+NodeStack* node_stack_init();
+void node_stack_push(NodeStack* stack, Node* node);
+void node_stack_free(NodeStack* stack);
+void node_stack_free_keep_nodes(NodeStack* stack);
+
 /**
  * @brief ctor pro buffer na tokeny, ktery se musi passnout parse_start() fci
  * @return ukazatel na onen buffer
