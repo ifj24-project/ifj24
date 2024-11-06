@@ -3,7 +3,6 @@
 
 #include "../scanner.h"
 #include "../symtable.h"
-#include "../error/error.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -124,6 +123,30 @@ typedef struct TokenBuffer
     SymbolTable* sym_table;
 
 }TokenBuffer;
+
+typedef struct NodeStackItem
+{
+    Node* data;
+    struct NodeStackItem * next;
+
+} NodeStackItem;
+
+
+typedef struct NodeStack
+{
+    int count;
+    NodeStackItem* first;
+
+} NodeStack;
+
+
+
+NodeStack* node_stack_init();
+void node_stack_push(NodeStack* stack, Node* node);
+void node_stack_free(NodeStack* stack);
+void node_stack_free_keep_nodes(NodeStack* stack);
+
+void parse_wrapper_ThrowError(int code);
 
 /**
  * @brief ctor pro buffer na tokeny, ktery se musi passnout parse_start() fci

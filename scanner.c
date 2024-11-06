@@ -107,6 +107,7 @@ Token* Create_ID_or_Keyword(char first){
             
             // 39 is the first keyword, so I flipped list of keywords and minused the position of the index
             token->type = 39 - i;
+            free(token->value.ID_name); // if token is not T_id, dont give ID_name value
             return token;
         }
     }
