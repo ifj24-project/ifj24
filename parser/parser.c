@@ -136,7 +136,8 @@ void free_parse_tree(Node* tree){
         free_string(tree->data.str);
         break;
     case FuncDefine_N:
-        if (tree->data.sym_table != NULL) free(tree->data.sym_table);
+        if (tree->data.sym_table != NULL) free_symbol_table(tree->data.sym_table);
+        
         break;
     default:
         break;
