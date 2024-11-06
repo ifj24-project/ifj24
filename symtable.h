@@ -165,6 +165,35 @@ VarType get_symbol_type(SymbolTable* table, String* key);
 void mark_variable_as_used(SymbolTable* table, String* key);
 
 /**
+ * @brief Marks a variable in the symbol table as modified.
+ *
+ * Checks if a variable with the specified key is found in the symbol table and 
+ * verifies it is not a constant. If the variable is non-constant, it marks 
+ * the variable as modified. Throws an error if the variable is a constant or 
+ * if it is not found in the table.
+ *
+ * @param table Pointer to the symbol table where the variable is stored.
+ * @param key Key (identifier) of the variable to mark as modified.
+ * @throws Error 9 if the variable is a constant and cannot be modified.
+ * @throws Error 99 if the variable does not exist or is not of type variable.
+ */
+void mark_variable_as_changed(SymbolTable* table, String* key);
+
+/**
+ * @brief Checks for unmodified, non-constant variables in the symbol table.
+ *
+ * Iterates through the symbol table to identify any non-constant variables 
+ * that have not been modified. If such variables are found, throws an error. 
+ * Returns the count of unmodified, non-constant variables if no error is thrown.
+ *
+ * @param table Pointer to the symbol table containing variables to check.
+ * @return int Number of non-constant variables that remain unmodified. Returns 
+ *         0 if all non-constant variables are correctly marked as modified.
+ * @throws Error 9 if any non-constant variable is found unmodified.
+ */
+int check_unmodified_variables(SymbolTable* table);
+
+/**
  * @brief Finds a symbol in the symbol table.
  * 
  * Searches for a symbol by its key in the symbol table. If found, returns a pointer to its associated information.
