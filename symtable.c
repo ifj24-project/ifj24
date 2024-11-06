@@ -139,6 +139,38 @@ void mark_variable_as_used(SymbolTable* table, String* key) {
     }
 }
 
+void mark_variable_as_changed(SymbolTable* table, String* key) {
+    int index = find_slot(table, key);
+    if (index != -1 && table->table[index].is_occupied && table->table[index].type == TYPE_VARIABLE) {
+        VariableInfo* var_info = &table->table[index].var_info;
+        // kontrola: pokud promenna je konstantni 
+        if (var_info->is_const) {
+            ThrowError(9);  // chyba: nemuzeme menit konstantni promenne
+        }
+        var_info->changed = true;  // nastavime na true modifikovatelnou promennu 
+       } else {
+        ThrowError(99);  // chyba: promenna nenajdena nebo neni to promenna
+    }
+}
+
+int check_unmodified_variables(SymbolTable* table) {
+    int count = 0;
+
+    for (int i = 0; i < table->size; i++) {
+        if (table->table[i].is_occupied && table->table[i].type == TYPE_VARIABLE) {
+            VariableInfo* var_info = &table->table[i].var_info;
+            if (!var_info->is_const && !var_info->changed) {
+                count++;
+            }
+        }
+    }
+    if (count > 0) {
+        ThrowError(9);  // chyba: nekonstantni promenna musi byt modifikovatelnou 
+    }
+
+    return count;  // vrati 0, pokud vsechny promenne jsou korektne oznaceny jako modifikovatelne 
+}
+
 void* find_symbol(SymbolTable* table, String* key) {
     int index = find_slot(table, key);
     if (index != -1 && table->table[index].is_occupied) {
