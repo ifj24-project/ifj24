@@ -87,7 +87,13 @@ Node * Parse_expression(TokenBuffer* token){
         
         if (prec_table[first_terminal][input->type] == 2)
         {
-            Node* ret = OneChildNode_new(Expression_N, stack->top->node);
+            Node* ret;
+            if (stack->top->node->type == Id_N || stack->top->node->type == FuncCall_N) ret = stack->top->node;
+            // else if (stack->top->node == P_id && stack->top->node->type ) ret = stack->top->node;
+            else ret = OneChildNode_new(Expression_N, stack->top->node);
+
+            // Node* ret = OneChildNode_new(Expression_N, stack->top->node);
+
             prec_stack_free(stack);
             free(input);
             return ret;
@@ -166,6 +172,12 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
         return create_prec_item(P_divide, NULL);
 
     case T_ID:
+        if (token->second->type == T_L_Round_B || token->second->type == T_Dot)
+        {
+            node = Parse_func_call(token);
+            return create_prec_item(P_id, node);
+        }
+        
         node = Parse_id(token);
         return create_prec_item(P_id, node);
 
@@ -186,7 +198,8 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
 
     case T_R_Round_B:
         (*bracket_cnt)--;
-        if (token->second->type == T_L_Curly_B || token->second->type == T_Pipe || token->second->type == T_Colon || *bracket_cnt < 0)
+        // comma collon fix?
+        if (token->second->type == T_L_Curly_B || token->second->type == T_Pipe || token->second->type == T_Comma || *bracket_cnt < 0)
         {
             if (*bracket_cnt > -1) expr_wrapper_ThrowError(2);
             return create_prec_item(P_$, NULL);
@@ -194,6 +207,7 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
         consume_buffer(token, 1);
         return create_prec_item(P_R_RoundB, NULL);
     
+    case T_Comma:
     case T_SemiC:
         // consume_buffer(token, 1);
         return create_prec_item(P_$, NULL);

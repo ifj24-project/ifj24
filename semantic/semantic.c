@@ -150,13 +150,13 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 if (!type_cmp(node->second->data.data_type, temp)) {
                     if (temp == TYPE_INT)
                     {
-                        int converted = expr_to_flt(node->third->first, local_table);
+                        int converted = expr_to_flt(node->third->first, global_table, local_table);
                         if (converted == -1) semantic_wrapper_ThrowError(7);
                         temp == TYPE_INT;
                     }
                     else if (temp == TYPE_FLOAT)
                     {
-                        int converted = expr_to_int(node->third->first, local_table);
+                        int converted = expr_to_int(node->third->first, global_table, local_table);
                         if (converted == -1) semantic_wrapper_ThrowError(7);
                         temp = TYPE_FLOAT;
                     }
@@ -242,13 +242,13 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             if (!type_cmp(var_info->data_type, temp)) {
                 if (temp == TYPE_INT)
                 {
-                    int converted = expr_to_flt(node->second->first, local_table);
+                    int converted = expr_to_flt(node->second->first, global_table, local_table);
                     if (converted == -1) semantic_wrapper_ThrowError(7);
                     temp == TYPE_INT;
                 }
                 else if (temp == TYPE_FLOAT)
                 {
-                    int converted = expr_to_int(node->second->first, local_table);
+                    int converted = expr_to_int(node->second->first, global_table, local_table);
                     if (converted == -1) semantic_wrapper_ThrowError(7);
                     temp = TYPE_FLOAT;
                 }
@@ -363,13 +363,13 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     if (!type_cmp(def_param->type, temp)) {
                     if (temp == TYPE_INT)
                     {
-                        int converted = expr_to_flt(called_param->first->first, local_table);
+                        int converted = expr_to_flt(called_param->first->first, global_table, local_table);
                         if (converted == -1) semantic_wrapper_ThrowError(7);
                         temp == TYPE_INT;
                     }
                     else if (temp == TYPE_FLOAT)
                     {
-                        int converted = expr_to_int(called_param->first->first, local_table);
+                        int converted = expr_to_int(called_param->first->first, global_table, local_table);
                         if (converted == -1) semantic_wrapper_ThrowError(7);
                         temp = TYPE_FLOAT;
                     }
@@ -398,7 +398,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     case If_N:
         if (node->data.has_not_null_id == true)
         {
-            VarType s_null_type = semantic_expr(node->first->first, global_table, local_table);
+            VarType s_null_type = semantic_expr(node->first, global_table, local_table);
             VarType bez_null_type;
             switch (s_null_type)
             {
@@ -422,7 +422,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         }
         else
         {
-            VarType temp = semantic_expr(node->first->first, global_table, local_table);
+            VarType temp = semantic_expr(node->first, global_table, local_table);
             if (temp != TYPE_BOOL) semantic_wrapper_ThrowError(7);
 
             semantic_scan(node->second, global_table, global_func_key, local_table);
@@ -432,7 +432,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     case While_N:
         if (node->data.has_not_null_id == true)
         {
-            VarType s_null_type = semantic_expr(node->first->first, global_table, local_table);
+            VarType s_null_type = semantic_expr(node->first, global_table, local_table);
             VarType bez_null_type;
             switch (s_null_type)
             {
@@ -479,13 +479,13 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             if (!type_cmp(func_info->return_type, temp)) { 
                 if (temp == TYPE_INT)
                 {
-                    int converted = expr_to_flt(node->first->first, local_table);
+                    int converted = expr_to_flt(node->first->first, global_table, local_table);
                     if (converted == -1) semantic_wrapper_ThrowError(7);
                     temp == TYPE_INT;
                 }
                 else if (temp == TYPE_FLOAT)
                 {
-                    int converted = expr_to_int(node->first->first, local_table);
+                    int converted = expr_to_int(node->first->first, global_table, local_table);
                     if (converted == -1) semantic_wrapper_ThrowError(7);
                     temp = TYPE_FLOAT;
                 }
@@ -552,6 +552,7 @@ bool is_whole_float(double value) {
 
 VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_table) {
     if (!node) {
+        fprintf(stderr, "semantic_expr: chyba: prazdny uzel\n");
         semantic_wrapper_ThrowError(7); // chyba: prazdny uzel
     }
 
@@ -559,6 +560,8 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
     // kontrola typu uzlu 
     switch (node->type) {
+        case Expression_N:
+            return semantic_expr(node->first, global_table, local_table);
         case Int_N:
             return TYPE_INT;
         case Float_N:
@@ -576,11 +579,21 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             if (!var) var = find_symbol(global_table, node->data.id);
             if (!var) {
 
-                semantic_wrapper_ThrowError(7); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni
+                semantic_wrapper_ThrowError(3); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni
             }
             free_string(null_str);
             return var->data_type;
         }
+        case FuncCall_N:
+            String* null_str = create_string("null");
+            if (compare_strings(node->first->data.id, null_str) == 0) semantic_wrapper_ThrowError(2);
+            free_string(null_str);
+
+            FunctionInfo* func = find_symbol(global_table, node->first->data.id);
+            if (func == NULL) semantic_wrapper_ThrowError(3);
+            semantic_scan(node, global_table, NULL, local_table);
+            return func->return_type;
+            
 
         case Plus_N: case Minus_N: case Times_N: case Divide_N: {
             // rekurzivne najdeme datove typy prvniho a druheho uzlu
@@ -594,17 +607,17 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             // konverze, pokud operandy maji ruzny typ
             if (left_type == TYPE_INT && right_type == TYPE_FLOAT) {
 
-                int temp = expr_to_flt(node->first, local_table);
+                int temp = expr_to_flt(node->first, global_table, local_table);
                 if (temp == -1) {
-                    temp = expr_to_int(node->second, local_table);
+                    temp = expr_to_int(node->second, global_table, local_table);
                 }
                 if (temp == -1) semantic_wrapper_ThrowError(7);
                 return TYPE_FLOAT;
             }
             if (left_type == TYPE_FLOAT && right_type == TYPE_INT) {
-                int temp = expr_to_flt(node->second, local_table);
+                int temp = expr_to_flt(node->second, global_table, local_table);
                 if (temp == -1) {
-                    temp = expr_to_int(node->first, local_table);
+                    temp = expr_to_int(node->first, global_table, local_table);
                 }
                 if (temp == -1) semantic_wrapper_ThrowError(7);
                 return TYPE_FLOAT;
@@ -655,16 +668,16 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
                 (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
                 if (left_type == TYPE_INT) {
-                    int temp = expr_to_flt(node->first, local_table);
+                    int temp = expr_to_flt(node->first, global_table, local_table);
                     if (temp == -1) {
-                        temp = expr_to_int(node->second, local_table);
+                        temp = expr_to_int(node->second, global_table, local_table);
                     }
                     if (temp == -1) semantic_wrapper_ThrowError(7);
                 }
                 if (right_type == TYPE_INT) {
-                    int temp = expr_to_flt(node->second, local_table);
+                    int temp = expr_to_flt(node->second, global_table, local_table);
                     if (temp == -1) {
-                        temp = expr_to_int(node->first, local_table);
+                        temp = expr_to_int(node->first, global_table, local_table);
                     }
                     if (temp == -1) semantic_wrapper_ThrowError(7);
                 }
@@ -704,16 +717,16 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             if ((left_type == TYPE_INT && right_type == TYPE_FLOAT) ||
                 (left_type == TYPE_FLOAT && right_type == TYPE_INT)) {
                 if (left_type == TYPE_INT) {
-                    int temp = expr_to_flt(node->first, local_table);
+                    int temp = expr_to_flt(node->first, global_table, local_table);
                     if (temp == -1) {
-                        temp = expr_to_int(node->first, local_table);
+                        temp = expr_to_int(node->first, global_table, local_table);
                     }
                     if (temp == -1) semantic_wrapper_ThrowError(7);
                 }
                 if (right_type == TYPE_INT) {
-                    int temp = expr_to_flt(node->second, local_table);
+                    int temp = expr_to_flt(node->second, global_table, local_table);
                     if (temp == -1) {
-                        temp = expr_to_int(node->second, local_table);
+                        temp = expr_to_int(node->second, global_table, local_table);
                     }
                     if (temp == -1) semantic_wrapper_ThrowError(7);
                 }
@@ -731,7 +744,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 }
 
 
-int expr_to_int(Node* node, SymbolTable* local_table){
+int expr_to_int(Node* node, SymbolTable* global_table, SymbolTable* local_table){
     if (node == NULL) return 0;
 
     int a;
@@ -752,16 +765,20 @@ int expr_to_int(Node* node, SymbolTable* local_table){
         VariableInfo* var = find_symbol(local_table, node->data.id);
         if (var->data_type == TYPE_FLOAT || var->data_type == TYPE_FLOAT_NULL) return -1;
         return 0;
+    case FuncCall_N:
+        FunctionInfo* func = find_symbol(global_table, node->first->data.id);
+        if (func->return_type == TYPE_FLOAT || func->return_type == TYPE_FLOAT_NULL) return -1;
+        return 0;
     default:
-        a = expr_to_int(node->first, local_table);
-        b = expr_to_int(node->second, local_table);
+        a = expr_to_int(node->first, global_table, local_table);
+        b = expr_to_int(node->second, global_table, local_table);
         break;
     }
     if (a != b) return -1;
     return 0;
 }
 
-int expr_to_flt(Node * node, SymbolTable* local_table){
+int expr_to_flt(Node * node, SymbolTable* global_table, SymbolTable* local_table){
     if (node == NULL) return 0;
 
     int a;
@@ -778,9 +795,13 @@ int expr_to_flt(Node * node, SymbolTable* local_table){
         VariableInfo* var = find_symbol(local_table, node->data.id);
         if (var->data_type == TYPE_INT || var->data_type == TYPE_INT_NULL) return -1;
         return 0;
+    case FuncCall_N:
+        FunctionInfo* func = find_symbol(global_table, node->first->data.id);
+        if (func->return_type == TYPE_INT || func->return_type == TYPE_INT_NULL) return -1;
+        return 0;
     default:
-        a = expr_to_flt(node->first, local_table);
-        b = expr_to_flt(node->second, local_table);
+        a = expr_to_flt(node->first, global_table, local_table);
+        b = expr_to_flt(node->second, global_table, local_table);
         break;
     }
     if (a != b) return -1;

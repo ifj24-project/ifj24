@@ -136,7 +136,7 @@ void free_parse_tree(Node* tree){
         free_string(tree->data.str);
         break;
     case FuncDefine_N:
-        free_symbol_table(tree->data.sym_table);
+        if (tree->data.sym_table != NULL) free(tree->data.sym_table);
         break;
     default:
         break;
@@ -923,26 +923,33 @@ Node * Parse_statement(TokenBuffer* token){
 }
 
 Node* Parse_rhs(TokenBuffer* token){
-    if (token->first->type == T_ID && token->second->type == T_Dot)
-    {
-        return Parse_func_call(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
-    {
-        return Parse_func_call(token);
-    }
-    else if (token->first->type == T_String)
+    // if (token->first->type == T_ID && token->second->type == T_Dot)
+    // {
+    //     return Parse_func_call(token);
+    // }
+    // else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
+    // {
+    //     return Parse_func_call(token);
+    // }
+    // else if (token->first->type == T_String)
+    // {
+    //     return Parse_string(token);
+    // }
+    // else if (token->first->type == T_ID && token->second->type == T_SemiC)
+    // {
+    //     return Parse_id(token);
+    // }
+    // else
+    // {
+    //     return Parse_expression(token);
+    // }
+
+    if (token->first->type == T_String)
     {
         return Parse_string(token);
     }
-    else if (token->first->type == T_ID && token->second->type == T_SemiC)
-    {
-        return Parse_id(token);
-    }
-    else
-    {
-        return Parse_expression(token);
-    }
+    else return Parse_expression(token);
+
 }
 
 Node * Parse_variable_define(TokenBuffer* token){
