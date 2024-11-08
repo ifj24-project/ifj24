@@ -164,9 +164,9 @@ int check_unmodified_variables(SymbolTable* table) {
             }
         }
     }
-    if (count > 0) {
-        ThrowError(9);  // chyba: nekonstantni promenna musi byt modifikovatelnou 
-    }
+    // if (count > 0) {
+    //     ThrowError(9);  // chyba: nekonstantni promenna musi byt modifikovatelnou 
+    // }
 
     return count;  // vrati 0, pokud vsechny promenne jsou korektne oznaceny jako modifikovatelne 
 }
@@ -197,11 +197,13 @@ int check_unused_variables(SymbolTable* table) {
         }
     }
     
-    if (unused_count > 0) {      // pokud jsou nepouzite promenne, volame error
-        ThrowError(9);
-    }
+    // if (unused_count > 0) {      // pokud jsou nepouzite promenne, volame error
+    //     ThrowError(9);
+    // }
 
-    return 0;  // vsechny promenne jsou pouzite
+    // return 0;  // vsechny promenne jsou pouzite
+
+    return unused_count;
 }
 
 void delete_symbol(SymbolTable* table, String* key) {
@@ -246,6 +248,7 @@ void resize_table(SymbolTable* table, int new_size) {
             if (old_table[i].type == TYPE_FUNCTION) {
                 insert_function(table, old_table[i].key, old_table[i].func_info.return_type);
                 table->table[find_slot(table, old_table[i].key)].func_info.params = old_table[i].func_info.params;
+                old_table[i].func_info.params = NULL; // nastavim ve stare tabulce na NULL aby free_symbol_table je nesmazal
                 table->table[find_slot(table, old_table[i].key)].func_info.param_count = old_table[i].func_info.param_count;
                 
             } else if (old_table[i].type == TYPE_VARIABLE) {
@@ -253,6 +256,7 @@ void resize_table(SymbolTable* table, int new_size) {
                  insert_variable(table, old_table[i].key, old_table[i].var_info.data_type, old_table[i].var_info.is_const);
                  int index = find_slot(table, old_table[i].key);
                  table->table[index].var_info.is_used = old_table[i].var_info.is_used;
+                 table->table[index].var_info.changed = old_table[i].var_info.changed;
             }
         }
     }

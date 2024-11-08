@@ -39,6 +39,7 @@ typedef struct {
     VarType data_type;   // datovy typ promenne
     bool is_const;       // je-li promenna konstantni 
     bool is_used;        // je-li promenna pouzita
+    bool changed;       // je-li promenna nekdy zmenena
 } VariableInfo;
 
 // Struktura pro zapis do tabulky symbolu
