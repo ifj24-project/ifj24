@@ -2,4 +2,10 @@
 compiler
 .vscode
 input4.txt
+<<<<<<< Updated upstream
 test.sh
+=======
+.idea
+/test.sh
+*.exe
+>>>>>>> Stashed changes

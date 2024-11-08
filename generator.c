@@ -72,6 +72,20 @@ void generate(Node *node) {
           printf("CREATEFRAME\n");
           printf("PUSHFRAME\n");
           printf("JUMP vardef$%s\n", node->first->data.id->data);
+          printf("LABEL vardef$%s$back\n", node->first->data.id->data);
+
+          // postupne projit nody s parametry a pricitat pocet parametru
+          int pocet_param = 0;
+          Node* node_params = node;
+          while(node_params->second != NULL) {
+            pocet_param++;
+            node_params = node_params->second;
+          }
+
+          // Popne vsechny parametry
+          for (int i = 0; i < pocet_param; i++) {
+            printf("POPS ")
+          }
 
           // zjistit pocet params
           // pop all params
@@ -93,6 +107,7 @@ void generate(Node *node) {
           printf("LABEL vardef$%s\n", node->first->data.id->data);
           // define all params
           generate(node->second);
+          printf("JUMP vardef$%s$back\n", node->first->data.id->data);
 
           printf("LABEL skip$%s", node->first->data.id->data);
       }
@@ -413,8 +428,9 @@ char* data_type(char* type){
         return "bool";
         break;
     case DT_UNDEFINED: //odvozeny?
-        return "nil";
+        return "";
         break;
+    // jak to je s tim nil?
     case DT_I32_NULL:
         return "int";;
         break;
@@ -425,7 +441,7 @@ char* data_type(char* type){
         return "string";
         break;
     default:
-        return "nil";
+        return "";
         break;
     }
 
