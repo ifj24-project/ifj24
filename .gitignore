@@ -2,5 +2,4 @@
 compiler
 .vscode
 input4.txt
-.idea
-/test.sh
+test.sh

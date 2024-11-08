@@ -43,6 +43,8 @@ typedef struct PrecStack
     PrecStackItem * top;
 } PrecStack;
 
+void expr_wrapper_ThrowError(int code);
+
 PrecStack* prec_stack_init();
 void prec_stack_push(PrecStack * stack, Prectype type, Node * data);
 PrecStackItem* create_prec_item(Prectype type, Node * data);
@@ -50,9 +52,11 @@ void prec_push_item(PrecStack * stack, PrecStackItem* item);
 void prec_stack_pop(PrecStack * stack);
 void prec_stack_free(PrecStack * stack);
 
-PrecStackItem * next_prec_item(TokenBuffer * token);
+PrecStackItem * next_prec_item(TokenBuffer * token, int* bracket_cnt);
 
 void reduce(PrecStack * stack);
+
+int first_terminal_type(PrecStack* stack);
 
 Node * Parse_expression(TokenBuffer* token);
 
