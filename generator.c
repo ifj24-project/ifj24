@@ -112,6 +112,7 @@ void generate(Node* node)
             }
 
             // Popne vsechny parametry od konce
+            // parametry jsou napushovany obracene, tj. nahore je prvni
             for (int i = pocet_param; i > 0; i--)
             {
                 printf("POPS LF@%s\n", node_params->first->data.id->data);
@@ -175,40 +176,68 @@ void generate(Node* node)
         {
             printf("DEFVAR LF@%s ", node->first->data.id->data);
             generate_expr(node->third, node->third->data.data_type);
+            printf("POPS LF@%s\n", node->first->data.id->data);
         }
         else
         {
             printf("DEFVAR LF@%s\n", node->first->data.id->data);
             generate(node->third);
         }
+        /*
         printf("DEFVAR LF@%s\n", node->first->data.id->data);
     //printf("MOVE LF@%s %s@%s", node->first->data.id->data, data_type(node->second->data.data_type), node->third->data.id->data);
         printf("MOVE LF@%s ", node->first->data.id->data);
-        generate(node->second);
+        */
         break;
 
     case VariableAssign_N:
-        printf("MOVE LF@%s ", node->first->data.id->data);
-        generate(node->second);
+        if (node->second->type == Expression_N)
+        {
+            generate_expr(node->second, node->second->data.data_type);
+            printf("POPS LF@%s\n", node->first->data.id->data);
+        } else
+        {
+            printf("MOVE LF@%s ", node->first->data.id->data);
+            generate(node->second);
+        }
         break;
 
     case FuncCall_N:
-        printf("JUMP $%s\n", node->first->data.id->data);
         generate(node->second);
+        printf("CALL $%s\n", node->first->data.id->data);
         break;
 
+    // pushuji parametry od konce!
+    // aby se to lip pak parovalo s parametry funkce
     case Params_N:
         // pushs parametr
-        printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
         generate(node->second);
+        if (node->first->type == Expression_N)
+		{
+			generate_expr(node->first, node->first->data.data_type);
+		}
+		else
+		{
+			printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
+		}
         break;
 
     case ParamsNext_N:
-        printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
         generate(node->second);
+        if (node->first->type == Expression_N)
+		{
+			generate_expr(node->first, node->first->data.data_type);
+		}
+		else
+		{
+			printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
+		}
+        //printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
         break;
 
     case If_N:
+        generate_expr(node->first, node->first->data.data_type);
+
         printf("PUSHS LF@%s\n", node->first->data.id->data);
 
         generate(node->second);
@@ -356,6 +385,7 @@ void generate_expr(Node* node, VarType expr_type)
     if (node == NULL) return; // break
 
     // prefix notation
+    // nwm je to vlastne na zasobniku, tj. nejdriv pushnu operandy a pak co chci
     switch (node->type)
     {
     case Id_N:
