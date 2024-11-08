@@ -64,7 +64,7 @@ void generate(Node* node)
 
                 // globalni promena pro vraceni hodnot z funkci
                 printf("DEFVAR GF@rvalue_return\n");
-                // globalni promenna pro vraceni true/false z funkci
+                // globalni promenna pro vraceni true/false
                 printf("DEFVAR GF@bool_return\n");
                 // globalni promenne pro expresions lhs a rhs
                 printf("DEFVAR GF@lhs\n");
@@ -355,11 +355,12 @@ void generate_expr(Node* node, VarType expr_type)
 {
     if (node == NULL) return; // break
 
+    // prefix notation
     switch (node->type)
     {
     case Id_N:
         // TODO: nejak tam tu promennou dat misto "symbol"
-        printf("PUSHS   symbol\n");
+        printf("PUSHS   LF@%s\n", node->data.id->data);
         break;
 
     case Float_N:
@@ -373,22 +374,19 @@ void generate_expr(Node* node, VarType expr_type)
     case Lesser_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
-    // do something
-        printf("LTS");
+        printf("LTS\n");
         break;
 
     case LesserEq_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
-    // do something
-        printf("GTS NOTS");
+        printf("GTS NOTS\n");
         break;
 
     case Greater_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
-    // do something
-        printf("GTS");
+		printf("GTS\n");
         break;
 
     case GreaterEq_N:
@@ -438,7 +436,7 @@ void generate_expr(Node* node, VarType expr_type)
         // if % then IDIVS else DIVS
 
         printf("DIVS");
-        
+
         break;
 
     default:
