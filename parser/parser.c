@@ -803,6 +803,7 @@ Node * Parse_datatype(TokenBuffer* token){
         
     case T_L_Square_B:
         buffer_check_first(token, T_L_Square_B);
+        if (token->first->type == T_Underscore) consume_buffer(token, 1); // allow [_]u8
         buffer_check_first(token,T_R_Square_B);
         buffer_check_first(token, T_u8);
         x = x + 3;
@@ -998,6 +999,9 @@ Node * Parse_variable_define(TokenBuffer* token){
 
 
 Node * Parse_variable_assign(TokenBuffer* token){
+
+    // TODO: allow       _ = do_smth(1, 2);
+
     Node * a = Parse_id(token);
     buffer_check_first(token, T_Assign);
     Node * b = Parse_rhs(token);
@@ -1018,6 +1022,9 @@ Node * Parse_func_call(TokenBuffer* token){
     }
     
     Node * a = Parse_id(token); 
+
+    if (!strcmp(a->data.id->data, "null")) parse_wrapper_ThrowError(2);
+
     buffer_check_first(token, T_L_Round_B);
     Node * b = Parse_params(token);
     buffer_check_first(token, T_R_Round_B);
@@ -1042,22 +1049,6 @@ Node * Parse_rhs_param(TokenBuffer * token){
     if (token->first->type == T_String)
     {
         return Parse_string(token);
-    }
-    else if ((token->first->type == T_ID) && (token->second->type == T_Comma))
-    {
-        return Parse_id(token);
-    }
-    else if ((token->first->type == T_ID) && (token->second->type == T_R_Round_B))
-    {
-        return Parse_id(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_Dot)
-    {
-        return Parse_func_call(token);
-    }
-    else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
-    {
-        return Parse_func_call(token);
     }
     else 
     {
@@ -1173,6 +1164,8 @@ Node * Parse_void_call(TokenBuffer* token){
     }
     
     Node * a = Parse_id(token);
+
+    if (!strcmp(a->data.id->data, "null")) parse_wrapper_ThrowError(2);
 
     buffer_check_first(token, T_L_Round_B);
     Node * b = Parse_params(token);
