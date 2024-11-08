@@ -51,6 +51,13 @@ void generate(Node *node) {
         if (strcmp(node->first->data.id->data, "main") == 0) {
           printf("LABEL $$main\n");
           printf("CREATEFRAME\n");
+
+          // globalni promena pro vraceni hodnot z funkci
+          printf("DEFVAR GF@%s\n", "returnVar");
+
+          generate(node->second);
+          generate(node->third);
+          generate(node->fourth);
         } else {
           printf("JUMP skip$%s\n", node->first->data.id->data);
           printf("LABEL $%s\n", node->first->data.id->data);
@@ -82,9 +89,9 @@ void generate(Node *node) {
             node_params = node_params->second;
           }
 
-          // Popne vsechny parametry
-          for (int i = 0; i < pocet_param; i++) {
-            printf("POPS ")
+          // Popne vsechny parametry od konce
+          for(int i = pocet_param; i > 0; i--) {
+            printf("POPS LF@%s\n", node_params->first->data.id->data);
           }
 
           // zjistit pocet params
@@ -98,7 +105,8 @@ void generate(Node *node) {
           printf("# Return funkce\n");
           printf("LABEL return$%s\n", node->first->data.id->data);
 
-          // return value
+          // return value ulozit na zasobnik
+
 
           printf("POPFRAME\n");
           printf("RETURN\n\n");
@@ -122,6 +130,7 @@ void generate(Node *node) {
     case ParamsDefineNext_N:
       printf("DEFVAR LF@%s\n", node->first->data.id->data);
       generate(node->second);
+      generate(node->third);
       break;
 
     case FuncBody_N:
