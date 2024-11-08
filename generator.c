@@ -81,6 +81,7 @@ void generate(Node *node) {
           generate(node->fourth);
 
           // sem skoci vsechny returny funkce
+          printf("# Return funkce\n");
           printf("LABEL return$%s\n", node->first->data.id->data);
 
           // return value
@@ -88,23 +89,23 @@ void generate(Node *node) {
           printf("POPFRAME\n");
           printf("RETURN\n\n");
 
+          printf("# Definice promennych\n");
           printf("LABEL vardef$%s\n", node->first->data.id->data);
           // define all params
-          //generate(node->second);
+          generate(node->second);
 
           printf("LABEL skip$%s", node->first->data.id->data);
       }
       break;
 
     case ParamsDefine_N:
-      //printf("DEFVAR LF@%s\n", node->first->data.id->data);
-      generate(node->first);
+      printf("DEFVAR LF@%s\n", node->first->data.id->data);
       generate(node->second);
       generate(node->third);
       break;
 
     case ParamsDefineNext_N:
-      generate(node->first);
+      printf("DEFVAR LF@%s\n", node->first->data.id->data);
       generate(node->second);
       break;
 
@@ -118,8 +119,8 @@ void generate(Node *node) {
       break;
 
     case VariableDefine_N:
-      generate(node->first);
-      generate(node->second);
+      printf("DEFVAR LF@%s\n", node->first->data.id->data);
+      //printf("MOVE LF@%s %s@%s", node->first->data.id->data, data_type(node->second->data.data_type), node->third->data.id->data);
       break;
 
     case VariableAssign_N:
@@ -373,4 +374,60 @@ void generate_expr(Node* node, VarType expr_type){
   }
 
 return;
+}
+
+char* data_type(char* type){
+  /*
+  // if i32 or ?i32
+  if (strcmp(type, "i32") == 0 || strcmp(type, "?i32") == 0) {
+    return "int";
+  }
+  // if f64 or ?f64
+  else if (strcmp(type, "f64") == 0 || strcmp(type, "?f64") == 0) {
+    return "float";
+  }
+  // if []u8 or ?[]u8
+  else if (strcmp(type, "[]u8") == 0 || strcmp(type, "?[]u8") == 0) {
+    return "string";
+  }
+  else {
+    return "nil";
+  }
+  */
+
+  switch (type)
+    {
+    case DT_I32: //i32
+        return "int";
+        break;
+    case DT_F64: //f64
+        return "float";
+        break;
+    case DT_U8: //u8
+        return "string";
+        break;
+    case DT_VOID: //void
+        return "void";
+        break;
+    case DT_BOOL: //bool
+        return "bool";
+        break;
+    case DT_UNDEFINED: //odvozeny?
+        return "nil";
+        break;
+    case DT_I32_NULL:
+        return "int";;
+        break;
+    case DT_F64_NULL:
+        return "float";
+        break;
+    case DT_U8_NULL:
+        return "string";
+        break;
+    default:
+        return "nil";
+        break;
+    }
+
+  return;
 }

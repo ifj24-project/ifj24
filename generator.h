@@ -12,5 +12,7 @@
 #include "parser/parser.h"
 
 void generate(Node* node);
+void generate_expr(Node* node, VarType expr_type);
+char* data_type(char* type);
 
 #endif //GENERATOR_H
