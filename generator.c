@@ -179,7 +179,7 @@ void generate(Node* node)
         break;
 
     case VariableDefine_N:
-        switch (node->third->data.data_type)
+        switch (node->third->type)
         {
         case Id_N:
             break;
@@ -226,7 +226,7 @@ void generate(Node* node)
         break;
 
     case VariableAssign_N:
-        switch (node->third->data.data_type)
+        switch (node->third->type)
         {
         case Id_N:
             break;
@@ -260,7 +260,7 @@ void generate(Node* node)
     // pushuji parametry od konce!
     // aby se to lip pak parovalo s parametry funkce
     case Params_N:
-        switch (node->third->data.data_type)
+        switch (node->third->type)
         {
         case Id_N:
             break;
@@ -287,7 +287,7 @@ void generate(Node* node)
         break;
 
     case ParamsNext_N:
-        switch (node->third->data.data_type)
+        switch (node->third->type)
         {
         case Id_N:
             break;
@@ -365,7 +365,7 @@ void generate(Node* node)
         break;
 
     case ReturnStatement_N:
-        switch (node->third->data.data_type)
+        switch (node->third->type)
         {
         case Id_N:
             break;
@@ -557,39 +557,39 @@ void generate_expr(Node* node, VarType expr_type)
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
     // do something
-        printf("LTS NOTS");
+        printf("LTS NOTS\n");
         break;
 
     case Eq_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
     // do something
-        printf("EQS");
+        printf("EQS\n");
         break;
 
     case NotEq_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
     // do something
-        printf("EQS NOTS");
+        printf("EQS NOTS\n");
         break;
 
     case Plus_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
-        printf("ADDS");
+        printf("ADDS\n");
         break;
 
     case Minus_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
-        printf("SUBS");
+        printf("SUBS\n");
         break;
 
     case Times_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
-        printf("MULS");
+        printf("MULS\n");
         break;
 
     case Divide_N:
@@ -599,13 +599,13 @@ void generate_expr(Node* node, VarType expr_type)
     // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
     // if % then IDIVS else DIVS
     // div float, idiv int
-        if (node->first->type == Float_N || node->second->type == Float_N)
+        if (expr_type == Float_N || expr_type == Float_N)
         {
-            printf("DIVS");
+            printf("DIVS\n");
         }
         else
         {
-            printf("IDIVS");
+            printf("IDIVS\n");
         }
         break;
 
