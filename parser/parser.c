@@ -34,6 +34,7 @@ NodeStack* node_stack_init(){
 }
 
 void node_stack_push(NodeStack* stack, Node* node){
+    // stack = PARSER_NODE_STACK;
     NodeStackItem* item = (NodeStackItem*) malloc(sizeof(NodeStackItem));
     if (item == NULL) parse_wrapper_ThrowError(99);
 
@@ -45,6 +46,7 @@ void node_stack_push(NodeStack* stack, Node* node){
 
 void node_stack_free(NodeStack* stack){
     NodeStackItem* item = stack->first;
+    // NodeStackItem* item = PARSER_NODE_STACK->first;
     NodeStackItem* temp;
     while (item != NULL)
     {
@@ -136,7 +138,8 @@ void free_parse_tree(Node* tree){
         free_string(tree->data.str);
         break;
     case FuncDefine_N:
-        if (tree->data.sym_table != NULL) free(tree->data.sym_table);
+        if (tree->data.sym_table != NULL) free_symbol_table(tree->data.sym_table);
+        
         break;
     default:
         break;
@@ -924,26 +927,6 @@ Node * Parse_statement(TokenBuffer* token){
 }
 
 Node* Parse_rhs(TokenBuffer* token){
-    // if (token->first->type == T_ID && token->second->type == T_Dot)
-    // {
-    //     return Parse_func_call(token);
-    // }
-    // else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
-    // {
-    //     return Parse_func_call(token);
-    // }
-    // else if (token->first->type == T_String)
-    // {
-    //     return Parse_string(token);
-    // }
-    // else if (token->first->type == T_ID && token->second->type == T_SemiC)
-    // {
-    //     return Parse_id(token);
-    // }
-    // else
-    // {
-    //     return Parse_expression(token);
-    // }
 
     if (token->first->type == T_String)
     {

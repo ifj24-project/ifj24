@@ -3,14 +3,16 @@
 
 /**
  * ERROR HANDLING
+ * @todo fix memory leak when called recursively (FUNEXP - func in expressions) 
+ * "udelat, kdyz je globalni stack not NULL, tak neinicializovat ale jenou oddelat levy P_$ a neterminal"
  */
 
 PrecStack* EXPRESSION_PREC_STACK = NULL;
-PrecStackItem** EXPRESSION_PREC_INPUT = NULL;
+PrecStackItem* EXPRESSION_PREC_INPUT = NULL;
 
 void expr_wrapper_ThrowError(int code){
     if (EXPRESSION_PREC_STACK != NULL) prec_stack_free(EXPRESSION_PREC_STACK);
-    if (EXPRESSION_PREC_INPUT != NULL) free(*EXPRESSION_PREC_INPUT);
+    if (EXPRESSION_PREC_INPUT != NULL) free(EXPRESSION_PREC_INPUT);
     parse_wrapper_ThrowError(code);
 }
 
@@ -72,13 +74,24 @@ Node * Parse_expression(TokenBuffer* token){
 
     int bracket_cnt = 0;
     
-    PrecStack * stack = prec_stack_init();
+    // PrecStack * stack = prec_stack_init(); // TODO: predej globalni pokud neni NULL
+
+    PrecStack * stack;
+    if (EXPRESSION_PREC_STACK != NULL) // have 1 stack for recursive calling (needed for error handling)
+    {
+        stack = EXPRESSION_PREC_STACK;
+        prec_stack_push(stack, P_$, NULL);
+    }
+    else stack = prec_stack_init();
+    
+
     PrecStackItem * input = next_prec_item(token, &bracket_cnt);
     Prectype first_terminal;
 
     // error handling
     EXPRESSION_PREC_STACK = stack;
-    EXPRESSION_PREC_INPUT = &input;
+    EXPRESSION_PREC_INPUT = input;
+    // EXPRESSION_PREC_INPUT = &input;
 
     while (true)
     {
@@ -88,13 +101,22 @@ Node * Parse_expression(TokenBuffer* token){
         if (prec_table[first_terminal][input->type] == 2)
         {
             Node* ret;
+            if (stack->top->type == P_$) expr_wrapper_ThrowError(2);
             if (stack->top->node->type == Id_N || stack->top->node->type == FuncCall_N) ret = stack->top->node;
-            // else if (stack->top->node == P_id && stack->top->node->type ) ret = stack->top->node;
             else ret = OneChildNode_new(Expression_N, stack->top->node);
 
-            // Node* ret = OneChildNode_new(Expression_N, stack->top->node);
 
-            prec_stack_free(stack);
+            if (stack->count < 2) expr_wrapper_ThrowError(2);
+            prec_stack_pop(stack);
+            prec_stack_pop(stack);
+
+            if (stack->count == 0) {
+                free(stack);
+                EXPRESSION_PREC_STACK = NULL;
+            }
+
+            // // TODO: 
+            // prec_stack_free(stack);
             free(input);
             return ret;
         }
@@ -103,6 +125,7 @@ Node * Parse_expression(TokenBuffer* token){
         {
             prec_push_item(stack, input);
             input = next_prec_item(token, &bracket_cnt);
+            EXPRESSION_PREC_INPUT = input;
         }
         else if (prec_table[first_terminal][input->type] == 0) // reduce
         {
