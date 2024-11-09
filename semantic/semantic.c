@@ -704,6 +704,12 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
                 semantic_wrapper_ThrowError(7); // chyba: nepovolena operace
             }
 
+            // zadny z operatoru nelze aplikovat na str
+            if (left_type == TYPE_STRING || left_type == TYPE_STRING || 
+            right_type == TYPE_STRING_NULL || right_type == TYPE_STRING_NULL) {
+                semantic_wrapper_ThrowError(7); // chyba: nepovolena operace
+            }
+
             // lze porovnavat promenne stejnych ciselnych typu 
             if (left_type == TYPE_INT && right_type == TYPE_INT) {
             return TYPE_BOOL;
