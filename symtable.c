@@ -160,6 +160,7 @@ int check_unmodified_variables(SymbolTable* table) {
         if (table->table[i].is_occupied && table->table[i].type == TYPE_VARIABLE) {
             VariableInfo* var_info = &table->table[i].var_info;
             if (!var_info->is_const && !var_info->changed) {
+                fprintf(stderr, "var unchanged: %s\n", table->table[i].key->data);
                 count++;
             }
         }
@@ -192,6 +193,7 @@ int check_unused_variables(SymbolTable* table) {
         if (table->table[i].is_occupied && table->table[i].type == TYPE_VARIABLE) {
             // kontrola pouziti promenne 
             if (!table->table[i].var_info.is_used) {
+                fprintf(stderr, "var unused: %s\n", table->table[i].key->data);
                 unused_count++;  // zvetsime pocitadlo nepouzitych promennych
             }
         }

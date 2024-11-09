@@ -8,16 +8,6 @@
 #include "../error/error.h"
 
 /**
- * TODO:
- * 
- * mark vars as used
- * mark vars as changed
- * include unused var check (symtable function)
- * 
- */
-
-
-/**
  * ERROR HANDLING
  */
 
@@ -70,6 +60,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         while (def_param != NULL) // nacti parametry do lokalni tabulky jako promenne
         {
             insert_variable(local_table, def_param->name, def_param->type, false);
+            mark_variable_as_changed(local_table, def_param->name);
 
             def_param = def_param->next;
         }
@@ -83,6 +74,12 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         semantic_scan(node->fourth, global_table, node->first->data.id, local_table);
         // node->data.sym_table = local_table;
         // free_symbol_table(local_table);
+
+
+        if (check_unused_variables(local_table) != 0) semantic_wrapper_ThrowError(9);
+        if (check_unmodified_variables(local_table) != 0) semantic_wrapper_ThrowError(9);
+
+
         local_table = NULL;
         break;
 
@@ -167,6 +164,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             else if (node->third->type == Id_N)
             {
                 VarType id_type = semantic_expr(node->third, global_table, local_table);
+
+                mark_variable_as_used(local_table, node->third->data.id);
+
                 if (id_type == TYPE_NULL)
                 {
                     if (node->second->data.data_type != DT_U8_NULL && 
@@ -234,6 +234,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             semantic_wrapper_ThrowError(5);
         }
 
+        mark_variable_as_used(local_table, node->first->data.id);
+        mark_variable_as_changed(local_table, node->first->data.id);
+
         // assign - check type compatibility
         if (node->second->type == Expression_N)
         {
@@ -260,6 +263,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         else if (node->second->type == Id_N)
         {
             VarType id_type = semantic_expr(node->second, global_table, local_table);
+
+            mark_variable_as_used(local_table, node->second->data.id);
+
             if (id_type == TYPE_NULL)
             {
                 if (var_info->data_type != TYPE_INT_NULL && 
@@ -339,7 +345,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 {
                     var_info = find_symbol(local_table, called_param->first->data.id);
                     if (var_info == NULL) semantic_wrapper_ThrowError(3);
-                    // if (var_info->data_type != def_param->type) semantic_wrapper_ThrowError(4);
+                    
+                    mark_variable_as_used(local_table, called_param->first->data.id);
+
                     if (var_info->data_type == def_param->type || var_info->data_type == TYPE_UNDEFINED)
                     {
                         // undefined loophole
@@ -382,10 +390,11 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     semantic_scan(called_param->first, global_table, global_func_key, local_table);
                 }
             }
-            else
+            else // takes any type (ifj.write())
             {
                 // check if called param is defined
                 if (called_param->first->type == Id_N && find_symbol(local_table, called_param->first->data.id) == NULL) semantic_wrapper_ThrowError(3); 
+                mark_variable_as_used(local_table, called_param->first->data.id);
             }
             
             called_param = called_param->second;
@@ -495,11 +504,20 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             break;
         case Id_N:
             var_info = find_symbol(local_table, node->first->data.id);
+            if (var_info == NULL) semantic_wrapper_ThrowError(3);
+
+            mark_variable_as_used(local_table, node->first->data.id);
+
             if (var_info->data_type != func_info->return_type) semantic_wrapper_ThrowError(4);
             break;
         case Str_N:
             if (func_info->return_type != TYPE_STRING && func_info->return_type != TYPE_STRING_NULL) semantic_wrapper_ThrowError(4);
             break;
+        case FuncCall_N:
+            FunctionInfo* temp_func_info = find_symbol(global_table, node->first->first->data.id);
+            if (temp_func_info == NULL) semantic_wrapper_ThrowError(3);
+            if (func_info->return_type != temp_func_info->return_type) semantic_wrapper_ThrowError(4);
+            semantic_scan(node->first, global_table, global_func_key, local_table);
         default:
             break;
         }
@@ -581,6 +599,9 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
                 semantic_wrapper_ThrowError(3); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni
             }
+
+            mark_variable_as_used(local_table, node->data.id);
+
             free_string(null_str);
             return var->data_type;
         }
