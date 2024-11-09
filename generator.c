@@ -18,6 +18,10 @@
 // TODO: zabalit fnc generate do dalsi, ktera bude kontrolovat a vyvolavat errory
 // pripadne pak upravit header soubor
 
+// pomocna promenna pro definici promennych ve funkci a jejich nasledne popovani ze zasobniku
+bool var_def = false;
+// pomocna promenna jestli se nachazime uvnitr funkce
+bool in_func = false;
 
 /**
  * @brief Funkce pro generovani kodu
@@ -28,6 +32,12 @@ void generate(Node* node)
 {
     if (node == NULL) return;
     //static int label_counter = 0;
+    // pocet if statements
+    static int if_counter = 0;
+    // pocet while statements
+    static int while_counter = 0;
+    // pocet void calls
+    static int void_call_counter = 0;
 
     switch (node->type)
     {
@@ -52,6 +62,7 @@ void generate(Node* node)
         break;
 
     case FuncDefine_N:
+        in_func = true;
         if (node->third->data.data_type == DT_VOID)
         {
             // void function
@@ -64,8 +75,8 @@ void generate(Node* node)
 
                 // globalni promena pro vraceni hodnot z funkci
                 printf("DEFVAR GF@rvalue_return\n");
-                // globalni promenna pro vraceni true/false
-                printf("DEFVAR GF@bool_return\n");
+                // globalni promenna pro vraceni true/false z expresion
+                printf("DEFVAR GF@exp_return\n");
                 // globalni promenne pro expresions lhs a rhs
                 printf("DEFVAR GF@lhs\n");
                 printf("DEFVAR GF@rhs\n");
@@ -98,33 +109,13 @@ void generate(Node* node)
             printf("CREATEFRAME\n");
             printf("PUSHFRAME\n");
 
-
             printf("JUMP vardef$%s\n", node->first->data.id->data);
             printf("LABEL vardef$%s$back\n", node->first->data.id->data);
 
-            // postupne projit nody s parametry a pricitat pocet parametru
-            int pocet_param = 0;
-            Node* node_params = node;
-            while (node_params->second != NULL)
-            {
-                pocet_param++;
-                node_params = node_params->second;
-            }
+            var_def = false;
+            generate(node->second);
 
-            // Popne vsechny parametry od konce
-            // parametry jsou napushovany obracene, tj. nahore je prvni
-            for (int i = pocet_param; i > 0; i--)
-            {
-                printf("POPS LF@%s\n", node_params->first->data.id->data);
-            }
-
-
-            // generate vsechny params a pak do nich popnout hodnoty zasobniku pozpatku
-
-            // zjistit pocet params
-            // pop all params
-            //generate(node->second);
-
+            printf("# Telo funkce\n");
             generate(node->third);
             generate(node->fourth);
 
@@ -142,7 +133,9 @@ void generate(Node* node)
             printf("# Definice promennych\n");
             printf("LABEL vardef$%s\n", node->first->data.id->data);
             // define all params
+            var_def = true;
             generate(node->second);
+
             printf("JUMP vardef$%s$back\n", node->first->data.id->data);
 
             printf("LABEL skip$%s", node->first->data.id->data);
@@ -150,13 +143,26 @@ void generate(Node* node)
         break;
 
     case ParamsDefine_N:
-        printf("DEFVAR LF@%s\n", node->first->data.id->data);
+        if (var_def)
+        {
+            printf("DEFVAR LF@%s\n", node->first->data.id->data);
+        } else
+        {
+            printf("POPS LF@%s\n", node->first->data.id->data);
+        }
         generate(node->second);
         generate(node->third);
         break;
 
     case ParamsDefineNext_N:
-        printf("DEFVAR LF@%s\n", node->first->data.id->data);
+        if (var_def)
+        {
+            printf("DEFVAR LF@%s\n", node->first->data.id->data);
+        } else
+        {
+            printf("POPS LF@%s\n", node->first->data.id->data);
+        }
+        //printf("DEFVAR LF@%s\n", node->first->data.id->data);
         generate(node->second);
         generate(node->third);
         break;
@@ -236,17 +242,48 @@ void generate(Node* node)
         break;
 
     case If_N:
-        generate_expr(node->first, node->first->data.data_type);
+        if_counter++;
+        // if bez pipes if () |neco| ..
+        if (node->second->data.has_not_null_id == false)
+		{
+			generate_expr(node->first, node->first->data.data_type);
+			printf("POPS GF@exp_return\n");
+			printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter);
+			generate(node->second);
+			printf("JUMP $if$%d$end\n", if_counter);
+			printf("LABEL $if$%d$else\n", if_counter);
+			generate(node->third);
+			printf("LABEL $if$%d$end\n", if_counter);
+		}
+		else
+		{
+		    // TODO: dodelat if s pipes |neco|
+		    generate_expr(node->first, node->first->data.data_type);
+		    printf("POPS GF@exp_return\n");
+		    printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter);
+		    generate(node->second);
+		    printf("LABEL $if$%d$else\n", if_counter);
+		    generate(node->third);
+		}
 
-        printf("PUSHS LF@%s\n", node->first->data.id->data);
-
-        generate(node->second);
-        generate(node->third);
         break;
 
     case While_N:
-        generate(node->first);
-        generate(node->second);
+        while_counter++;
+        // while bez pipes while () |neco| ..
+        if (node->second->data.has_not_null_id == false)
+        {
+            printf("LABEL while$%d\n", while_counter);
+            generate_expr(node->first, node->first->data.data_type);
+            printf("POPS GF@exp_return\n");
+            printf("JUMPIFEQ $while$%d$end GF@exp_return bool@false\n", while_counter);
+            generate(node->second);
+            printf("JUMP while$%d\n", while_counter);
+            printf("LABEL $while$%d$end\n", while_counter);
+        } else
+        {
+            // TODO: dodelat while s pipes |neco|
+        }
         break;
 
     case VoidCall_N:
@@ -279,6 +316,9 @@ void generate(Node* node)
         break;
 
     case If_not_null:
+        // TODO:
+        // if .data.has_not_null_id == true -> true je s pipema
+        // udelam promenou tomu pipam
         generate(node->first);
         generate(node->second);
         generate(node->third);
@@ -382,6 +422,11 @@ void generate(Node* node)
  */
 void generate_expr(Node* node, VarType expr_type)
 {
+
+    // pro realcni udelat zvlast protoze se to chova jinak nez int
+    // kdyz to je string tak to je ve string.id
+    // funkce jsou jinak function_call_N
+
     if (node == NULL) return; // break
 
     // prefix notation
@@ -391,6 +436,7 @@ void generate_expr(Node* node, VarType expr_type)
     case Id_N:
         // TODO: nejak tam tu promennou dat misto "symbol"
         printf("PUSHS   LF@%s\n", node->data.id->data);
+        // if null push null nill
         break;
 
     case Float_N:
@@ -464,10 +510,21 @@ void generate_expr(Node* node, VarType expr_type)
 
     // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
         // if % then IDIVS else DIVS
-
-        printf("DIVS");
-
+        // div float, idiv int
+        if (node->first->type == Float_N || node->second->type == Float_N)
+		{
+			printf("DIVS");
+		}
+		else
+		{
+			printf("IDIVS");
+		}
         break;
+
+    case FuncCall_N:
+		generate(node->first);
+		break;
+
 
     default:
         ThrowError(99);
