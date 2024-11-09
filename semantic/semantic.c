@@ -223,6 +223,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
         break;
     case VariableAssign_N:
+        // TODO: assign into _ = 1+1
+
+
         // function not defined
         var_info = find_symbol(local_table, node->first->data.id);
         if (var_info == NULL)

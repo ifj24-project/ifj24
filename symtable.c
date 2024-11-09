@@ -235,8 +235,12 @@ void resize_table(SymbolTable* table, int new_size) {
     table->table = calloc(new_size, sizeof(SymbolTableEntry));
     if (table->table == NULL) {
         //??
-        SymbolTable temp_table = {old_table, old_size, table->count};
-        free_symbol_table(&temp_table);  // uvolnujeme starou tabulku v pripade chyby
+        SymbolTable* temp_table = malloc(sizeof(SymbolTable));
+        if (temp_table == NULL) ThrowError(99);
+        temp_table->count = table->count;
+        temp_table->size = old_size;
+        temp_table->table = old_table;
+        free_symbol_table(temp_table);  // uvolnujeme starou tabulku v pripade chyby
         ThrowError(99);  // chyba allokace 
     }
 
@@ -263,8 +267,12 @@ void resize_table(SymbolTable* table, int new_size) {
         }
     }
     // uvolnujeme starou tabulku
-    SymbolTable temp_table = {old_table, old_size, table->count};
-    free_symbol_table(&temp_table);
+    SymbolTable* temp_table = malloc(sizeof(SymbolTable));
+    if (temp_table == NULL) ThrowError(99);
+    temp_table->count = table->count;
+    temp_table->size = old_size;
+    temp_table->table = old_table;
+    free_symbol_table(temp_table);
 }
 
 void free_symbol_table(SymbolTable* table) {
