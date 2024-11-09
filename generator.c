@@ -146,7 +146,8 @@ void generate(Node* node)
         if (var_def)
         {
             printf("DEFVAR LF@%s\n", node->first->data.id->data);
-        } else
+        }
+        else
         {
             printf("POPS LF@%s\n", node->first->data.id->data);
         }
@@ -158,11 +159,12 @@ void generate(Node* node)
         if (var_def)
         {
             printf("DEFVAR LF@%s\n", node->first->data.id->data);
-        } else
+        }
+        else
         {
             printf("POPS LF@%s\n", node->first->data.id->data);
         }
-        //printf("DEFVAR LF@%s\n", node->first->data.id->data);
+    //printf("DEFVAR LF@%s\n", node->first->data.id->data);
         generate(node->second);
         generate(node->third);
         break;
@@ -177,7 +179,20 @@ void generate(Node* node)
         break;
 
     case VariableDefine_N:
-        // if node->third == EXPRESSION -> generate_expr
+        switch (node->third->data.data_type)
+        {
+        case Id_N:
+            break;
+        case FuncCall_N:
+            break;
+        case Expression_N:
+            break;
+        case Str_N:
+            break;
+        default:
+            // chyba
+            break;
+        }
         if (node->third->type == Expression_N)
         {
             printf("DEFVAR LF@%s ", node->first->data.id->data);
@@ -189,19 +204,48 @@ void generate(Node* node)
             printf("DEFVAR LF@%s\n", node->first->data.id->data);
             generate(node->third);
         }
-        /*
-        printf("DEFVAR LF@%s\n", node->first->data.id->data);
-    //printf("MOVE LF@%s %s@%s", node->first->data.id->data, data_type(node->second->data.data_type), node->third->data.id->data);
-        printf("MOVE LF@%s ", node->first->data.id->data);
-        */
+
+
+    // if node->third == EXPRESSION -> generate_expr
+        if (node->third->type == Expression_N)
+        {
+            printf("DEFVAR LF@%s ", node->first->data.id->data);
+            generate_expr(node->third, node->third->data.data_type);
+            printf("POPS LF@%s\n", node->first->data.id->data);
+        }
+        else
+        {
+            printf("DEFVAR LF@%s\n", node->first->data.id->data);
+            generate(node->third);
+        }
+    /*
+    printf("DEFVAR LF@%s\n", node->first->data.id->data);
+//printf("MOVE LF@%s %s@%s", node->first->data.id->data, data_type(node->second->data.data_type), node->third->data.id->data);
+    printf("MOVE LF@%s ", node->first->data.id->data);
+    */
         break;
 
     case VariableAssign_N:
+        switch (node->third->data.data_type)
+        {
+        case Id_N:
+            break;
+        case FuncCall_N:
+            break;
+        case Expression_N:
+            break;
+        case Str_N:
+            break;
+        default:
+            // chyba
+            break;
+        }
         if (node->second->type == Expression_N)
         {
             generate_expr(node->second, node->second->data.data_type);
             printf("POPS LF@%s\n", node->first->data.id->data);
-        } else
+        }
+        else
         {
             printf("MOVE LF@%s ", node->first->data.id->data);
             generate(node->second);
@@ -216,61 +260,90 @@ void generate(Node* node)
     // pushuji parametry od konce!
     // aby se to lip pak parovalo s parametry funkce
     case Params_N:
-        // pushs parametr
+        switch (node->third->data.data_type)
+        {
+        case Id_N:
+            break;
+        case FuncCall_N:
+            break;
+        case Expression_N:
+            break;
+        case Str_N:
+            break;
+        default:
+            // chyba
+            break;
+        }
+    // pushs parametr
         generate(node->second);
         if (node->first->type == Expression_N)
-		{
-			generate_expr(node->first, node->first->data.data_type);
-		}
-		else
-		{
-			printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
-		}
+        {
+            generate_expr(node->first, node->first->data.data_type);
+        }
+        else
+        {
+            printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
+        }
         break;
 
     case ParamsNext_N:
+        switch (node->third->data.data_type)
+        {
+        case Id_N:
+            break;
+        case FuncCall_N:
+            break;
+        case Expression_N:
+            break;
+        case Str_N:
+            break;
+        default:
+            // chyba
+            break;
+        }
         generate(node->second);
         if (node->first->type == Expression_N)
-		{
-			generate_expr(node->first, node->first->data.data_type);
-		}
-		else
-		{
-			printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
-		}
-        //printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
+        {
+            generate_expr(node->first, node->first->data.data_type);
+        }
+        else
+        {
+            printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
+        }
+    //printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
         break;
 
     case If_N:
         if_counter++;
-        // if bez pipes if () |neco| ..
+    // if bez pipes if () |neco| ..
         if (node->second->data.has_not_null_id == false)
-		{
-			generate_expr(node->first, node->first->data.data_type);
-			printf("POPS GF@exp_return\n");
-			printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter);
-			generate(node->second);
-			printf("JUMP $if$%d$end\n", if_counter);
-			printf("LABEL $if$%d$else\n", if_counter);
-			generate(node->third);
-			printf("LABEL $if$%d$end\n", if_counter);
-		}
-		else
-		{
-		    // TODO: dodelat if s pipes |neco|
-		    generate_expr(node->first, node->first->data.data_type);
-		    printf("POPS GF@exp_return\n");
-		    printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter);
-		    generate(node->second);
-		    printf("LABEL $if$%d$else\n", if_counter);
-		    generate(node->third);
-		}
+        {
+            generate_expr(node->first, node->first->data.data_type);
+            printf("POPS GF@exp_return\n");
+            printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter);
+            generate(node->second);
+            printf("JUMP $if$%d$end\n", if_counter);
+            printf("LABEL $if$%d$else\n", if_counter);
+            generate(node->third);
+            printf("LABEL $if$%d$end\n", if_counter);
+        }
+        else
+        {
+            // TODO: dodelat if s pipes |neco|
+            // if (vyraz s null) |id bez null| -> pokud vyraz s null neni null -> prevedu do id bez null s odpovidajici hodnotou
+            generate_expr(node->first, node->first->data.data_type);
+            printf("POPS GF@exp_return\n");
+            printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter);
+            generate(node->second);
+            printf("LABEL $if$%d$else\n", if_counter);
+            generate(node->third);
+        }
 
         break;
 
     case While_N:
         while_counter++;
-        // while bez pipes while () |neco| ..
+    // while bez pipes while () |neco| ..
         if (node->second->data.has_not_null_id == false)
         {
             printf("LABEL while$%d\n", while_counter);
@@ -280,7 +353,8 @@ void generate(Node* node)
             generate(node->second);
             printf("JUMP while$%d\n", while_counter);
             printf("LABEL $while$%d$end\n", while_counter);
-        } else
+        }
+        else
         {
             // TODO: dodelat while s pipes |neco|
         }
@@ -291,6 +365,20 @@ void generate(Node* node)
         break;
 
     case ReturnStatement_N:
+        switch (node->third->data.data_type)
+        {
+        case Id_N:
+            break;
+        case FuncCall_N:
+            break;
+        case Expression_N:
+            break;
+        case Str_N:
+            break;
+        default:
+            // chyba
+            break;
+        }
         generate(node->first);
         break;
 
@@ -422,21 +510,21 @@ void generate(Node* node)
  */
 void generate_expr(Node* node, VarType expr_type)
 {
-
     // pro realcni udelat zvlast protoze se to chova jinak nez int
     // kdyz to je string tak to je ve string.id
     // funkce jsou jinak function_call_N
 
     if (node == NULL) return; // break
 
-    // prefix notation
-    // nwm je to vlastne na zasobniku, tj. nejdriv pushnu operandy a pak co chci
+    // rozlisit realcni a int
+
+
     switch (node->type)
     {
     case Id_N:
         // TODO: nejak tam tu promennou dat misto "symbol"
         printf("PUSHS   LF@%s\n", node->data.id->data);
-        // if null push null nill
+    // if null push null nill
         break;
 
     case Float_N:
@@ -462,7 +550,7 @@ void generate_expr(Node* node, VarType expr_type)
     case Greater_N:
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
-		printf("GTS\n");
+        printf("GTS\n");
         break;
 
     case GreaterEq_N:
@@ -509,21 +597,21 @@ void generate_expr(Node* node, VarType expr_type)
         generate_expr(node->second, expr_type);
 
     // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
-        // if % then IDIVS else DIVS
-        // div float, idiv int
+    // if % then IDIVS else DIVS
+    // div float, idiv int
         if (node->first->type == Float_N || node->second->type == Float_N)
-		{
-			printf("DIVS");
-		}
-		else
-		{
-			printf("IDIVS");
-		}
+        {
+            printf("DIVS");
+        }
+        else
+        {
+            printf("IDIVS");
+        }
         break;
 
     case FuncCall_N:
-		generate(node->first);
-		break;
+        generate(node->first);
+        break;
 
 
     default:
@@ -536,24 +624,6 @@ void generate_expr(Node* node, VarType expr_type)
 
 char* data_type(char* type)
 {
-    /*
-    // if i32 or ?i32
-    if (strcmp(type, "i32") == 0 || strcmp(type, "?i32") == 0) {
-      return "int";
-    }
-    // if f64 or ?f64
-    else if (strcmp(type, "f64") == 0 || strcmp(type, "?f64") == 0) {
-      return "float";
-    }
-    // if []u8 or ?[]u8
-    else if (strcmp(type, "[]u8") == 0 || strcmp(type, "?[]u8") == 0) {
-      return "string";
-    }
-    else {
-      return "nil";
-    }
-    */
-
     switch (type)
     {
     case DT_I32: //i32
@@ -585,9 +655,35 @@ char* data_type(char* type)
         return "nil";
         break;
     default:
+        // error?
         return "";
         break;
     }
 
+    return;
+}
+
+// asi jeste vyuziju, aby to bylo na jednom miste (pujde to?)
+// func with switch case to determine "rhs"
+NodeType get_rhs(NodeType type)
+{
+    switch (type)
+    {
+    case Int_N:
+        return Int_N;
+        break;
+    case Float_N:
+        return Float_N;
+        break;
+    case Id_N:
+        return Id_N;
+        break;
+    case FuncCall_N:
+        return FuncCall_N;
+        break;
+    default:
+        return Int_N;
+        break;
+    }
     return;
 }
