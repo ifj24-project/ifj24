@@ -223,7 +223,16 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
         break;
     case VariableAssign_N:
-        // TODO: assign into _ = 1+1
+
+        if (node->first->type == Underscore_N) // only check rhs
+        {
+            if (node->second->type == Expression_N) node->second->data.data_type = semantic_expr(node->second, global_table, local_table);
+            if (node->second->type == Id_N || node->second->type == FuncCall_N) semantic_expr(node->second, global_table, local_table);
+
+            semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
+            break; // break big switch ( _ takes any type )
+        }
+        
 
 
         // function not defined
@@ -287,36 +296,36 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         else if (node->second->type == FuncCall_N)
         {
             func_info = find_symbol(global_table, node->second->first->data.id);
-            if (func_info != NULL) // if func is defined
+            if (func_info == NULL) semantic_wrapper_ThrowError(7); 
+
+            switch (var_info->data_type)
             {
-                switch (var_info->data_type)
-                {
-                case TYPE_INT:
-                    if (func_info->return_type != TYPE_INT) semantic_wrapper_ThrowError(7);
-                    break;
-                case TYPE_INT_NULL:
-                    if (func_info->return_type != TYPE_INT_NULL && func_info->return_type != TYPE_INT) semantic_wrapper_ThrowError(7);
-                    break;
-                case TYPE_FLOAT:
-                    if (func_info->return_type != TYPE_FLOAT) semantic_wrapper_ThrowError(7);
-                    break;
-                case TYPE_FLOAT_NULL:
-                    if (func_info->return_type != TYPE_FLOAT_NULL && func_info->return_type != TYPE_FLOAT) semantic_wrapper_ThrowError(7);
-                    break;
-                case TYPE_STRING:
-                    if (func_info->return_type != TYPE_STRING) semantic_wrapper_ThrowError(7);
-                    break;
-                case TYPE_STRING_NULL:
-                    if (func_info->return_type != TYPE_STRING_NULL && func_info->return_type != TYPE_STRING) semantic_wrapper_ThrowError(7);
-                    break;
-                case TYPE_UNDEFINED:
-                    // undefined loophole
-                    break;
-                default:
-                    semantic_wrapper_ThrowError(7);
-                    break;
-                }
+            case TYPE_INT:
+                if (func_info->return_type != TYPE_INT) semantic_wrapper_ThrowError(7);
+                break;
+            case TYPE_INT_NULL:
+                if (func_info->return_type != TYPE_INT_NULL && func_info->return_type != TYPE_INT) semantic_wrapper_ThrowError(7);
+                break;
+            case TYPE_FLOAT:
+                if (func_info->return_type != TYPE_FLOAT) semantic_wrapper_ThrowError(7);
+                break;
+            case TYPE_FLOAT_NULL:
+                if (func_info->return_type != TYPE_FLOAT_NULL && func_info->return_type != TYPE_FLOAT) semantic_wrapper_ThrowError(7);
+                break;
+            case TYPE_STRING:
+                if (func_info->return_type != TYPE_STRING) semantic_wrapper_ThrowError(7);
+                break;
+            case TYPE_STRING_NULL:
+                if (func_info->return_type != TYPE_STRING_NULL && func_info->return_type != TYPE_STRING) semantic_wrapper_ThrowError(7);
+                break;
+            case TYPE_UNDEFINED:
+                // undefined loophole
+                break;
+            default:
+                semantic_wrapper_ThrowError(7);
+                break;
             }
+        
         }
         
         semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
@@ -596,8 +605,8 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             
             // dostavame typ promenne z tabulky symbolu
             VariableInfo* var = find_symbol(local_table, node->data.id);
-            if (!var) var = find_symbol(global_table, node->data.id);
-            if (!var) {
+            // if (!var) var = find_symbol(global_table, node->data.id);
+            if (var == NULL) {
 
                 semantic_wrapper_ThrowError(3); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni
             }

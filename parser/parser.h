@@ -53,7 +53,8 @@ typedef enum NodeType {
     Times_N = 35,
     Divide_N = 36,
 
-    Int_N = 37
+    Int_N = 37,
+    Underscore_N = 38
 
 } NodeType;
 

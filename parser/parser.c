@@ -900,6 +900,7 @@ Node * Parse_statement(TokenBuffer* token){
     case T_var:
         a = Parse_variable_define(token);
         break;
+    case T_Underscore: // allow assign to underscore
     case T_ID: // var assign or void call
         if ((token->second->type == T_L_Round_B)||(token->second->type == T_Dot))
         {
@@ -985,9 +986,14 @@ Node * Parse_variable_define(TokenBuffer* token){
 
 Node * Parse_variable_assign(TokenBuffer* token){
 
-    // TODO: allow       _ = do_smth(1, 2);
+    // allow assingment to _ (undersore)
+    Node * a;
+    if (token->first->type == T_Underscore){
+        a = NoChildNode_new(Underscore_N);
+        consume_buffer(token, 1);
+    }
+    else a = Parse_id(token);
 
-    Node * a = Parse_id(token);
     buffer_check_first(token, T_Assign);
     Node * b = Parse_rhs(token);
 
