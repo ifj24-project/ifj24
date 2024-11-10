@@ -149,7 +149,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     {
                         int converted = expr_to_flt(node->third->first, global_table, local_table);
                         if (converted == -1) semantic_wrapper_ThrowError(7);
-                        temp == TYPE_INT;
+                        temp = TYPE_INT;
                     }
                     else if (temp == TYPE_FLOAT)
                     {
@@ -250,7 +250,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 {
                     int converted = expr_to_flt(node->second->first, global_table, local_table);
                     if (converted == -1) semantic_wrapper_ThrowError(7);
-                    temp == TYPE_INT;
+                    temp = TYPE_INT;
                 }
                 else if (temp == TYPE_FLOAT)
                 {
@@ -372,21 +372,20 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     VarType temp = semantic_expr(called_param->first->first, global_table, local_table);
                     // if (def_param->type != temp) semantic_wrapper_ThrowError(4);
                     if (!type_cmp(def_param->type, temp)) {
-                    if (temp == TYPE_INT)
-                    {
-                        int converted = expr_to_flt(called_param->first->first, global_table, local_table);
-                        if (converted == -1) semantic_wrapper_ThrowError(7);
-                        temp == TYPE_INT;
+                        if (temp == TYPE_INT)
+                        {
+                            int converted = expr_to_flt(called_param->first->first, global_table, local_table);
+                            if (converted == -1) semantic_wrapper_ThrowError(7);
+                            temp = TYPE_INT;
+                        }
+                        else if (temp == TYPE_FLOAT)
+                        {
+                            int converted = expr_to_int(called_param->first->first, global_table, local_table);
+                            if (converted == -1) semantic_wrapper_ThrowError(7);
+                            temp = TYPE_FLOAT;
+                        }
+                        else semantic_wrapper_ThrowError(4);
                     }
-                    else if (temp == TYPE_FLOAT)
-                    {
-                        int converted = expr_to_int(called_param->first->first, global_table, local_table);
-                        if (converted == -1) semantic_wrapper_ThrowError(7);
-                        temp = TYPE_FLOAT;
-                    }
-                    else semantic_wrapper_ThrowError(4);
-                    }
-                    called_param->first->data.data_type;
                 }
                 else if (called_param->first->type == FuncCall_N)
                 {
@@ -493,7 +492,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 {
                     int converted = expr_to_flt(node->first->first, global_table, local_table);
                     if (converted == -1) semantic_wrapper_ThrowError(7);
-                    temp == TYPE_INT;
+                    temp = TYPE_INT;
                 }
                 else if (temp == TYPE_FLOAT)
                 {

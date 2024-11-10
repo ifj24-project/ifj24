@@ -237,6 +237,7 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
 
     default:
         expr_wrapper_ThrowError(2);
+        return NULL;
         break;
     }
 }
@@ -330,6 +331,7 @@ int first_terminal_type(PrecStack* stack){
         item = item->next;
     }
     
+    return 1;
 }
 
 void reduce(PrecStack * stack){

@@ -295,6 +295,7 @@ const char * get_token_name(enum token_type token_id){
         return "T_Pipe";
         break;
     default:
+        return "ERROR: TOKEN TYPE NOT FOUND";
         break;
     }
 }
@@ -332,7 +333,7 @@ int sym_get_type(int type){
         break;
     default:
         fprintf(stderr, "sym_get_type: something went wrong\n");
-
+        return -1;
         break;
     }
 }
@@ -376,7 +377,6 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
         break;
     default:
         fprintf(stderr, "sym_push_params something went wrong\n");
-
         break;
     }
 
@@ -609,6 +609,7 @@ Node * Parse_id(TokenBuffer* token){
     else
     {
         buffer_check_first(token, T_ID);
+        return NULL;
     }
     
 }
@@ -623,6 +624,7 @@ Node * Parse_string(TokenBuffer* token){
     else
     {
         buffer_check_first(token, T_String);
+        return NULL;
     }
 }
 
