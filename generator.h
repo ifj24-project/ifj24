@@ -11,8 +11,14 @@
 
 #include "parser/parser.h"
 
+/**
+ * @brief Funkce pro generovani kodu
+ *
+ * @param node ukazatel na uzel stromu
+ */
 void generate(Node* node);
 void generate_expr(Node* node, VarType expr_type);
-char* data_type(char* type);
+char* data_type(type);
+NodeType get_rhs(NodeType type);
 
 #endif //GENERATOR_H

@@ -10,6 +10,7 @@
 #include "generator.h"
 
 #include <string.h>
+#include <stdbool.h>
 
 #include "error/error.h"
 #include "symtable.h"
@@ -23,11 +24,6 @@ bool var_def = false;
 // pomocna promenna jestli se nachazime uvnitr funkce
 bool in_func = false;
 
-/**
- * @brief Funkce pro generovani kodu
- *
- * @param node ukazatel na uzel stromu
- */
 void generate(Node *node) {
     if (node == NULL) return;
     //static int label_counter = 0;
@@ -45,8 +41,8 @@ void generate(Node *node) {
             break;
 
         case ProgramProlog_N:
-            // Kod v jazyce IFJ24 zacina radkem
-            printf(".IFJcode24\n\nJUMP $$main\n");
+            // Kod v jazyce mezikodu IFJ24 zacina radkem
+            printf(".IFJcode24\n\n");
             break;
 
         case Program_N:
@@ -66,6 +62,7 @@ void generate(Node *node) {
                 // if main
                 // asi nemusi byt muzu proste nazacatku udelat main je kontrolovano jestli existuje
                 if (strcmp(node->first->data.id->data, "main") == 0) {
+                    printf("JUMP $$main\n");
                     printf("LABEL $$main\n");
                     printf("CREATEFRAME\n");
 
@@ -147,6 +144,10 @@ void generate(Node *node) {
 
                 printf("POPFRAME\n");
                 printf("RETURN\n\n");
+                printf("EXIT int@0\n");
+                printf("LABEL error_exit\n");
+                printf("EXIT int@99\n");
+                // --konec funkce--
 
                 printf("# Definice promennych\n");
                 printf("LABEL vardef$%s\n", node->first->data.id->data);
@@ -203,6 +204,7 @@ void generate(Node *node) {
                     break;
                 default:
                     // chyba
+                    printf("JUMP error_exit\n");
                     break;
             }
             if (node->third->type == Expression_N) {
@@ -243,6 +245,7 @@ void generate(Node *node) {
                     break;
                 default:
                     // chyba
+                    printf("JUMP error_exit\n");
                     break;
             }
             if (node->second->type == Expression_N) {
@@ -273,6 +276,7 @@ void generate(Node *node) {
                     break;
                 default:
                     // chyba
+                    printf("JUMP error_exit\n");
                     break;
             }
         // pushs parametr
@@ -280,7 +284,7 @@ void generate(Node *node) {
             if (node->first->type == Expression_N) {
                 generate_expr(node->first, node->first->data.data_type);
             } else {
-                printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
+                printf("PUSHS %s@%s\n", data_type(node->first), node->first->data.id->data);
             }
             break;
 
@@ -296,13 +300,14 @@ void generate(Node *node) {
                     break;
                 default:
                     // chyba
+                    printf("JUMP error_exit\n");
                     break;
             }
             generate(node->second);
             if (node->first->type == Expression_N) {
                 generate_expr(node->first, node->first->data.data_type);
             } else {
-                printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
+                printf("PUSHS %s@%s\n", data_type(node->first), node->first->data.id->data);
             }
         //printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
             break;
@@ -349,7 +354,8 @@ void generate(Node *node) {
             break;
 
         case VoidCall_N:
-            generate(node->first);
+            generate(node->second);
+            printf("CALL $%s\n", node->first->data.id->data);
             break;
 
         case ReturnStatement_N:
@@ -364,6 +370,7 @@ void generate(Node *node) {
                     break;
                 default:
                     // chyba
+                    printf("JUMP error_exit\n");
                     break;
             }
             generate(node->first);
@@ -503,12 +510,13 @@ void generate_expr(Node *node, VarType expr_type) {
     if (node == NULL) return; // break
 
     // rozlisit realcni a int
+    // bool -> ANDS, ORS, NOTS
 
 
     switch (node->type) {
         case Id_N:
             // TODO: nejak tam tu promennou dat misto "symbol"
-            printf("PUSHS   LF@%s\n", node->data.id->data);
+            printf("PUSHS LF@%s\n", node->data.id->data);
         // if null push null nill
             break;
 
@@ -529,7 +537,7 @@ void generate_expr(Node *node, VarType expr_type) {
         case LesserEq_N:
             generate_expr(node->first, expr_type);
             generate_expr(node->second, expr_type);
-            printf("GTS NOTS\n");
+            printf("GTS\nNOTS\n");
             break;
 
         case Greater_N:
@@ -542,7 +550,7 @@ void generate_expr(Node *node, VarType expr_type) {
             generate_expr(node->first, expr_type);
             generate_expr(node->second, expr_type);
         // do something
-            printf("LTS NOTS\n");
+            printf("LTS\nNOTS\n");
             break;
 
         case Eq_N:
@@ -556,7 +564,7 @@ void generate_expr(Node *node, VarType expr_type) {
             generate_expr(node->first, expr_type);
             generate_expr(node->second, expr_type);
         // do something
-            printf("EQS NOTS\n");
+            printf("EQS\nNOTS\n");
             break;
 
         case Plus_N:
@@ -603,8 +611,8 @@ void generate_expr(Node *node, VarType expr_type) {
     return;
 }
 
-char *data_type(char *type) {
-    switch (type) {
+char *data_type(Node* node) {
+    switch (node->type) {
         case DT_I32: //i32
             return "int";
             break;
@@ -638,8 +646,6 @@ char *data_type(char *type) {
             return "";
             break;
     }
-
-    return;
 }
 
 // asi jeste vyuziju, aby to bylo na jednom miste (pujde to?)
@@ -662,5 +668,4 @@ NodeType get_rhs(NodeType type) {
             return Int_N;
             break;
     }
-    return;
 }
