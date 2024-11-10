@@ -3,7 +3,6 @@
 
 #include "../scanner.h"
 #include "../symtable.h"
-#include "../error/error.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -79,6 +78,7 @@ typedef int IntValue;
 typedef int DataTypeValue;
 typedef int VariableDefineValue;
 typedef bool Not_null_statement;
+typedef SymbolTable* FuncDefineValue;
 
 /**
  * @brief specialni members pro nektere uzly
@@ -92,6 +92,8 @@ typedef union DataValue
     DataTypeValue data_type; // 1==i32, 2==f64, 3==[]u8, 4==void , 5==bool
     VariableDefineValue var_or_const; // 0==var, 1==const
     Not_null_statement has_not_null_id; // true== ma o dite navic, node.second dite je |id| v te pipe
+    FuncDefineValue sym_table; // Dane: musis znova pushnout var v tech |pipech| protoze ja je popuju po jejich useku platnosti;
+    
 
 } Data_value;
 
@@ -121,6 +123,30 @@ typedef struct TokenBuffer
     SymbolTable* sym_table;
 
 }TokenBuffer;
+
+typedef struct NodeStackItem
+{
+    Node* data;
+    struct NodeStackItem * next;
+
+} NodeStackItem;
+
+
+typedef struct NodeStack
+{
+    int count;
+    NodeStackItem* first;
+
+} NodeStack;
+
+
+
+NodeStack* node_stack_init();
+void node_stack_push(NodeStack* stack, Node* node);
+void node_stack_free(NodeStack* stack);
+void node_stack_free_keep_nodes(NodeStack* stack);
+
+void parse_wrapper_ThrowError(int code);
 
 /**
  * @brief ctor pro buffer na tokeny, ktery se musi passnout parse_start() fci
@@ -182,6 +208,8 @@ Node * Parse_params_define(TokenBuffer* token);
 Node * Parse_params_define_next(TokenBuffer* token);
 Node * Parse_func_body(TokenBuffer* token);
 Node * Parse_statement(TokenBuffer* token);
+Node * Parse_rhs(TokenBuffer* token);
+Node * Parse_rhs_param(TokenBuffer* token);
 Node * Parse_variable_define(TokenBuffer* token);
 Node * Parse_variable_assign(TokenBuffer* token);
 Node * Parse_func_call(TokenBuffer* token);
