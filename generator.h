@@ -18,7 +18,8 @@
  */
 void generate(Node* node);
 void generate_expr(Node* node, VarType expr_type);
-char* data_type(type);
+
+char *data_type(VarType type);
 NodeType get_rhs(NodeType type);
 
 #endif //GENERATOR_H

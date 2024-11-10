@@ -11,6 +11,7 @@
 
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "error/error.h"
 #include "symtable.h"
@@ -217,7 +218,7 @@ void generate(Node *node) {
             }
 
 
-        // if node->third == EXPRESSION -> generate_expr
+            // if node->third == EXPRESSION -> generate_expr
             if (node->third->type == Expression_N) {
                 printf("DEFVAR LF@%s ", node->first->data.id->data);
                 generate_expr(node->third, node->third->data.data_type);
@@ -226,11 +227,6 @@ void generate(Node *node) {
                 printf("DEFVAR LF@%s\n", node->first->data.id->data);
                 generate(node->third);
             }
-        /*
-        printf("DEFVAR LF@%s\n", node->first->data.id->data);
-    //printf("MOVE LF@%s %s@%s", node->first->data.id->data, data_type(node->second->data.data_type), node->third->data.id->data);
-        printf("MOVE LF@%s ", node->first->data.id->data);
-        */
             break;
 
         case VariableAssign_N:
@@ -258,6 +254,8 @@ void generate(Node *node) {
             break;
 
         case FuncCall_N:
+            // if ifj.write -> WRITE
+
             generate(node->second);
             printf("CALL $%s\n", node->first->data.id->data);
             break;
@@ -284,7 +282,7 @@ void generate(Node *node) {
             if (node->first->type == Expression_N) {
                 generate_expr(node->first, node->first->data.data_type);
             } else {
-                printf("PUSHS %s@%s\n", data_type(node->first), node->first->data.id->data);
+                printf("PUSHS %s@%s\n", data_type(node->first->type), node->first->data.id->data);
             }
             break;
 
@@ -307,7 +305,7 @@ void generate(Node *node) {
             if (node->first->type == Expression_N) {
                 generate_expr(node->first, node->first->data.data_type);
             } else {
-                printf("PUSHS %s@%s\n", data_type(node->first), node->first->data.id->data);
+                printf("PUSHS %s@%s\n", data_type(node->first->type), node->first->data.id->data);
             }
         //printf("PUSHS %s@%s\n", data_type(node->first->data.id->data), node->first->data.id->data);
             break;
@@ -611,8 +609,8 @@ void generate_expr(Node *node, VarType expr_type) {
     return;
 }
 
-char *data_type(Node* node) {
-    switch (node->type) {
+char *data_type(VarType type) {
+    switch (type) {
         case DT_I32: //i32
             return "int";
             break;
@@ -665,7 +663,23 @@ NodeType get_rhs(NodeType type) {
             return FuncCall_N;
             break;
         default:
-            return Int_N;
+			// error
             break;
     }
+}
+
+// prevest string na escape sequence podle ifj24
+String* convert_string(const char* str) {
+	String* new_str = malloc(sizeof(String));
+	if (new_str == NULL) {
+		ThrowError(99);
+	}
+	new_str->length = strlen(str);
+	new_str->data = malloc(new_str->length + 1);
+	if (new_str->data == NULL) {
+		free(new_str);
+		ThrowError(99);
+	}
+	strcpy(new_str->data, str);
+	return new_str;
 }
