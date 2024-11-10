@@ -652,6 +652,8 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
         case Eq_N: case NotEq_N: {
             VarType left_type = semantic_expr(node->first, global_table, local_table);
             VarType right_type = semantic_expr(node->second, global_table, local_table);
+            node->data.bool_val.left = left_type;
+            node->data.bool_val.right = right_type;
 
             // zpracovani null == null
             if (left_type == TYPE_NULL && right_type == TYPE_NULL) {
@@ -714,6 +716,8 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
         case Lesser_N: case Greater_N: case LesserEq_N: case GreaterEq_N: {
             VarType left_type = semantic_expr(node->first, global_table, local_table);
             VarType right_type = semantic_expr(node->second, global_table, local_table);
+            node->data.bool_val.left = left_type;
+            node->data.bool_val.right = right_type;
 
             // pokud typ operandu null, nemuzeme porovnovat 
             if (left_type == TYPE_NULL || right_type == TYPE_NULL) {

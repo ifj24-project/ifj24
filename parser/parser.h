@@ -79,6 +79,12 @@ typedef int DataTypeValue;
 typedef int VariableDefineValue;
 typedef bool Not_null_statement;
 typedef SymbolTable* FuncDefineValue;
+typedef struct 
+{
+    VarType left;
+    VarType right;
+
+} BoolValue;
 
 /**
  * @brief specialni members pro nektere uzly
@@ -93,7 +99,7 @@ typedef union DataValue
     VariableDefineValue var_or_const; // 0==var, 1==const
     Not_null_statement has_not_null_id; // true== ma o dite navic, node.second dite je |id| v te pipe
     FuncDefineValue sym_table; // Dane: musis znova pushnout var v tech |pipech| protoze ja je popuju po jejich useku platnosti;
-    
+    BoolValue bool_val; // udava vartype na leve a prave stane u relacnich operatoru
 
 } Data_value;
 
@@ -108,7 +114,6 @@ struct Node
     Node *third; /**< ukazatal na treti uzel (treti dite) */
     Node *fourth; /**< ukazatal na ctvrty uzel (ctvrte dite) */
     Data_value data; /**< nektere node typy maji specialni value. Node muze mit pouze jedny data */
-    // bool need_converting; /**< bandaid fix pro zaznamenani konverze v id (jinak bude potreva refaktorovat vsechno) */
 };
 
 /**
