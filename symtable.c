@@ -31,7 +31,7 @@ unsigned int hash(String* key, int table_size) {
 unsigned int second_hash(String* key, int table_size) {
     unsigned long int hash_value = 0;
     for (int i = 0; i < key->length; i++) {
-        hash_value = hash_value * 33 + key->data[i]; // pouzivame jine proste cislo pro 2. hash
+        hash_value = hash_value * 37 + key->data[i]; // pouzivame jine proste cislo pro 2. hash
     }
     return 1 + (hash_value % (table_size - 1)); // krok musi byt nenulovy
 }
