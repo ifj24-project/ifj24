@@ -469,76 +469,6 @@ void generate(Node* node)
         generate(node->fourth);
         break;
 
-    // case Lesser_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case LesserEq_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case Greater_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case GreaterEq_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case Eq_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case NotEq_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case Plus_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case Minus_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case Times_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
-    // case Divide_N:
-    //   generate(node->first);
-    //   generate(node->second);
-    //   generate(node->third);
-    //   generate(node->fourth);
-    //   break;
-
     default:
         generate(node->first);
         generate(node->second);
@@ -765,22 +695,27 @@ char* escape_string(const char* str)
 
 void generate_builtin()
 {
-    printf("LABEL $ifj_write\n");
+    // .string
+    printf("LABEL $ifj.string\n");
+    // prevest string na escape sequence
+
+    // write
+    printf("LABEL $ifj.write\n");
     printf("RETURN\n");
 
     // read functions
     // read int
-    printf("LABEL $ifj_read_int\n");
+    printf("LABEL $ifj.readi32\n");
     printf("READ GF@rvalue_return int\n");
     printf("RETURN\n");
 
     // read float
-    printf("LABEL $ifj_read_float\n");
+    printf("LABEL $ifj.readf64\n");
     printf("READ GF@rvalue_return float\n");
     printf("RETURN\n");
 
     // read string
-    printf("LABEL $ifj_read_string\n");
+    printf("LABEL $ifj.readstr\n");
     printf("READ GF@rvalue_return string\n");
     printf("RETURN\n");
 
@@ -788,4 +723,14 @@ void generate_builtin()
     printf("LABEL $ifj_read_bool\n");
     printf("READ GF@rvalue_return bool\n");
     printf("RETURN\n");
+
+    // concat
+    printf("LABEL $ifj.concat\n");
+    printf("RETURN\n");
+
+    // strcmp
+    printf("LABEL $ifj.strcmp\n");
+    printf("RETURN\n");
+
+    // strlen, setchar, getchar, substr
 }
