@@ -34,6 +34,7 @@ NodeStack* node_stack_init(){
 }
 
 void node_stack_push(NodeStack* stack, Node* node){
+    // stack = PARSER_NODE_STACK;
     NodeStackItem* item = (NodeStackItem*) malloc(sizeof(NodeStackItem));
     if (item == NULL) parse_wrapper_ThrowError(99);
 
@@ -45,6 +46,7 @@ void node_stack_push(NodeStack* stack, Node* node){
 
 void node_stack_free(NodeStack* stack){
     NodeStackItem* item = stack->first;
+    // NodeStackItem* item = PARSER_NODE_STACK->first;
     NodeStackItem* temp;
     while (item != NULL)
     {
@@ -136,7 +138,8 @@ void free_parse_tree(Node* tree){
         free_string(tree->data.str);
         break;
     case FuncDefine_N:
-        if (tree->data.sym_table != NULL) free(tree->data.sym_table);
+        if (tree->data.sym_table != NULL) free_symbol_table(tree->data.sym_table);
+        
         break;
     default:
         break;
@@ -292,6 +295,7 @@ const char * get_token_name(enum token_type token_id){
         return "T_Pipe";
         break;
     default:
+        return "ERROR: TOKEN TYPE NOT FOUND";
         break;
     }
 }
@@ -329,7 +333,7 @@ int sym_get_type(int type){
         break;
     default:
         fprintf(stderr, "sym_get_type: something went wrong\n");
-
+        return -1;
         break;
     }
 }
@@ -373,7 +377,6 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
         break;
     default:
         fprintf(stderr, "sym_push_params something went wrong\n");
-
         break;
     }
 
@@ -606,6 +609,7 @@ Node * Parse_id(TokenBuffer* token){
     else
     {
         buffer_check_first(token, T_ID);
+        return NULL;
     }
     
 }
@@ -620,16 +624,23 @@ Node * Parse_string(TokenBuffer* token){
     else
     {
         buffer_check_first(token, T_String);
+        return NULL;
     }
 }
 
 Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_const);
-    buffer_check_first(token, T_ID); // TODO: check if ifj
+    if (token->first->type == T_ID){ //check if ifj
+        if (strcmp(token->first->value.ID_name, "ifj")) parse_wrapper_ThrowError(2); // if id is not ifj
+    }
+    buffer_check_first(token, T_ID); 
     buffer_check_first(token, T_Assign);
     buffer_check_first(token, T_At);
     buffer_check_first(token, T_import);
     buffer_check_first(token, T_L_Round_B);
+    if (token->first->type == T_String){ //check import file name
+        if (strcmp(token->first->value.stringVal, "ifj24.zig")) parse_wrapper_ThrowError(2); // if name bad
+    }
     buffer_check_first(token, T_String);
     buffer_check_first(token, T_R_Round_B);
     buffer_check_first(token, T_SemiC);
@@ -895,6 +906,7 @@ Node * Parse_statement(TokenBuffer* token){
     case T_var:
         a = Parse_variable_define(token);
         break;
+    case T_Underscore: // allow assign to underscore
     case T_ID: // var assign or void call
         if ((token->second->type == T_L_Round_B)||(token->second->type == T_Dot))
         {
@@ -924,26 +936,6 @@ Node * Parse_statement(TokenBuffer* token){
 }
 
 Node* Parse_rhs(TokenBuffer* token){
-    // if (token->first->type == T_ID && token->second->type == T_Dot)
-    // {
-    //     return Parse_func_call(token);
-    // }
-    // else if (token->first->type == T_ID && token->second->type == T_L_Round_B)
-    // {
-    //     return Parse_func_call(token);
-    // }
-    // else if (token->first->type == T_String)
-    // {
-    //     return Parse_string(token);
-    // }
-    // else if (token->first->type == T_ID && token->second->type == T_SemiC)
-    // {
-    //     return Parse_id(token);
-    // }
-    // else
-    // {
-    //     return Parse_expression(token);
-    // }
 
     if (token->first->type == T_String)
     {
@@ -1000,9 +992,14 @@ Node * Parse_variable_define(TokenBuffer* token){
 
 Node * Parse_variable_assign(TokenBuffer* token){
 
-    // TODO: allow       _ = do_smth(1, 2);
+    // allow assingment to _ (undersore)
+    Node * a;
+    if (token->first->type == T_Underscore){
+        a = NoChildNode_new(Underscore_N);
+        consume_buffer(token, 1);
+    }
+    else a = Parse_id(token);
 
-    Node * a = Parse_id(token);
     buffer_check_first(token, T_Assign);
     Node * b = Parse_rhs(token);
 

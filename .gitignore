@@ -3,6 +3,4 @@ compiler
 .vscode
 input4.txt
 test.sh
-.idea
-/test.sh
-*.exe
+bin

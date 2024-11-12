@@ -60,6 +60,9 @@ typedef struct {
     int count;               // aktualni pocet prvku 
 } SymbolTable;
 
+bool is_prime(int num);
+int get_next_prime(int num);
+
 
 /**
  * @brief Creates a new symbol table.

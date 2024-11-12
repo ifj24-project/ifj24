@@ -6,6 +6,8 @@
 #include "symtable.h"
 
 SymbolTable* create_symbol_table(int size) {
+    size = get_next_prime(size); // velikost tabulky musi byt prvocislo pokud chceme pouzivat dvojity hash
+
     SymbolTable* table = malloc(sizeof(SymbolTable));
      if (table == NULL) {
         ThrowError(99);
@@ -20,6 +22,29 @@ SymbolTable* create_symbol_table(int size) {
     return table;
 }
 
+bool is_prime(int num){
+    if (num < 2) return false;
+
+    for (int i = 2; i <= (num/2); i++)
+    {
+        if (num % i == 0) return false;
+    }
+
+    return true;
+}
+
+int get_next_prime(int num){
+    if (num < 2) num = 2;
+    num++;
+    while (is_prime(num) == false)
+    {
+        num++;
+    }
+    
+    return num;
+}
+ 
+
 unsigned int hash(String* key, int table_size) {
     unsigned long int hash_value = 0;
     for (int i = 0; i < key->length; i++) {
@@ -31,7 +56,7 @@ unsigned int hash(String* key, int table_size) {
 unsigned int second_hash(String* key, int table_size) {
     unsigned long int hash_value = 0;
     for (int i = 0; i < key->length; i++) {
-        hash_value = hash_value * 33 + key->data[i]; // pouzivame jine proste cislo pro 2. hash
+        hash_value = hash_value * 37 + key->data[i]; // pouzivame jine proste cislo pro 2. hash
     }
     return 1 + (hash_value % (table_size - 1)); // krok musi byt nenulovy
 }
@@ -160,13 +185,11 @@ int check_unmodified_variables(SymbolTable* table) {
         if (table->table[i].is_occupied && table->table[i].type == TYPE_VARIABLE) {
             VariableInfo* var_info = &table->table[i].var_info;
             if (!var_info->is_const && !var_info->changed) {
+                fprintf(stderr, "var unchanged: %s\n", table->table[i].key->data);
                 count++;
             }
         }
     }
-    // if (count > 0) {
-    //     ThrowError(9);  // chyba: nekonstantni promenna musi byt modifikovatelnou 
-    // }
 
     return count;  // vrati 0, pokud vsechny promenne jsou korektne oznaceny jako modifikovatelne 
 }
@@ -192,16 +215,11 @@ int check_unused_variables(SymbolTable* table) {
         if (table->table[i].is_occupied && table->table[i].type == TYPE_VARIABLE) {
             // kontrola pouziti promenne 
             if (!table->table[i].var_info.is_used) {
+                fprintf(stderr, "var unused: %s\n", table->table[i].key->data);
                 unused_count++;  // zvetsime pocitadlo nepouzitych promennych
             }
         }
     }
-    
-    // if (unused_count > 0) {      // pokud jsou nepouzite promenne, volame error
-    //     ThrowError(9);
-    // }
-
-    // return 0;  // vsechny promenne jsou pouzite
 
     return unused_count;
 }
@@ -225,6 +243,8 @@ void delete_symbol(SymbolTable* table, String* key) {
 }
 
 void resize_table(SymbolTable* table, int new_size) {
+    new_size = get_next_prime(new_size); // velikost tabulky musi byt prvocislo pokud chceme pouzivat dvojity hash
+
     // ukladame starou tabulku
     SymbolTableEntry* old_table = table->table;  
     int old_size = table->size;
@@ -233,8 +253,12 @@ void resize_table(SymbolTable* table, int new_size) {
     table->table = calloc(new_size, sizeof(SymbolTableEntry));
     if (table->table == NULL) {
         //??
-        SymbolTable temp_table = {old_table, old_size, table->count};
-        free_symbol_table(&temp_table);  // uvolnujeme starou tabulku v pripade chyby
+        SymbolTable* temp_table = malloc(sizeof(SymbolTable));
+        if (temp_table == NULL) ThrowError(99);
+        temp_table->count = table->count;
+        temp_table->size = old_size;
+        temp_table->table = old_table;
+        free_symbol_table(temp_table);  // uvolnujeme starou tabulku v pripade chyby
         ThrowError(99);  // chyba allokace 
     }
 
@@ -261,8 +285,12 @@ void resize_table(SymbolTable* table, int new_size) {
         }
     }
     // uvolnujeme starou tabulku
-    SymbolTable temp_table = {old_table, old_size, table->count};
-    free_symbol_table(&temp_table);
+    SymbolTable* temp_table = malloc(sizeof(SymbolTable));
+    if (temp_table == NULL) ThrowError(99);
+    temp_table->count = table->count;
+    temp_table->size = old_size;
+    temp_table->table = old_table;
+    free_symbol_table(temp_table);
 }
 
 void free_symbol_table(SymbolTable* table) {
