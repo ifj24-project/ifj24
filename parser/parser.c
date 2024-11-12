@@ -630,11 +630,17 @@ Node * Parse_string(TokenBuffer* token){
 
 Node * Parse_prolog(TokenBuffer* token){
     buffer_check_first(token, T_const);
-    buffer_check_first(token, T_ID); // TODO: check if ifj
+    if (token->first->type == T_ID){ //check if ifj
+        if (strcmp(token->first->value.ID_name, "ifj")) parse_wrapper_ThrowError(2); // if id is not ifj
+    }
+    buffer_check_first(token, T_ID); 
     buffer_check_first(token, T_Assign);
     buffer_check_first(token, T_At);
     buffer_check_first(token, T_import);
     buffer_check_first(token, T_L_Round_B);
+    if (token->first->type == T_String){ //check import file name
+        if (strcmp(token->first->value.stringVal, "ifj24.zig")) parse_wrapper_ThrowError(2); // if name bad
+    }
     buffer_check_first(token, T_String);
     buffer_check_first(token, T_R_Round_B);
     buffer_check_first(token, T_SemiC);
