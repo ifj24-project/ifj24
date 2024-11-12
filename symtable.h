@@ -11,8 +11,13 @@ typedef enum {
     TYPE_STRING,   // []u8
     TYPE_BOOL,     // bool
     TYPE_UNDEFINED, // nedefinovana promenna
+    TYPE_INT_NULL, // ?i32
+    TYPE_FLOAT_NULL, // ?f64
+    TYPE_STRING_NULL, // ?[]u8
     TYPE_FUNCTION,  // funkce
     TYPE_VARIABLE,  // promenna
+    TYPE_VOID, // void
+    TYPE_NULL // null
 } VarType;
 
 // Struktura parametru funkce
@@ -34,6 +39,7 @@ typedef struct {
     VarType data_type;   // datovy typ promenne
     bool is_const;       // je-li promenna konstantni 
     bool is_used;        // je-li promenna pouzita
+    bool changed;       // je-li promenna nekdy zmenena
 } VariableInfo;
 
 // Struktura pro zapis do tabulky symbolu
@@ -45,6 +51,7 @@ typedef struct {
         VariableInfo var_info;
     };
     bool is_occupied;    // overi, zda uz obsazeno 
+    bool is_deleted;
 } SymbolTableEntry;
 
 // Struktura tabulky
@@ -54,6 +61,8 @@ typedef struct {
     int count;               // aktualni pocet prvku 
 } SymbolTable;
 
+bool is_prime(int num);
+int get_next_prime(int num);
 
 /**
  * @brief Creates a new symbol table.
