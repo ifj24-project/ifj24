@@ -6,6 +6,8 @@
 #include "symtable.h"
 
 SymbolTable* create_symbol_table(int size) {
+    size = get_next_prime(size); // velikost tabulky musi byt prvocislo pokud chceme pouzivat dvojity hash
+
     SymbolTable* table = malloc(sizeof(SymbolTable));
      if (table == NULL) {
         ThrowError(99);
@@ -19,6 +21,29 @@ SymbolTable* create_symbol_table(int size) {
     }
     return table;
 }
+
+bool is_prime(int num){
+    if (num < 2) return false;
+
+    for (int i = 2; i <= (num/2); i++)
+    {
+        if (num % i == 0) return false;
+    }
+
+    return true;
+}
+
+int get_next_prime(int num){
+    if (num < 2) num = 2;
+    num++;
+    while (is_prime(num) == false)
+    {
+        num++;
+    }
+    
+    return num;
+}
+ 
 
 unsigned int hash(String* key, int table_size) {
     unsigned long int hash_value = 0;
@@ -165,9 +190,6 @@ int check_unmodified_variables(SymbolTable* table) {
             }
         }
     }
-    // if (count > 0) {
-    //     ThrowError(9);  // chyba: nekonstantni promenna musi byt modifikovatelnou 
-    // }
 
     return count;  // vrati 0, pokud vsechny promenne jsou korektne oznaceny jako modifikovatelne 
 }
@@ -198,12 +220,6 @@ int check_unused_variables(SymbolTable* table) {
             }
         }
     }
-    
-    // if (unused_count > 0) {      // pokud jsou nepouzite promenne, volame error
-    //     ThrowError(9);
-    // }
-
-    // return 0;  // vsechny promenne jsou pouzite
 
     return unused_count;
 }
@@ -227,6 +243,8 @@ void delete_symbol(SymbolTable* table, String* key) {
 }
 
 void resize_table(SymbolTable* table, int new_size) {
+    new_size = get_next_prime(new_size); // velikost tabulky musi byt prvocislo pokud chceme pouzivat dvojity hash
+
     // ukladame starou tabulku
     SymbolTableEntry* old_table = table->table;  
     int old_size = table->size;
