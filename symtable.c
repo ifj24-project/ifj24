@@ -248,7 +248,6 @@ void delete_symbol(SymbolTable* table, String* key) {
         }
         table->table[index].is_deleted = true;
         table->table[index].is_occupied = false;
-        table->count--;
     }
 }
 
