@@ -4,3 +4,5 @@ compiler
 input4.txt
 test.sh
 bin
+.idea
+*.exe
