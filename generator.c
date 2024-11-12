@@ -232,7 +232,8 @@ void generate(Node* node)
             printf("POPS LF@%s\n", node->first->data.id->data);
             break;
         case Str_N:
-            printf("")
+            printf("MOVE LF@%s %s@%s\n", node->first->data.id->data, data_type(node->third->data.data_type),
+				   node->third->data.str->data);
             break;
         default:
             // chyba
@@ -760,4 +761,31 @@ char* escape_string(const char* str)
     // appends null terminator
     *new_str = '\0';
     return new_str;
+}
+
+void generate_builtin()
+{
+    printf("LABEL $ifj_write\n");
+    printf("RETURN\n");
+
+    // read functions
+    // read int
+    printf("LABEL $ifj_read_int\n");
+    printf("READ GF@rvalue_return int\n");
+    printf("RETURN\n");
+
+    // read float
+    printf("LABEL $ifj_read_float\n");
+    printf("READ GF@rvalue_return float\n");
+    printf("RETURN\n");
+
+    // read string
+    printf("LABEL $ifj_read_string\n");
+    printf("READ GF@rvalue_return string\n");
+    printf("RETURN\n");
+
+    // read bool
+    printf("LABEL $ifj_read_bool\n");
+    printf("READ GF@rvalue_return bool\n");
+    printf("RETURN\n");
 }
