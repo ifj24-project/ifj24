@@ -50,7 +50,6 @@ String* copy_string(const String *str) {
 
 
 int compare_strings(const String* str1, const String* str2) {
-    if (!str1 || !str2) ThrowError(4);
     return strcmp(str1->data, str2->data);
 }
 
