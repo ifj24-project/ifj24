@@ -144,7 +144,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             {
                 // check expr type
                 VarType temp = semantic_expr(node->third->first, global_table, local_table);
-                if (!type_cmp(node->second->data.data_type, temp)) {
+                if (!type_cmp(sym_get_type(node->second->data.data_type), temp)) {
                     if (temp == TYPE_INT)
                     {
                         int converted = expr_to_flt(node->third->first, global_table, local_table);
