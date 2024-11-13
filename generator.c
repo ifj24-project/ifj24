@@ -677,15 +677,18 @@ char* escape_string(const char* str)
     char n;
     while ((n = *(str++)) != '\0')
     {
+        // ascii values of control chars, space, #, backslash
         if (n <= 32 || n == 35 || n == 92)
         {
+            // escape sequence is in format \
             sprintf(new_str, "\\%03u", n);
             // move to next sequence
             new_str += 4;
         }
         else
         {
-            *new_str = n;
+            // move to next character
+            *new_str++ = n;
         }
     }
     // appends null terminator
@@ -732,5 +735,7 @@ void generate_builtin()
     printf("LABEL $ifj.strcmp\n");
     printf("RETURN\n");
 
-    // strlen, setchar, getchar, substr
+    // TODO: strlen, setchar, getchar, substr, ord, chr, nilcheck, length, all convert fncs, type
 }
+
+
