@@ -44,17 +44,19 @@ void free_string(String* str) {
 }
 
 String* copy_string(const String *str) {
-    if (!str) ThrowError(4);
+    if (!str) ThrowError(99);
     return create_string(str->data);
 }
 
 
 int compare_strings(const String* str1, const String* str2) {
+    if (str1 == NULL && str2 == NULL) return 0;
+    if (str1 == NULL || str2 == NULL) return 1;
     return strcmp(str1->data, str2->data);
 }
 
 String* concat_strings(const String *str1, const String *str2) {
-    if (!str1 || !str2) ThrowError(4);
+    if (!str1 || !str2) ThrowError(99);
     String *new_str = (String *)malloc(sizeof(String));
     if (new_str == NULL) ThrowError(99);
 

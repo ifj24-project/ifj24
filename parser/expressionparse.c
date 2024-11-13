@@ -3,8 +3,6 @@
 
 /**
  * ERROR HANDLING
- * @todo fix memory leak when called recursively (FUNEXP - func in expressions) 
- * "udelat, kdyz je globalni stack not NULL, tak neinicializovat ale jenou oddelat levy P_$ a neterminal"
  */
 
 PrecStack* EXPRESSION_PREC_STACK = NULL;
