@@ -138,7 +138,7 @@ void generate(Node *node) {
                 case Str_N:
                     char* str = escape_string(node->first->data.str->data);
                     printf("MOVE GF@value_return string@%s\n", str);
-                free(str);
+                    free(str);
                     break;
                 default:
                     // chyba
@@ -194,7 +194,7 @@ void generate(Node *node) {
                 case Str_N:
                     char* str = escape_string(node->third->data.str->data);
                     printf("MOVE LF@%s string@%s\n", node->first->data.id->data, str);
-                free(str);
+                    free(str);
                     break;
                 default:
                     // chyba
@@ -238,7 +238,7 @@ void generate(Node *node) {
                     case Str_N:
                         char* str = escape_string(node->second->data.str->data);
                         printf("MOVE LF@%s string@%s\n", node->first->data.id->data, str);
-                    free(str);
+                        free(str);
                         break;
                     default:
                         // chyba
@@ -528,12 +528,14 @@ NodeType get_rhs(NodeType type) {
 }
 
 // convert string to escape sequence
-char *escape_string(const char *str) {
+char* escape_string(const char *str) {
     // sequences are 4 characters long
     char *new_str = malloc(strlen(str) * 4 + 1);
     if (new_str == NULL) {
         ThrowError(99);
     }
+    char *ret_str;
+    ret_str = new_str;
 
     char n;
     while ((n = *(str++)) != '\0') {
@@ -551,7 +553,7 @@ char *escape_string(const char *str) {
     }
     // appends null terminator
     *new_str = '\0';
-    return new_str;
+    return ret_str;
     // TODO: free(new_str);
 }
 
