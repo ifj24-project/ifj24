@@ -19,7 +19,7 @@
 void generate(Node* node);
 void generate_expr(Node* node, VarType expr_type);
 
-char* data_type(VarType type);
+char* data_type(int type);
 NodeType get_rhs(NodeType type);
 char* escape_string(const char* str);
 

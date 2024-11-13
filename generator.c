@@ -34,7 +34,7 @@ void generate(Node* node)
     // pocet while statements
     static int while_counter = 0;
     // pocet void calls
-    static int void_call_counter = 0;
+    // static int void_call_counter = 0;
 
     switch (node->type)
     {
@@ -548,8 +548,8 @@ void generate_expr(Node* node, VarType expr_type)
         break;
 
     case NotEq_N:
-        generate_expr(node->first, expr_type);
-        generate_expr(node->second, expr_type);
+        generate_expr(node->first, node->data.bool_val.left);
+        generate_expr(node->second, node->data.bool_val.right);
     // do something
         printf("EQS\nNOTS\n");
         break;
@@ -579,7 +579,7 @@ void generate_expr(Node* node, VarType expr_type)
     // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
     // if % then IDIVS else DIVS
     // div float, idiv int
-        if (expr_type == Float_N || expr_type == Float_N)
+        if (expr_type == TYPE_FLOAT)
         {
             printf("DIVS\n");
         }
@@ -601,7 +601,7 @@ void generate_expr(Node* node, VarType expr_type)
     return;
 }
 
-char* data_type(VarType type)
+char* data_type(int type)
 {
     switch (type)
     {
@@ -659,7 +659,7 @@ NodeType get_rhs(NodeType type)
         return FuncCall_N;
         break;
     default:
-        // error
+        return -1;
         break;
     }
 }
@@ -680,7 +680,7 @@ char* escape_string(const char* str)
         // ascii values of control chars, space, #, backslash
         if (n <= 32 || n == 35 || n == 92)
         {
-            // escape sequence is in format \
+            // escape sequence is in format 
             sprintf(new_str, "\\%03u", n);
             // move to next sequence
             new_str += 4;
