@@ -97,6 +97,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             if (node->third->type == FuncCall_N)
             {
                 func_info = find_symbol(global_table, node->third->first->data.id);
+                if (func_info == NULL) semantic_wrapper_ThrowError(3); // not defined
                 temp = func_info->return_type;
             }
             else if (node->third->type == Expression_N)
@@ -185,8 +186,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             else if (node->third->type == FuncCall_N)
             {
                 func_info = find_symbol(global_table, node->third->first->data.id);
-                if (func_info != NULL) // if func is defined
-                {
+                if (func_info == NULL) semantic_wrapper_ThrowError(3); // not defined
                     switch (sym_get_type(node->second->data.data_type))
                     {
                     case TYPE_INT:
@@ -214,7 +214,6 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                         semantic_wrapper_ThrowError(7);
                         break;
                     }
-                }
             }
         }
         
