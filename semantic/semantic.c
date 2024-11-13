@@ -403,8 +403,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             else // takes any type (ifj.write())
             {
                 // check if called param is defined
-                if (called_param->first->type == Id_N && find_symbol(local_table, called_param->first->data.id) == NULL) semantic_wrapper_ThrowError(3); 
-                mark_variable_as_used(local_table, called_param->first->data.id);
+                if (called_param->first->type != Str_N) semantic_expr(called_param->first, global_table, local_table);
             }
             
             called_param = called_param->second;
