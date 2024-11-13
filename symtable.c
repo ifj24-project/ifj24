@@ -66,32 +66,40 @@ int find_slot(SymbolTable* table, String* key) {
     int step = second_hash(key, table->size); // 2. hash funkce
     int original_index = index;
     int checked_slots = 0;  // pocitadlo prochazenych slotu
+    int deleted_index = -1;
     
-    // dvojite hashovani
-    while (table->table[index].is_occupied && compare_strings(table->table[index].key, key) != 0) {
-        index = (index + step) % table->size; // posuvame se o "step" pozici v pripade kolize
+    while (table->table[index].is_occupied || table->table[index].is_deleted) {
+        if (table->table[index].is_occupied && compare_strings(table->table[index].key, key) == 0) {
+            return index;
+        }
+         if (deleted_index == -1 && table->table[index].is_deleted) {
+            deleted_index = index;  
+        }
+        
+        index = (index + step) % table->size;
         checked_slots++;
         
         if (index == original_index && checked_slots >= table->size) {
             ThrowError(99); // tabulka je plna
         }
     }
-    return index;
+    return (deleted_index != -1) ? deleted_index : index;
 }
 
 void insert_function(SymbolTable* table, String* key, VarType return_type) {
-    if (table->count >= table->size * 0.75) {   // pokud tabulka je vyplena vic nez 75%, rozsirujeme
+    if ((float)table->count >= table->size * 0.75) {   // pokud tabulka je vyplena vic nez 75%, rozsirujeme
         resize_table(table, table->size * 2);  // rozsireni tabulky
     }
     
     int index = find_slot(table, key);
-    if (!table->table[index].is_occupied) {
+    if (!table->table[index].is_occupied || table->table[index].is_deleted) {
         table->table[index].key = copy_string(key);
         table->table[index].type = TYPE_FUNCTION;
         table->table[index].func_info.return_type = return_type;
         table->table[index].func_info.params = NULL;  // zpocatku nejsou zadne parametry
         table->table[index].func_info.param_count = 0;  // nastaveni poctu parametru na 0
         table->table[index].is_occupied = true;
+		table->table[index].is_deleted = false;
         table->count++;
     } else {
         // pokud funkce jiz existuje
@@ -134,19 +142,24 @@ void push_parameter(SymbolTable* table, String* key, FunctionParam new_param) {
 }
 
 void insert_variable(SymbolTable* table, String* key, VarType data_type, bool is_const) {
-    if (table->count >= table->size * 0.75) {  // pokud tabulka je vyplena vic nez 75%, rozsirujeme
+    if ((float)table->count >= table->size * 0.75) {  // pokud tabulka je vyplena vic nez 75%, rozsirujeme
     resize_table(table, table->size * 2);  // rozsireni tabulky 
     }
     int index = find_slot(table, key);
-    if (!table->table[index].is_occupied) {
+    if (!table->table[index].is_occupied || table->table[index].is_deleted) {
         table->table[index].key = copy_string(key);
         table->table[index].type = TYPE_VARIABLE;
         table->table[index].var_info.data_type = data_type;
         table->table[index].var_info.is_const = is_const;
         table->table[index].var_info.is_used = false;
         table->table[index].is_occupied = true;
+		table->table[index].is_deleted = false;
         table->count++;
     }
+	else {
+	ThrowError(99);  //pokud promenna jiz existuje
+	}
+		
 }
 
 VarType get_symbol_type(SymbolTable* table, String* key) {
@@ -226,7 +239,7 @@ int check_unused_variables(SymbolTable* table) {
 
 void delete_symbol(SymbolTable* table, String* key) {
     int index = find_slot(table, key);
-    if (index != -1 && table->table[index].is_occupied) {
+    if (index != -1 && table->table[index].is_occupied && !table->table[index].is_deleted) {
         free_string(table->table[index].key);
         if (table->table[index].type == TYPE_FUNCTION) {
            FunctionParam* current_param = table->table[index].func_info.params;
@@ -238,7 +251,7 @@ void delete_symbol(SymbolTable* table, String* key) {
             }
         }
         table->table[index].is_occupied = false;
-        table->count--;
+        table->table[index].is_deleted = true;
     }
 }
 
@@ -252,7 +265,7 @@ void resize_table(SymbolTable* table, int new_size) {
     // vytvarime novou tabulku s vetsi velikosti
     table->table = calloc(new_size, sizeof(SymbolTableEntry));
     if (table->table == NULL) {
-        //??
+        // v pripade, ze se nepodarilo allokovat pamet pro novou tabulku, smazeme starou pomoci docasne struktury
         SymbolTable* temp_table = malloc(sizeof(SymbolTable));
         if (temp_table == NULL) ThrowError(99);
         temp_table->count = table->count;
