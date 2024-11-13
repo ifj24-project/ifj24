@@ -268,7 +268,7 @@ void generate(Node* node)
         break;
 
     case VariableAssign_N:
-        switch (node->third->type)
+        switch (node->second->type)
         {
         case Id_N:
             break;
@@ -277,6 +277,9 @@ void generate(Node* node)
         case Expression_N:
             break;
         case Str_N:
+            break;
+    case Underscore_N:
+        generate_expr(node->second, node->second->data.data_type);
             break;
         default:
             // chyba
@@ -514,6 +517,8 @@ void generate_expr(Node* node, VarType expr_type)
     case Int_N:
         printf("PUSHS int@%d\n", node->data.integer);
         break;
+    case Underscore_N:
+        break;
 
     case Lesser_N:
         generate_expr(node->first, expr_type);
@@ -576,9 +581,12 @@ void generate_expr(Node* node, VarType expr_type)
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
 
+<<<<<<< HEAD
     // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
     // if % then IDIVS else DIVS
     // div float, idiv int
+=======
+>>>>>>> f6b833fdb8fb230a0af45f31f5b8196193b64702
         if (expr_type == TYPE_FLOAT)
         {
             printf("DIVS\n");
@@ -680,7 +688,11 @@ char* escape_string(const char* str)
         // ascii values of control chars, space, #, backslash
         if (n <= 32 || n == 35 || n == 92)
         {
+<<<<<<< HEAD
             // escape sequence is in format 
+=======
+            // escape sequence is in format
+>>>>>>> f6b833fdb8fb230a0af45f31f5b8196193b64702
             sprintf(new_str, "\\%03u", n);
             // move to next sequence
             new_str += 4;

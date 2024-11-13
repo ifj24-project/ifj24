@@ -22,7 +22,7 @@ $(OBJDIR)/%.o: %.c $(HEADER)
 	@mkdir -p $(OBJDIR)/parser
 	@mkdir -p $(OBJDIR)/error
 	@mkdir -p $(OBJDIR)/semantic
-	$(CC) $(CFLAGS) -o $@ $< 
+	$(CC) $(CFLAGS) -o $@ $<
 
 .PHONY: clean
 
