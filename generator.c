@@ -254,7 +254,9 @@ void generate(Node *node) {
         case FuncCall_N:
             generate(node->second);
             if(strcmp(node->first->data.id->data, "ifj.write") == 0) {
-            printf("CALL $writeStr\n");
+                printf("CALL $ifj_write\n");
+            } else if (strcmp(node->first->data.id->data, "ifj.string") == 0) {
+				printf("CALL $ifj_string\n");
 			} else {
 				printf("CALL $%s\n", node->first->data.id->data);
 			}
@@ -341,7 +343,7 @@ void generate(Node *node) {
         case VoidCall_N:
             generate(node->second);
             if(strcmp(node->first->data.id->data, "ifj.write") == 0) {
-                printf("CALL $writeStr\n");
+                printf("CALL $ifj_write\n");
             } else {
                 printf("CALL $%s\n", node->first->data.id->data);
             }
@@ -576,17 +578,22 @@ char* escape_string(const char *str) {
 }
 
 void generate_builtin() {
-    /*
+
     // TODO
     // .string
-    printf("LABEL $adf\n");
+    printf("JUMP $skip_string\n");
+    printf("LABEL $ifj_string\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    printf("POPS GF@value_return\n");
     // prevest string na escape sequence
+    printf("POPFRAME\n");
     printf("RETURN\n");
-    */
+    printf("LABEL $skip_string\n");
 
     // write
     printf("JUMP $skip_write\n");
-    printf("LABEL $writeStr\n");
+    printf("LABEL $ifj_write\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("DEFVAR LF@_write\n");
@@ -596,44 +603,67 @@ void generate_builtin() {
     printf("RETURN\n");
     printf("LABEL $skip_write\n");
 
-    /*
+
     // read functions
     // read int
-    printf("LABEL $ifj.readi32\n");
+    printf("JUMP $skip_readi32\n");
+    printf("LABEL $ifj_readi32\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return int\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
+    printf("LABEL $skip_readi32\n");
 
     // read float
-    printf("LABEL $ifj.readf64\n");
+    printf("JUMP $skip_readf64\n");
+    printf("LABEL $ifj_readf64\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return float\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
+    printf("LABEL $skip_readf64\n");
 
     // read string
-    printf("LABEL $ifj.readstr\n");
+    printf("JUMP $skip_readstr\n");
+    printf("LABEL $ifj_readstr\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return string\n");
+    printf("POPFRAME\n");
     printf("RETURN\n");
+    printf("LABEL $skip_readstr\n");
 
     // read bool
+    printf("JUMP $skip_readbool\n");
     printf("LABEL $ifj_read_bool\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return bool\n");
+    printf("POPFRAME\n");
     printf("RETURN\n");
+    printf("LABEL $skip_readbool\n");
 
     // concat
-    printf("LABEL $ifj.concat\n");
+    printf("JUMP $skip_concat\n");
+    printf("LABEL $ifj_concat\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+
+    printf("POPFRAME\n");
     printf("RETURN\n");
+    printf("LABEL $skip_concat\n");
 
     // strcmp
-    printf("LABEL $ifj.strcmp\n");
+    printf("JUMP $skip_strcmp\n");
+    printf("LABEL $ifj_strcmp\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+
+    printf("POPFRAME\n");
     printf("RETURN\n");
-    */
+    printf("LABEL $skip_strcmp\n");
 
     // TODO: strlen, setchar, getchar, substr, ord, chr, nilcheck, length, all convert fncs, type
 }
