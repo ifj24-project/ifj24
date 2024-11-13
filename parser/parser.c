@@ -93,6 +93,14 @@ TokenBuffer * buffer_ctor(){
     x->third = scan();
     x->fourth = scan();
 
+    if (x->first->type == T_ERORR ||
+        x->second->type == T_ERORR ||
+        x->third->type == T_ERORR ||
+        x->fourth->type == T_ERORR) {
+            fprintf(stderr, "\nERROR TOKEN DETECTED!\n\n");
+            parse_wrapper_ThrowError(99);
+        }
+
     return x;
 }
 
@@ -399,6 +407,10 @@ void consume_buffer(TokenBuffer* token, size_t n){
         token->second = token->third;
         token->third = token->fourth;
         token->fourth = scan();
+        if (token->fourth->type == T_ERORR) {
+            fprintf(stderr, "\nERROR TOKEN DETECTED!\n\n");
+            parse_wrapper_ThrowError(99);
+        }
     }
     
 }
@@ -406,11 +418,11 @@ void consume_buffer(TokenBuffer* token, size_t n){
 void buffer_check_first(TokenBuffer* token, token_type num){
     if (token->first->type != num)
     {
-        fprintf(stderr, "Expected token type: %s got: %s\n", get_token_name(num), get_token_name(token->first->type));
+        fprintf(stderr, "\nExpected token type: %s got: %s\n", get_token_name(num), get_token_name(token->first->type));
         fprintf(stderr, "next tokens:\n");
         fprintf(stderr, "%s\n", get_token_name(token->second->type));
         fprintf(stderr, "%s\n", get_token_name(token->third->type));
-        fprintf(stderr, "%s\n", get_token_name(token->fourth->type));
+        fprintf(stderr, "%s\n\n", get_token_name(token->fourth->type));
         parse_wrapper_ThrowError(2);
     }
     consume_buffer(token, 1);
