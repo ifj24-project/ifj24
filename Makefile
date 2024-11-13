@@ -2,8 +2,8 @@
 CC = gcc
 CFLAGS = -std=gnu99 -c -g -Wall
 
-HEADER = parser/parser.h parser/expressionparse.h scanner.h semantic/semantic.h error/error.h stringlib.h symstack.h symtable.h
-CPP = parser/parser.c parser/expressionparse.c scanner.c  main.c semantic/semantic.c error/error.c stringlib.c symstack.c symtable.c
+HEADER = parser/parser.h parser/expressionparse.h scanner.h semantic/semantic.h error/error.h stringlib.h symstack.h symtable.h generator.h
+CPP = parser/parser.c parser/expressionparse.c scanner.c  main.c semantic/semantic.c error/error.c stringlib.c symstack.c symtable.c generator.c
 
 # Program name
 PROGNAME = compiler
@@ -22,7 +22,7 @@ $(OBJDIR)/%.o: %.c $(HEADER)
 	@mkdir -p $(OBJDIR)/parser
 	@mkdir -p $(OBJDIR)/error
 	@mkdir -p $(OBJDIR)/semantic
-	$(CC) $(CFLAGS) -o $@ $< 
+	$(CC) $(CFLAGS) -o $@ $<
 
 .PHONY: clean
 

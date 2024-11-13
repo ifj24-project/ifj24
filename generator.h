@@ -22,5 +22,6 @@ void generate_expr(Node* node, VarType expr_type);
 char* data_type(VarType type);
 NodeType get_rhs(NodeType type);
 char* escape_string(const char* str);
+void generate_builtin();
 
 #endif //GENERATOR_H
