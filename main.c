@@ -1,5 +1,6 @@
 #include "parser/parser.h"
 #include "semantic/semantic.h"
+#include "generator.h"
 
 int main()
 {
@@ -15,6 +16,7 @@ int main()
     /**
      * Gregoruv generator tady.
      */
+    generate(parse_tree);
 
     free_symbol_table(symbol_table);
     free_parse_tree(parse_tree);
