@@ -63,6 +63,7 @@ void generate(Node *node) {
             if (strcmp(node->first->data.id->data, "main") == 0) {
                 printf("LABEL $$main\n");
                 printf("CREATEFRAME\n");
+                printf("PUSHFRAME\n");
 
                 // globalni promena pro vraceni hodnot z funkci
                 printf("DEFVAR GF@value_return\n");
@@ -72,11 +73,13 @@ void generate(Node *node) {
                 printf("DEFVAR GF@lhs\n");
                 printf("DEFVAR GF@rhs\n");
                 printf("DEFVAR GF@devnull\n");
+                generate_builtin();
 
                 generate(node->second);
                 generate(node->third);
                 generate(node->fourth);
 
+                printf("POPFRAME\n");
                 printf("EXIT int@0\n");
                 printf("LABEL error_exit\n");
                 printf("EXIT int@99\n");
@@ -250,7 +253,11 @@ void generate(Node *node) {
 
         case FuncCall_N:
             generate(node->second);
-            printf("CALL $%s\n", node->first->data.id->data);
+            if(strcmp(node->first->data.id->data, "ifj.write") == 0) {
+            printf("CALL $writeStr\n");
+			} else {
+				printf("CALL $%s\n", node->first->data.id->data);
+			}
             break;
 
         // pushuji parametry od konce!
@@ -333,7 +340,11 @@ void generate(Node *node) {
 
         case VoidCall_N:
             generate(node->second);
-            printf("CALL $%s\n", node->first->data.id->data);
+            if(strcmp(node->first->data.id->data, "ifj.write") == 0) {
+                printf("CALL $writeStr\n");
+            } else {
+                printf("CALL $%s\n", node->first->data.id->data);
+            }
             break;
 
 
@@ -364,6 +375,13 @@ void generate_expr(Node *node, VarType expr_type) {
 
     // rozlisit realcni a int
     // bool -> ANDS, ORS, NOTS
+    /*
+    if (expr_type == DT_BOOL) {
+        switch (node->type) {
+            // ANDS, ORS, NOTS
+        }
+    }
+    */
 
 
     switch (node->type) {
@@ -558,29 +576,48 @@ char* escape_string(const char *str) {
 }
 
 void generate_builtin() {
+    /*
     // TODO
     // .string
-    printf("LABEL $ifj.string\n");
+    printf("LABEL $adf\n");
     // prevest string na escape sequence
     printf("RETURN\n");
+    */
 
     // write
-    printf("LABEL $ifj.write\n");
+    printf("JUMP $skip_write\n");
+    printf("LABEL $writeStr\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    printf("DEFVAR LF@_write\n");
+    printf("POPS LF@_write\n");
+    printf("WRITE LF@_write\n");
+    printf("POPFRAME\n");
     printf("RETURN\n");
+    printf("LABEL $skip_write\n");
 
+    /*
     // read functions
     // read int
     printf("LABEL $ifj.readi32\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return int\n");
+    printf("POPFRAME\n");
     printf("RETURN\n");
 
     // read float
     printf("LABEL $ifj.readf64\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return float\n");
+    printf("POPFRAME\n");
     printf("RETURN\n");
 
     // read string
     printf("LABEL $ifj.readstr\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return string\n");
     printf("RETURN\n");
 
@@ -596,6 +633,7 @@ void generate_builtin() {
     // strcmp
     printf("LABEL $ifj.strcmp\n");
     printf("RETURN\n");
+    */
 
     // TODO: strlen, setchar, getchar, substr, ord, chr, nilcheck, length, all convert fncs, type
 }
