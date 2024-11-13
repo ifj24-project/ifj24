@@ -120,7 +120,7 @@ void generate(Node *node) {
 
                 printf("JUMP vardef$%s$back\n", node->first->data.id->data);
 
-                printf("LABEL skip$%s", node->first->data.id->data);
+                printf("LABEL skip$%s\n", node->first->data.id->data);
                 in_func = false;
             }
             break;
@@ -252,11 +252,18 @@ void generate(Node *node) {
             break;
 
         case FuncCall_N:
+            // TODO: prepsat to na ty podtrzitka
             generate(node->second);
             if(strcmp(node->first->data.id->data, "ifj.write") == 0) {
                 printf("CALL $ifj_write\n");
             } else if (strcmp(node->first->data.id->data, "ifj.string") == 0) {
 				printf("CALL $ifj_string\n");
+            } else if (strcmp(node->first->data.id->data, "ifj.readi32") == 0) {
+				printf("CALL $ifj_readi32\n");
+            } else if (strcmp(node->first->data.id->data, "ifj.i2f") == 0) {
+				printf("CALL $ifj_i2f\n");
+            } else if (strcmp(node->first->data.id->data, "ifj.f2i") == 0) {
+				printf("CALL $ifj_f2i\n");
 			} else {
 				printf("CALL $%s\n", node->first->data.id->data);
 			}
@@ -292,27 +299,28 @@ void generate(Node *node) {
 
         case If_N:
             if_counter++;
+            int if_counter_in = if_counter;
         // if bez pipes if () |neco| ..
             if (node->data.has_not_null_id == false) {
                 generate_expr(node->first, node->first->data.data_type);
                 printf("POPS GF@exp_return\n");
-                printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter);
+                printf("JUMPIFEQ $if$%d$else GF@exp_return bool@false\n", if_counter_in);
                 generate(node->second);
-                printf("JUMP $if$%d$end\n", if_counter);
-                printf("LABEL $if$%d$else\n", if_counter);
+                printf("JUMP $if$%d$end\n", if_counter_in);
+                printf("LABEL $if$%d$else\n", if_counter_in);
                 generate(node->third);
-                printf("LABEL $if$%d$end\n", if_counter);
+                printf("LABEL $if$%d$end\n", if_counter_in);
             } else {
                 // TODO: dodelat if s pipes |neco|
                 // if (vyraz s null) |id bez null| -> pokud vyraz s null neni null -> prevedu do id bez null s odpovidajici hodnotou
-                printf("JUMPIFEQ $if$%d$else LF@%s nil@nil\n", if_counter, node->first->data.id->data);
+                printf("JUMPIFEQ $if$%d$else LF@%s nil@nil\n", if_counter_in, node->first->data.id->data);
                 printf("DEFVAR LF@%s\n", node->second->data.id->data);
-                printf("MOVE LF@%s LF@%s\n", node->first->data.id->data, node->second->data.id->data);
+                printf("MOVE LF@%s LF@%s\n", node->second->data.id->data, node->first->data.id->data);
                 generate(node->third);
-                printf("JUMP $if$%d$end\n", if_counter);
-                printf("LABEL $if$%d$else\n", if_counter);
+                printf("JUMP $if$%d$end\n", if_counter_in);
+                printf("LABEL $if$%d$else\n", if_counter_in);
                 generate(node->fourth);
-                printf("LABEL $if$%d$end\n", if_counter);
+                printf("LABEL $if$%d$end\n", if_counter_in);
             }
 
             break;
@@ -398,7 +406,7 @@ void generate_expr(Node *node, VarType expr_type) {
             break;
 
         case Float_N:
-            printf("PUSHS float@%f\n", node->data.flt);
+            printf("PUSHS float@%a\n", node->data.flt);
             break;
 
         case Int_N:
@@ -610,7 +618,7 @@ void generate_builtin() {
     printf("LABEL $ifj_readi32\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-    printf("READ GF@rvalue_return int\n");
+    printf("READ GF@value_return int\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     printf("LABEL $skip_readi32\n");
@@ -664,6 +672,29 @@ void generate_builtin() {
     printf("POPFRAME\n");
     printf("RETURN\n");
     printf("LABEL $skip_strcmp\n");
+
+    //int to float
+    printf("JUMP $skip_i2f\n");
+    printf("LABEL $ifj_i2f\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    printf("INT2FLOATS\n");
+    printf("POPS GF@value_return\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL $skip_i2f\n");
+
+    // float to int
+    printf("JUMP $skip_f2i\n");
+    printf("LABEL $ifj_f2i\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    printf("FLOAT2INTS\n");
+    printf("POPS GF@value_return\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL $skip_f2i\n");
+
 
     //
 
