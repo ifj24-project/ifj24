@@ -240,34 +240,12 @@ void generate(Node* node)
             printf("JUMP error_exit\n");
             break;
         }
-        if (node->third->type == Expression_N)
-        {
-            printf("DEFVAR LF@%s ", node->first->data.id->data);
-            generate_expr(node->third, node->third->data.data_type);
-            printf("POPS LF@%s\n", node->first->data.id->data);
-        }
-        else
-        {
-            printf("DEFVAR LF@%s\n", node->first->data.id->data);
-            generate(node->third);
-        }
-
-
-    // if node->third == EXPRESSION -> generate_expr
-        if (node->third->type == Expression_N)
-        {
-            printf("DEFVAR LF@%s ", node->first->data.id->data);
-            generate_expr(node->third, node->third->data.data_type);
-            printf("POPS LF@%s\n", node->first->data.id->data);
-        }
-        else
-        {
-            printf("DEFVAR LF@%s\n", node->first->data.id->data);
-            generate(node->third);
-        }
         break;
 
     case VariableAssign_N:
+        if (node->first->type == Underscore_N) {
+            // nikam neprirazuju
+        }
         switch (node->second->type)
         {
         case Id_N:
@@ -277,9 +255,6 @@ void generate(Node* node)
         case Expression_N:
             break;
         case Str_N:
-            break;
-    case Underscore_N:
-        generate_expr(node->second, node->second->data.data_type);
             break;
         default:
             // chyba
@@ -336,6 +311,7 @@ void generate(Node* node)
         break;
 
     case ParamsNext_N:
+        // napsat if jestli to je id, fnccall, expression, str a nakopirovat to vsude
         switch (node->third->type)
         {
         case Id_N:
@@ -434,44 +410,6 @@ void generate(Node* node)
         generate(node->first);
         break;
 
-    case Id_N:
-        generate(node->first);
-        generate(node->second);
-        generate(node->third);
-        generate(node->fourth);
-        break;
-
-    case Str_N:
-        generate(node->first);
-        generate(node->second);
-        generate(node->third);
-        generate(node->fourth);
-        break;
-
-    case Float_N:
-        generate(node->first);
-        generate(node->second);
-        generate(node->third);
-        generate(node->fourth);
-        break;
-
-    case If_not_null:
-        // TODO:
-        // if .data.has_not_null_id == true -> true je s pipema
-        // udelam promenou tomu pipam
-        generate(node->first);
-        generate(node->second);
-        generate(node->third);
-        generate(node->fourth);
-        break;
-
-    case while_not_null:
-        generate(node->first);
-        generate(node->second);
-        generate(node->third);
-        generate(node->fourth);
-        break;
-
     default:
         generate(node->first);
         generate(node->second);
@@ -479,7 +417,7 @@ void generate(Node* node)
         generate(node->fourth);
         break;
     }
-    // Exit succes
+    // Exit success
     //printf("EXIt in@0\n");
 }
 
@@ -705,6 +643,7 @@ char* escape_string(const char* str)
 
 void generate_builtin()
 {
+    // TODO
     // .string
     printf("LABEL $ifj.string\n");
     // prevest string na escape sequence
