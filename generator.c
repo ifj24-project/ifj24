@@ -308,7 +308,7 @@ void generate(Node* node)
     // pushuji parametry od konce!
     // aby se to lip pak parovalo s parametry funkce
     case Params_N:
-        switch (node->third->type)
+        switch (node->first->type)
         {
         case Id_N:
             break;
@@ -504,6 +504,10 @@ void generate_expr(Node* node, VarType expr_type)
 
     switch (node->type)
     {
+    case Expression_N:
+        generate_expr(node->first, expr_type);
+        break;
+
     case Id_N:
         // TODO: nejak tam tu promennou dat misto "symbol"
         printf("PUSHS LF@%s\n", node->data.id->data);
@@ -521,33 +525,33 @@ void generate_expr(Node* node, VarType expr_type)
         break;
 
     case Lesser_N:
-        generate_expr(node->first, expr_type);
-        generate_expr(node->second, expr_type);
+        generate_expr(node->first, node->data.bool_val.left);
+        generate_expr(node->second, node->data.bool_val.right);
         printf("LTS\n");
         break;
 
     case LesserEq_N:
-        generate_expr(node->first, expr_type);
-        generate_expr(node->second, expr_type);
+        generate_expr(node->first, node->data.bool_val.left);
+        generate_expr(node->second, node->data.bool_val.right);
         printf("GTS\nNOTS\n");
         break;
 
     case Greater_N:
-        generate_expr(node->first, expr_type);
-        generate_expr(node->second, expr_type);
+        generate_expr(node->first, node->data.bool_val.left);
+        generate_expr(node->second, node->data.bool_val.right);
         printf("GTS\n");
         break;
 
     case GreaterEq_N:
-        generate_expr(node->first, expr_type);
-        generate_expr(node->second, expr_type);
+        generate_expr(node->first, node->data.bool_val.left);
+        generate_expr(node->second, node->data.bool_val.right);
     // do something
         printf("LTS\nNOTS\n");
         break;
 
     case Eq_N:
-        generate_expr(node->first, expr_type);
-        generate_expr(node->second, expr_type);
+        generate_expr(node->first, node->data.bool_val.left);
+        generate_expr(node->second, node->data.bool_val.right);
     // do something
         printf("EQS\n");
         break;
