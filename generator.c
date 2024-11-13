@@ -581,12 +581,6 @@ void generate_expr(Node* node, VarType expr_type)
         generate_expr(node->first, expr_type);
         generate_expr(node->second, expr_type);
 
-<<<<<<< HEAD
-    // TODO: nejak zkontrolovat jestli pouzit DIV nebo IDIV
-    // if % then IDIVS else DIVS
-    // div float, idiv int
-=======
->>>>>>> f6b833fdb8fb230a0af45f31f5b8196193b64702
         if (expr_type == TYPE_FLOAT)
         {
             printf("DIVS\n");
@@ -688,11 +682,8 @@ char* escape_string(const char* str)
         // ascii values of control chars, space, #, backslash
         if (n <= 32 || n == 35 || n == 92)
         {
-<<<<<<< HEAD
-            // escape sequence is in format 
-=======
             // escape sequence is in format
->>>>>>> f6b833fdb8fb230a0af45f31f5b8196193b64702
+
             sprintf(new_str, "\\%03u", n);
             // move to next sequence
             new_str += 4;
