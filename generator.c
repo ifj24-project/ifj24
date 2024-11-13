@@ -665,5 +665,7 @@ void generate_builtin() {
     printf("RETURN\n");
     printf("LABEL $skip_strcmp\n");
 
+    //
+
     // TODO: strlen, setchar, getchar, substr, ord, chr, nilcheck, length, all convert fncs, type
 }
