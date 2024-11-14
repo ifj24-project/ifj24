@@ -69,9 +69,7 @@ void generate(Node *node) {
                 printf("DEFVAR GF@value_return\n");
                 // globalni promenna pro vraceni true/false z expresion
                 printf("DEFVAR GF@exp_return\n");
-                // globalni promenne pro expresions lhs a rhs
-                printf("DEFVAR GF@lhs\n");
-                printf("DEFVAR GF@rhs\n");
+                // globalni promenna pro zahozeni hodnoty
                 printf("DEFVAR GF@devnull\n");
                 // generovani vestavenych funkci
                 generate_builtin();
@@ -275,11 +273,13 @@ void generate(Node *node) {
             generate(node->second);
             switch (node->first->type) {
                 case Id_N:
-                    printf("PUSHS LF@%s\n", node->first->data.id->data);
+                    generate_expr(node->first, node->first->data.data_type);
+                    //printf("PUSHS LF@%s\n", node->first->data.id->data);
                     break;
                 case FuncCall_N:
-                    generate(node->first);
-                    printf("PUSHS GF@value_return\n");
+                    generate_expr(node->first, node->first->data.data_type);
+                    //generate(node->first);
+                    //printf("PUSHS GF@value_return\n");
                     break;
                 case Expression_N:
                     generate_expr(node->first, node->first->data.data_type);
@@ -326,24 +326,25 @@ void generate(Node *node) {
 
         case While_N:
             while_counter++;
+            int while_counter_in = while_counter;
         // while bez pipes while () |neco| ..
             if (node->data.has_not_null_id == false) {
-                printf("LABEL while$%d\n", while_counter);
+                printf("LABEL while$%d\n", while_counter_in);
                 generate_expr(node->first, node->first->data.data_type);
                 printf("POPS GF@exp_return\n");
-                printf("JUMPIFEQ $while$%d$end GF@exp_return bool@false\n", while_counter);
+                printf("JUMPIFEQ $while$%d$end GF@exp_return bool@false\n", while_counter_in);
                 generate(node->second);
-                printf("JUMP while$%d\n", while_counter);
-                printf("LABEL $while$%d$end\n", while_counter);
+                printf("JUMP while$%d\n", while_counter_in);
+                printf("LABEL $while$%d$end\n", while_counter_in);
             } else {
                 // TODO: destruktor
                 printf("DEFVAR LF@%s\n", node->second->data.id->data);
-                printf("LABEL while$%d\n", while_counter);
-                printf("JUMPIFEQ $while$%d$end LF@%s nil@nil\n", while_counter, node->first->data.id->data);
+                printf("LABEL while$%d\n", while_counter_in);
+                printf("JUMPIFEQ $while$%d$end LF@%s nil@nil\n", while_counter_in, node->first->data.id->data);
                 printf("MOVE LF@%s LF@%s\n", node->second->data.id->data, node->first->data.id->data);
                 generate(node->third);
-                printf("JUMP while$%d\n", while_counter);
-                printf("LABEL $while$%d$end\n", while_counter);
+                printf("JUMP while$%d\n", while_counter_in);
+                printf("LABEL $while$%d$end\n", while_counter_in);
             }
             break;
 
@@ -408,6 +409,7 @@ void generate_expr(Node *node, VarType expr_type) {
         case Int_N:
             printf("PUSHS int@%d\n", node->data.integer);
             break;
+
         case Underscore_N:
             break;
 
@@ -480,8 +482,9 @@ void generate_expr(Node *node, VarType expr_type) {
             break;
 
         case FuncCall_N:
-            generate(node->first);
-            printf("PUSH GF@return_value\n");
+            generate(node->second);
+            printf("CALL $%s\n", node->first->data.id->data);
+            printf("PUSHS GF@value_return\n");
             break;
 
         default:
@@ -585,19 +588,12 @@ char *escape_string(const char *str) {
 
 void generate_builtin() {
     // TODO
-    // .string
-    printf("JUMP $skip_string\n");
-    printf("LABEL $ifj_string\n");
-    printf("CREATEFRAME\n");
-    printf("PUSHFRAME\n");
-    printf("POPS GF@value_return\n");
-    // prevest string na escape sequence
-    printf("POPFRAME\n");
-    printf("RETURN\n");
-    printf("LABEL $skip_string\n");
+    printf("\n# Builtin functions\n");
+    printf("JUMP $skip_builtin\n");
+
 
     // write
-    printf("JUMP $skip_write\n");
+    //printf("JUMP $skip_write\n");
     printf("LABEL $ifj_write\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
@@ -606,39 +602,39 @@ void generate_builtin() {
     printf("WRITE LF@tmp\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_write\n");
+    //printf("LABEL $skip_write\n");
 
 
     // read functions
     // read int
-    printf("JUMP $skip_readi32\n");
+    //printf("JUMP $skip_readi32\n");
     printf("LABEL $ifj_readi32\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("READ GF@value_return int\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_readi32\n");
+    //printf("LABEL $skip_readi32\n");
 
     // read float
-    printf("JUMP $skip_readf64\n");
+    //printf("JUMP $skip_readf64\n");
     printf("LABEL $ifj_readf64\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("READ GF@rvalue_return float\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_readf64\n");
+    //printf("LABEL $skip_readf64\n");
 
     // read string
-    printf("JUMP $skip_readstr\n");
+    //printf("JUMP $skip_readstr\n");
     printf("LABEL $ifj_readstr\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("READ GF@value_return string\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_readstr\n");
+    //printf("LABEL $skip_readstr\n");
 
     /*
     // read bool
@@ -652,8 +648,20 @@ void generate_builtin() {
     printf("LABEL $skip_readbool\n");
     */
 
+    // work with strings
+    // string
+    //printf("JUMP $skip_string\n");
+    printf("LABEL $ifj_string\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    printf("POPS GF@value_return\n");
+    // prevest string na escape sequence
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    //printf("LABEL $skip_string\n");
+
     // concat
-    printf("JUMP $skip_concat\n");
+    //printf("JUMP $skip_concat\n");
     printf("LABEL $ifj_concat\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
@@ -664,21 +672,64 @@ void generate_builtin() {
     printf("CONCAT GF@value_return LF@tmp1 LF@tmp2\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_concat\n");
+    //printf("LABEL $skip_concat\n");
 
     // strcmp
-    printf("JUMP $skip_strcmp\n");
+    //printf("JUMP $skip_strcmp\n");
     printf("LABEL $ifj_strcmp\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
     printf("EQS\n");
-    printf("POPS GF@exp_return\n");
+    printf("POPS GF@value_return\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_strcmp\n");
+    //printf("LABEL $skip_strcmp\n");
 
-    //int to float
-    printf("JUMP $skip_i2f\n");
+    // length
+    //printf("JUMP $skip_length\n");
+    printf("LABEL $ifj_length\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    printf("DEFVAR LF@tmp\n");
+    printf("POPS LF@tmp\n");
+    printf("STRLEN GF@value_return LF@tmp\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    //printf("LABEL $skip_length\n");
+
+    // substr
+    //printf("JUMP $skip_substr\n");
+    printf("LABEL $ifj_substr\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    // TODO: substr
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    //printf("LABEL $skip_substr\n");
+
+    // ord
+    //printf("JUMP $skip_ord\n");
+    printf("LABEL $ifj_ord\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    //printf("LABEL $skip_ord\n");
+
+    // chr
+    //printf("JUMP $skip_chr\n");
+    printf("LABEL $ifj_chr\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    //printf("LABEL $skip_chr\n");
+
+    // convert functions
+    // int to float
+    //printf("JUMP $skip_i2f\n");
     printf("LABEL $ifj_i2f\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
@@ -686,10 +737,10 @@ void generate_builtin() {
     printf("POPS GF@value_return\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_i2f\n");
+    //printf("LABEL $skip_i2f\n");
 
     // float to int
-    printf("JUMP $skip_f2i\n");
+    //printf("JUMP $skip_f2i\n");
     printf("LABEL $ifj_f2i\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
@@ -697,10 +748,10 @@ void generate_builtin() {
     printf("POPS GF@value_return\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    printf("LABEL $skip_f2i\n");
+    //printf("LABEL $skip_f2i\n");
 
 
-    //
+    printf("LABEL $skip_builtin\n\n");
 
     // TODO: strlen, setchar, getchar, substr, ord, chr, nilcheck, length, all convert fncs, type
 }
