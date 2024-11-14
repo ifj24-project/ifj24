@@ -17,11 +17,43 @@
  * @param node ukazatel na uzel stromu
  */
 void generate(Node* node);
+
+/**
+ * @brief Funkce pro generovani vyrazu
+ *
+ * @param node ukazatel na uzel stromu
+ * @param expr_type typ vyrazu
+ */
 void generate_expr(Node* node, VarType expr_type);
 
-char* data_type(int type);
-NodeType get_rhs(NodeType type);
+/**
+ * @brief Funkce pro generovani datoveho typu
+ *
+ * @param type typ datoveho typu
+ * @return retezec s datovym typem
+ */
+//char* data_type(int type);
+
+/**
+ * @brief Funkce pro ziskani leveho potomka
+ *
+ * @param type typ uzlu
+ * @return typ leveho potomka
+ */
+//NodeType get_rhs(NodeType type);
+
+
+/**
+ * @brief Funkce pro prevedeni retezce na retezec v jazyce IFJ24
+ *
+ * @param str retezec
+ * @return retezec v jazyce IFJ24
+ */
 char* escape_string(const char* str);
+
+/**
+ * @brief Funkce pro generovani vestavenych funkci
+ */
 void generate_builtin();
 
 #endif //GENERATOR_H
