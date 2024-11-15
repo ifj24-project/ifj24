@@ -171,22 +171,22 @@ void generate(Node *node) {
             break;
 
         case VariableDefine_N:
-            printf("DEFVAR LF@%s\n", node->first->data.id->data);
+            printf("DEFVAR LF@%s$\n", node->first->data.id->data);
             switch (node->third->type) {
                 case Id_N:
-                    printf("MOVE LF@%s LF@%s\n", node->first->data.id->data, node->third->data.id->data);
+                    printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->third->data.id->data);
                     break;
                 case FuncCall_N:
                     generate(node->third);
-                    printf("MOVE LF@%s GF@value_return\n", node->first->data.id->data);
+                    printf("MOVE LF@%s$ GF@value_return\n", node->first->data.id->data);
                     break;
                 case Expression_N:
                     generate_expr(node->third, node->third->data.data_type);
-                    printf("POPS LF@%s\n", node->first->data.id->data);
+                    printf("POPS LF@%s$\n", node->first->data.id->data);
                     break;
                 case Str_N:
                     char *str = escape_string(node->third->data.str->data);
-                    printf("MOVE LF@%s string@%s\n", node->first->data.id->data, str);
+                    printf("MOVE LF@%s$ string@%s\n", node->first->data.id->data, str);
                     free(str);
                     break;
                 default:
@@ -218,19 +218,23 @@ void generate(Node *node) {
             } else {
                 switch (node->second->type) {
                     case Id_N:
-                        printf("MOVE LF@%s LF@%s\n", node->first->data.id->data, node->second->data.id->data);
+                        if (strcmp(node->second->data.id->data, "null") == 0) {
+                            printf("MOVE LF@%s$ nil@nil\n", node->first->data.id->data);
+                        } else {
+                            printf("MOVE LF@%s$ LF@%s\n", node->first->data.id->data, node->second->data.id->data);
+                        }
                         break;
                     case FuncCall_N:
                         generate(node->second);
-                        printf("MOVE LF@%s GF@value_return\n", node->first->data.id->data);
+                        printf("MOVE LF@%s$ GF@value_return\n", node->first->data.id->data);
                         break;
                     case Expression_N:
                         generate_expr(node->second, node->second->data.data_type);
-                        printf("POPS LF@%s\n", node->first->data.id->data);
+                        printf("POPS LF@%s$\n", node->first->data.id->data);
                         break;
                     case Str_N:
                         char *str = escape_string(node->second->data.str->data);
-                        printf("MOVE LF@%s string@%s\n", node->first->data.id->data, str);
+                        printf("MOVE LF@%s$ string@%s\n", node->first->data.id->data, str);
                         free(str);
                         break;
                     default:
@@ -312,9 +316,9 @@ void generate(Node *node) {
             } else {
                 // TODO: dodelat if s pipes |neco|
                 // if (vyraz s null) |id bez null| -> pokud vyraz s null neni null -> prevedu do id bez null s odpovidajici hodnotou
-                printf("JUMPIFEQ $if$%d$else LF@%s nil@nil\n", if_counter_in, node->first->data.id->data);
-                printf("DEFVAR LF@%s\n", node->second->data.id->data);
-                printf("MOVE LF@%s LF@%s\n", node->second->data.id->data, node->first->data.id->data);
+                printf("JUMPIFEQ $if$%d$else LF@%s$ nil@nil\n", if_counter_in, node->first->data.id->data);
+                printf("DEFVAR LF@%s$\n", node->second->data.id->data);
+                printf("MOVE LF@%s$ LF@%s$\n", node->second->data.id->data, node->first->data.id->data);
                 generate(node->third);
                 printf("JUMP $if$%d$end\n", if_counter_in);
                 printf("LABEL $if$%d$else\n", if_counter_in);
@@ -338,10 +342,10 @@ void generate(Node *node) {
                 printf("LABEL $while$%d$end\n", while_counter_in);
             } else {
                 // TODO: destruktor
-                printf("DEFVAR LF@%s\n", node->second->data.id->data);
+                printf("DEFVAR LF@%s$\n", node->second->data.id->data);
                 printf("LABEL while$%d\n", while_counter_in);
-                printf("JUMPIFEQ $while$%d$end LF@%s nil@nil\n", while_counter_in, node->first->data.id->data);
-                printf("MOVE LF@%s LF@%s\n", node->second->data.id->data, node->first->data.id->data);
+                printf("JUMPIFEQ $while$%d$end LF@%s$ nil@nil\n", while_counter_in, node->first->data.id->data);
+                printf("MOVE LF@%s$ LF@%s$\n", node->second->data.id->data, node->first->data.id->data);
                 generate(node->third);
                 printf("JUMP while$%d\n", while_counter_in);
                 printf("LABEL $while$%d$end\n", while_counter_in);
@@ -398,7 +402,11 @@ void generate_expr(Node *node, VarType expr_type) {
 
         case Id_N:
             // TODO: nejak tam tu promennou dat misto "symbol"
-            printf("PUSHS LF@%s\n", node->data.id->data);
+                if (strcmp(node->data.id->data, "null") == 0) {
+                    printf("PUSH nil@nil\n");
+                } else {
+                    printf("PUSHS LF@%s$\n", node->data.id->data);
+                }
         // if null push null nill
             break;
 
@@ -557,6 +565,12 @@ NodeType get_rhs(NodeType type) {
 }
 */
 
+// replace the "." in ifj builtin funcs for "_"
+// will probably remove in future, do this replacement in parser
+char *convert_builtin(const char *str) {
+    return NULL;
+}
+
 // convert string to escape sequence
 char *escape_string(const char *str) {
     // sequences are 4 characters long
@@ -675,12 +689,37 @@ void generate_builtin() {
     //printf("LABEL $skip_concat\n");
 
     // strcmp
+    // TODO: strcmp aby vracelo -1, 0, 1
     //printf("JUMP $skip_strcmp\n");
     printf("LABEL $ifj_strcmp\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-    printf("EQS\n");
-    printf("POPS GF@value_return\n");
+
+    printf("DEFVAR LF@str1\n");
+    printf("DEFVAR LF@str2\n");
+    printf("DEFVAR LF@len1\n");
+    printf("DEFVAR LF@len2\n");
+
+    printf("POPS LF@str1\n");
+    printf("POPS LF@str2\n");
+    printf("STRLEN LF@len1 LF@str1\n");
+    printf("STRLEN LF@len2 LF@str2\n");
+    printf("DEFVAR LF@tmp1\n");
+
+    printf("EQ LF@tmp1 LF@len1 LF@len2\n");
+    printf("JUMPIFEQ $ifj_strcmp$end LF@tmp1 bool@true\n");
+    printf("LT LF@tmp1 LF@len1 LF@len2\n");
+    printf("JUMPIFEQ $ifj_strcmp$smalls1 LF@tmp1 bool@true\n");
+    printf("MOVE GF@value_return int@1\n");
+    printf("JUMP $ifj_strcmp$end$end\n");
+
+    printf("LABEL $ifj_strcmp$smalls1\n");
+    printf("MOVE GF@value_return int@-1\n");
+    printf("JUMP $ifj_strcmp$end$end\n");
+
+    printf("LABEL $ifj_strcmp$end\n");
+    printf("MOVE GF@value_return int@0\n");
+    printf("LABEL $ifj_strcmp$end$end\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_strcmp\n");
@@ -712,7 +751,8 @@ void generate_builtin() {
     printf("LABEL $ifj_ord\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-
+    printf("STRI2INTS\n");
+    printf("POPS GF@value_return\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_ord\n");
@@ -722,7 +762,8 @@ void generate_builtin() {
     printf("LABEL $ifj_chr\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-
+    printf("INT2CHARS\n");
+    printf("POPS GF@value_return\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_chr\n");
@@ -750,8 +791,5 @@ void generate_builtin() {
     printf("RETURN\n");
     //printf("LABEL $skip_f2i\n");
 
-
     printf("LABEL $skip_builtin\n\n");
-
-    // TODO: strlen, setchar, getchar, substr, ord, chr, nilcheck, length, all convert fncs, type
 }
