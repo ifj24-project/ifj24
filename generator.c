@@ -20,10 +20,14 @@
 // TODO: zabalit fnc generate do dalsi, ktera bude kontrolovat a vyvolavat errory
 // pripadne pak upravit header soubor
 
+/*
 // pomocna promenna pro definici promennych ve funkci a jejich nasledne popovani ze zasobniku
 bool var_def = false;
 // pomocna promenna jestli se nachazime uvnitr funkce
 bool in_func = false;
+// pomocna promenna jestli se nachazime uvnitr while
+bool in_while = false;
+*/
 
 void generate(Node *node) {
     if (node == NULL) return;
@@ -34,6 +38,12 @@ void generate(Node *node) {
     static int while_counter = 0;
     // pocet void calls
     // static int void_call_counter = 0;
+
+    static bool var_def = false;
+    // pomocna promenna jestli se nachazime uvnitr funkce
+    static bool in_func = false;
+    // pomocna promenna jestli se nachazime uvnitr while
+    static bool in_while = false;
 
     switch (node->type) {
         case Start_N:
@@ -116,6 +126,7 @@ void generate(Node *node) {
                 // define all params
                 var_def = true;
                 generate(node->second);
+                var_def = false;
 
                 printf("JUMP vardef$%s$back\n", node->first->data.id->data);
 
@@ -127,7 +138,7 @@ void generate(Node *node) {
         case ReturnStatement_N:
             switch (node->first->type) {
                 case Id_N:
-                    printf("MOVE GF@value_return LF@%s\n", node->first->data.id->data);
+                    printf("MOVE GF@value_return LF@%s$\n", node->first->data.id->data);
                     break;
                 case FuncCall_N:
                     generate(node->first);
@@ -153,9 +164,9 @@ void generate(Node *node) {
         case ParamsDefine_N:
         case ParamsDefineNext_N:
             if (var_def) {
-                printf("DEFVAR LF@%s\n", node->first->data.id->data);
+                printf("DEFVAR LF@%s$\n", node->first->data.id->data);
             } else {
-                printf("POPS LF@%s\n", node->first->data.id->data);
+                printf("POPS LF@%s$\n", node->first->data.id->data);
             }
             generate(node->second);
             generate(node->third);
@@ -221,7 +232,7 @@ void generate(Node *node) {
                         if (strcmp(node->second->data.id->data, "null") == 0) {
                             printf("MOVE LF@%s$ nil@nil\n", node->first->data.id->data);
                         } else {
-                            printf("MOVE LF@%s$ LF@%s\n", node->first->data.id->data, node->second->data.id->data);
+                            printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->second->data.id->data);
                         }
                         break;
                     case FuncCall_N:
@@ -248,6 +259,8 @@ void generate(Node *node) {
         case FuncCall_N:
             // TODO: prepsat to na ty podtrzitka
             generate(node->second);
+            convert_builtin(node->first->data.id->data);
+        /*
             if (strcmp(node->first->data.id->data, "ifj.write") == 0) {
                 printf("CALL $ifj_write\n");
             } else if (strcmp(node->first->data.id->data, "ifj.string") == 0) {
@@ -269,6 +282,7 @@ void generate(Node *node) {
             } else {
                 printf("CALL $%s\n", node->first->data.id->data);
             }
+            */
             break;
 
         // pushuji parametry od konce!
@@ -278,12 +292,12 @@ void generate(Node *node) {
             switch (node->first->type) {
                 case Id_N:
                     generate_expr(node->first, node->first->data.data_type);
-                    //printf("PUSHS LF@%s\n", node->first->data.id->data);
+                //printf("PUSHS LF@%s\n", node->first->data.id->data);
                     break;
                 case FuncCall_N:
                     generate_expr(node->first, node->first->data.data_type);
-                    //generate(node->first);
-                    //printf("PUSHS GF@value_return\n");
+                //generate(node->first);
+                //printf("PUSHS GF@value_return\n");
                     break;
                 case Expression_N:
                     generate_expr(node->first, node->first->data.data_type);
@@ -314,8 +328,6 @@ void generate(Node *node) {
                 generate(node->third);
                 printf("LABEL $if$%d$end\n", if_counter_in);
             } else {
-                // TODO: dodelat if s pipes |neco|
-                // if (vyraz s null) |id bez null| -> pokud vyraz s null neni null -> prevedu do id bez null s odpovidajici hodnotou
                 printf("JUMPIFEQ $if$%d$else LF@%s$ nil@nil\n", if_counter_in, node->first->data.id->data);
                 printf("DEFVAR LF@%s$\n", node->second->data.id->data);
                 printf("MOVE LF@%s$ LF@%s$\n", node->second->data.id->data, node->first->data.id->data);
@@ -331,7 +343,12 @@ void generate(Node *node) {
         case While_N:
             while_counter++;
             int while_counter_in = while_counter;
-        // while bez pipes while () |neco| ..
+            in_while = true;
+
+
+
+
+
             if (node->data.has_not_null_id == false) {
                 printf("LABEL while$%d\n", while_counter_in);
                 generate_expr(node->first, node->first->data.data_type);
@@ -342,6 +359,7 @@ void generate(Node *node) {
                 printf("LABEL $while$%d$end\n", while_counter_in);
             } else {
                 // TODO: destruktor
+                // TODO: redefinice promenne problem
                 printf("DEFVAR LF@%s$\n", node->second->data.id->data);
                 printf("LABEL while$%d\n", while_counter_in);
                 printf("JUMPIFEQ $while$%d$end LF@%s$ nil@nil\n", while_counter_in, node->first->data.id->data);
@@ -350,12 +368,15 @@ void generate(Node *node) {
                 printf("JUMP while$%d\n", while_counter_in);
                 printf("LABEL $while$%d$end\n", while_counter_in);
             }
+            in_while = false;
             break;
 
         case VoidCall_N:
             generate(node->second);
             if (strcmp(node->first->data.id->data, "ifj.write") == 0) {
                 printf("CALL $ifj_write\n");
+            } else if (strcmp(node->first->data.id->data, "ifj.strcmp") == 0) {
+                printf("CALL $ifj_strcmp\n");
             } else {
                 printf("CALL $%s\n", node->first->data.id->data);
             }
@@ -402,11 +423,11 @@ void generate_expr(Node *node, VarType expr_type) {
 
         case Id_N:
             // TODO: nejak tam tu promennou dat misto "symbol"
-                if (strcmp(node->data.id->data, "null") == 0) {
-                    printf("PUSH nil@nil\n");
-                } else {
-                    printf("PUSHS LF@%s$\n", node->data.id->data);
-                }
+            if (strcmp(node->data.id->data, "null") == 0) {
+                printf("PUSH nil@nil\n");
+            } else {
+                printf("PUSHS LF@%s$\n", node->data.id->data);
+            }
         // if null push null nill
             break;
 
@@ -479,6 +500,7 @@ void generate_expr(Node *node, VarType expr_type) {
             break;
 
         case Divide_N:
+            // TODO: deleni nulou (DPRINT)
             generate_expr(node->first, expr_type);
             generate_expr(node->second, expr_type);
 
@@ -491,7 +513,7 @@ void generate_expr(Node *node, VarType expr_type) {
 
         case FuncCall_N:
             generate(node->second);
-            printf("CALL $%s\n", node->first->data.id->data);
+            convert_builtin(node->first->data.id->data);
             printf("PUSHS GF@value_return\n");
             break;
 
@@ -502,6 +524,7 @@ void generate_expr(Node *node, VarType expr_type) {
 
     return;
 }
+
 /*
 char *data_type(int type) {
     switch (type) {
@@ -567,8 +590,37 @@ NodeType get_rhs(NodeType type) {
 
 // replace the "." in ifj builtin funcs for "_"
 // will probably remove in future, do this replacement in parser
-char *convert_builtin(const char *str) {
-    return NULL;
+void convert_builtin(const char *str) {
+    if (strcmp(str, "ifj.write") == 0) {
+        printf("CALL $ifj_write\n");
+    } else if (strcmp(str, "ifj.string") == 0) {
+        printf("CALL $ifj_string\n");
+    } else if (strcmp(str, "ifj.readi32") == 0) {
+        printf("CALL $ifj_readi32\n");
+    } else if (strcmp(str, "ifj.readf64") == 0) {
+        printf("CALL $ifj_readf64\n");
+    } else if (strcmp(str, "ifj.readstr") == 0) {
+        printf("CALL $ifj_readstr\n");
+    } else if (strcmp(str, "ifj.i2f") == 0) {
+        printf("CALL $ifj_i2f\n");
+    } else if (strcmp(str, "ifj.f2i") == 0) {
+        printf("CALL $ifj_f2i\n");
+    } else if (strcmp(str, "ifj.concat") == 0) {
+        printf("CALL $ifj_concat\n");
+    } else if (strcmp(str, "ifj.strcmp") == 0) {
+        printf("CALL $ifj_strcmp\n");
+    } else if (strcmp(str, "ifj.length") == 0) {
+        printf("CALL $ifj_length\n");
+    } else if (strcmp(str, "ifj.substr") == 0) {
+        printf("CALL $ifj_substr\n");
+    } else if (strcmp(str, "ifj.ord") == 0) {
+        printf("CALL $ifj_ord\n");
+    } else if (strcmp(str, "ifj.chr") == 0) {
+        printf("CALL $ifj_chr\n");
+    } else {
+        printf("CALL $%s\n", str);
+    }
+    return;
 }
 
 // convert string to escape sequence

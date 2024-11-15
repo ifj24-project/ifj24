@@ -42,6 +42,12 @@ void generate_expr(Node* node, VarType expr_type);
  */
 //NodeType get_rhs(NodeType type);
 
+/**
+ * @brief Funkce pro prevedeni vestavene funkce
+ *
+ * @param str nazev funkce
+ */
+void convert_builtin(const char* str);
 
 /**
  * @brief Funkce pro prevedeni retezce na retezec v jazyce IFJ24
