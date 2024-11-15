@@ -234,7 +234,9 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
         return create_prec_item(P_$, NULL);
 
     default:
-        expr_wrapper_ThrowError(2);
+        return create_prec_item(P_expression, NULL); // P_exp instead of P_ERROR because non-terminal cant be input
+        // cant add P_ERROR, because it breaks realtion expressions with enums
+        // expr_wrapper_ThrowError(2);
         return NULL;
         break;
     }
