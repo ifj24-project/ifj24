@@ -642,8 +642,8 @@ void convert_builtin(const char *str) {
         printf("CALL $ifj_strcmp\n");
     } else if (strcmp(str, "ifj.length") == 0) {
         printf("CALL $ifj_length\n");
-    } else if (strcmp(str, "ifj.substr") == 0) {
-        printf("CALL $ifj_substr\n");
+    } else if (strcmp(str, "ifj.substring") == 0) {
+        printf("CALL $ifj_substring\n");
     } else if (strcmp(str, "ifj.ord") == 0) {
         printf("CALL $ifj_ord\n");
     } else if (strcmp(str, "ifj.chr") == 0) {
@@ -820,14 +820,65 @@ void generate_builtin() {
     //printf("LABEL $skip_length\n");
 
     // substr
-    //printf("JUMP $skip_substr\n");
-    printf("LABEL $ifj_substr\n");
+    //printf("JUMP $skip_substring\n");
+    printf("LABEL $ifj_substring\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-    // TODO: substr
+
+    printf("DEFVAR LF@str\n");
+    printf("DEFVAR LF@index1\n");
+    printf("DEFVAR LF@index2\n");
+    printf("DEFVAR LF@len\n");
+    printf("DEFVAR LF@tmp\n");
+    printf("DEFVAR LF@strRet\n");
+
+    printf("POPS LF@str\n");
+    printf("POPS LF@index1\n");
+    printf("POPS LF@index2\n");
+
+    printf("STRLEN LF@len LF@str\n");
+
+    // i < 0
+    printf("LT LF@tmp LF@index1 int@0\n");
+    printf("JUMPIFEQ $return_nil LF@tmp bool@true\n");
+
+    // j < 0
+    printf("LT LF@tmp LF@index2 int@0\n");
+    printf("JUMPIFEQ $return_nil LF@tmp bool@true\n");
+
+    // i > j
+    printf("GT LF@tmp LF@index1 LF@index2\n");
+    printf("JUMPIFEQ $return_nil LF@tmp bool@true\n");
+
+    // i >= len
+    printf("LT LF@tmp LF@index1 LF@len\n");
+    printf("JUMPIFEQ $return_nil LF@tmp bool@false\n");
+
+    // j > len
+    printf("GT LF@tmp LF@index2 LF@len\n");
+    printf("JUMPIFEQ $return_nil LF@tmp bool@true\n");
+
+    printf("MOVE LF@strRet string@\n");
+
+    // iterate through string
+    printf("LABEL $substr$loop\n");
+    printf("JUMPIFEQ $substr$end LF@index1 LF@index2\n");
+    printf("GETCHAR LF@tmp LF@str LF@index1\n");
+    printf("CONCAT LF@strRet LF@strRet LF@tmp\n");
+    printf("ADD LF@index1 LF@index1 int@1\n");
+    printf("JUMP $substr$loop\n");
+
+    printf("LABEL $return_nil\n");
+    printf("MOVE GF@value_return nil@nil\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-    //printf("LABEL $skip_substr\n");
+
+    printf("LABEL $substr$end\n");
+    printf("MOVE GF@value_return LF@strRet\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+
+    //printf("LABEL $skip_substring\n");
 
     // ord
     //printf("JUMP $skip_ord\n");
