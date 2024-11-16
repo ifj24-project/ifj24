@@ -41,7 +41,7 @@ void generate(Node *node) {
 
     static bool var_def = false;
     // pomocna promenna jestli se nachazime uvnitr funkce
-    static bool in_func = false;
+    //static bool in_func = false;
     // pomocna promenna jestli se nachazime uvnitr while
     static bool in_while = false;
 
@@ -69,7 +69,7 @@ void generate(Node *node) {
             break;
 
         case FuncDefine_N:
-            in_func = true;
+            //in_func = true;
             if (strcmp(node->first->data.id->data, "main") == 0) {
                 printf("LABEL $$main\n");
                 printf("CREATEFRAME\n");
@@ -110,7 +110,7 @@ void generate(Node *node) {
                 var_def = false;
                 generate(node->second);
 
-                in_func = true;
+                //in_func = true;
                 printf("# Telo funkce\n");
                 generate(node->third);
                 generate(node->fourth);
@@ -137,7 +137,7 @@ void generate(Node *node) {
                 printf("JUMP vardef$%s$back\n", node->first->data.id->data);
 
                 printf("LABEL skip$%s\n", node->first->data.id->data);
-                in_func = false;
+                //in_func = false;
             }
             break;
 
