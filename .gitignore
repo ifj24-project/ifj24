@@ -7,3 +7,4 @@ bin
 .idea
 *.exe
 *.out
+*.tar.gz

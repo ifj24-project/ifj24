@@ -5,6 +5,9 @@ CFLAGS = -std=gnu99 -c -g -Wall
 HEADER = parser.h expressionparse.h scanner.h semantic.h error.h stringlib.h symstack.h symtable.h generator.h
 CPP = parser.c expressionparse.c scanner.c  main.c semantic.c error.c stringlib.c symstack.c symtable.c generator.c
 
+FILES_TO_PACK = $(HEADER) $(CPP) Makefile
+LEADER = xgeier00
+
 # Program name
 PROGNAME = compiler
 
@@ -21,7 +24,11 @@ $(OBJDIR)/%.o: %.c $(HEADER)
 	@mkdir -p $(OBJDIR)/
 	$(CC) $(CFLAGS) -o $@ $<
 
-.PHONY: clean
+.PHONY: clean pack
 
 clean:
 	rm $(PROGNAME) -fr $(OBJDIR)
+	rm $(LEADER).tar.gz
+
+pack:
+	tar -zcvf $(LEADER).tar.gz $(FILES_TO_PACK)
