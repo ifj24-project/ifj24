@@ -2,11 +2,11 @@
 CC = gcc
 CFLAGS = -std=gnu99 -c -g -Wall
 
-HEADER = parser.h expressionparse.h scanner.h semantic.h error.h stringlib.h symstack.h symtable.h generator.h
-CPP = parser.c expressionparse.c scanner.c  main.c semantic.c error.c stringlib.c symstack.c symtable.c generator.c
+HEADER = parser.h expressionparse.h scanner.h semantic.h error.h stringlib.h symtable.h generator.h
+CPP = parser.c expressionparse.c scanner.c  main.c semantic.c error.c stringlib.c symtable.c generator.c
 
 FILES_TO_PACK = $(HEADER) $(CPP) Makefile
-LEADER = xgeier00
+PACK_NAME = xgeier00
 
 # Program name
 PROGNAME = compiler
@@ -28,7 +28,7 @@ $(OBJDIR)/%.o: %.c $(HEADER)
 
 clean:
 	rm $(PROGNAME) -fr $(OBJDIR)
-	rm $(LEADER).tar.gz
+	rm $(PACK_NAME).tar.gz
 
 pack:
-	tar -zcvf $(LEADER).tar.gz $(FILES_TO_PACK)
+	tar -zcvf $(PACK_NAME).tar.gz $(FILES_TO_PACK)
