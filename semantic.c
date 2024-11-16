@@ -1,11 +1,13 @@
- 
+
 #include "semantic.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
-#include "../error/error.h"
+#include "error.h"
+#include "parser.h"
+#include "symtable.h"
 
 /**
  * ERROR HANDLING
@@ -33,7 +35,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
     VariableInfo* var_info;
     FunctionParam* def_param;
     Node* called_param;
-    
+
     switch (node->type)
     {
     case Start_N:
@@ -48,11 +50,11 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         if (info->param_count != 0) semantic_wrapper_ThrowError(4); // main has parametrs
 
         semantic_scan(node->second, global_table, global_func_key,local_table);
-        
+
         break;
 
     case FuncDefine_N:
-        
+
         func_info = find_symbol(global_table, node->first->data.id);
         def_param = func_info->params;
         local_table = create_symbol_table(100);
@@ -70,7 +72,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         {
             if (find_ret_statement(node) == false) semantic_wrapper_ThrowError(6);
         }
-        
+
         semantic_scan(node->fourth, global_table, node->first->data.id, local_table);
         // node->data.sym_table = local_table;
         // free_symbol_table(local_table);
@@ -85,7 +87,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
 
     case VariableDefine_N:
         // redefinice
-        if (find_symbol(local_table, node->first->data.id) != NULL || find_symbol(global_table, node->first->data.id) != NULL) 
+        if (find_symbol(local_table, node->first->data.id) != NULL || find_symbol(global_table, node->first->data.id) != NULL)
         {
             semantic_wrapper_ThrowError(5);
         }
@@ -109,8 +111,8 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             {
                 temp = semantic_expr(node->third, global_table, local_table);
             }
-            
-            
+
+
             switch (temp)
             {
             case TYPE_INT:
@@ -170,8 +172,8 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
 
                 if (id_type == TYPE_NULL)
                 {
-                    if (node->second->data.data_type != DT_U8_NULL && 
-                        node->second->data.data_type != DT_F64_NULL && 
+                    if (node->second->data.data_type != DT_U8_NULL &&
+                        node->second->data.data_type != DT_F64_NULL &&
                         node->second->data.data_type != DT_I32_NULL) semantic_wrapper_ThrowError(7);
                 }
                 else
@@ -216,9 +218,9 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     }
             }
         }
-        
+
         insert_variable(local_table, node->first->data.id, sym_get_type(node->second->data.data_type), node->data.var_or_const);
-        
+
         semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
         break;
     case VariableAssign_N:
@@ -231,7 +233,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
             break; // break big switch ( _ takes any type )
         }
-        
+
 
 
         // function not defined
@@ -268,7 +270,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 }
                 else semantic_wrapper_ThrowError(7);
             }
-            
+
             node->second->data.data_type = temp;
         }
         else if (node->second->type == Id_N)
@@ -279,8 +281,8 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
 
             if (id_type == TYPE_NULL)
             {
-                if (var_info->data_type != TYPE_INT_NULL && 
-                    var_info->data_type != TYPE_FLOAT_NULL && 
+                if (var_info->data_type != TYPE_INT_NULL &&
+                    var_info->data_type != TYPE_FLOAT_NULL &&
                     var_info->data_type != TYPE_STRING_NULL) semantic_wrapper_ThrowError(7);
             }
             else
@@ -295,7 +297,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         else if (node->second->type == FuncCall_N)
         {
             func_info = find_symbol(global_table, node->second->first->data.id);
-            if (func_info == NULL) semantic_wrapper_ThrowError(7); 
+            if (func_info == NULL) semantic_wrapper_ThrowError(7);
 
             switch (var_info->data_type)
             {
@@ -324,12 +326,12 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 semantic_wrapper_ThrowError(7);
                 break;
             }
-        
+
         }
-        
+
         semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
         break;
-    
+
     case VoidCall_N:
         // function not defined
         if (find_symbol(global_table, node->first->data.id) == NULL) semantic_wrapper_ThrowError(3);
@@ -356,7 +358,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 {
                     var_info = find_symbol(local_table, called_param->first->data.id);
                     if (var_info == NULL) semantic_wrapper_ThrowError(3);
-                    
+
                     mark_variable_as_used(local_table, called_param->first->data.id);
 
                     if (var_info->data_type == def_param->type || var_info->data_type == TYPE_UNDEFINED)
@@ -405,7 +407,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 // check if called param is defined
                 if (called_param->first->type != Str_N) semantic_expr(called_param->first, global_table, local_table);
             }
-            
+
             called_param = called_param->second;
             def_param = def_param->next;
         }
@@ -487,14 +489,14 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
             semantic_scan(node->first, global_table, global_func_key, local_table);
             break;
         }
-        
+
         // vraci spravny datatype podle definice funkce?
         switch (node->first->type)
         {
         case Expression_N:
             // expr check
             VarType temp = semantic_expr(node->first->first, global_table, local_table);
-            if (!type_cmp(func_info->return_type, temp)) { 
+            if (!type_cmp(func_info->return_type, temp)) {
                 if (temp == TYPE_INT)
                 {
                     int converted = expr_to_flt(node->first->first, global_table, local_table);
@@ -557,7 +559,7 @@ bool find_ret_statement(Node* node){
     case ReturnStatement_N:
         return true;
         break;
-    
+
     default:
         a = find_ret_statement(node->first);
         b = find_ret_statement(node->second);
@@ -583,9 +585,9 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
         semantic_wrapper_ThrowError(7); // chyba: prazdny uzel
     }
 
-    
 
-    // kontrola typu uzlu 
+
+    // kontrola typu uzlu
     switch (node->type) {
         case Expression_N:
             return semantic_expr(node->first, global_table, local_table);
@@ -600,7 +602,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
                 free_string(null_str);
                 return TYPE_NULL;
             }
-            
+
             // dostavame typ promenne z tabulky symbolu
             VariableInfo* var = find_symbol(local_table, node->data.id);
             // if (!var) var = find_symbol(global_table, node->data.id);
@@ -623,7 +625,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             if (func == NULL) semantic_wrapper_ThrowError(3);
             semantic_scan(node, global_table, NULL, local_table);
             return func->return_type;
-            
+
 
         case Plus_N: case Minus_N: case Times_N: case Divide_N: {
             // rekurzivne najdeme datove typy prvniho a druheho uzlu
@@ -688,7 +690,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
                 return TYPE_BOOL;
             }
 
-            // lze porovnavat promenne stejnych ciselnych typu 
+            // lze porovnavat promenne stejnych ciselnych typu
             if (left_type == TYPE_INT && right_type == TYPE_INT) {
             return TYPE_BOOL;
             }
@@ -716,7 +718,7 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
                 return TYPE_BOOL;
             }
-            
+
             semantic_wrapper_ThrowError(7); // chyba nekompatibility typu
         }
 
@@ -726,25 +728,25 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
             node->data.bool_val.left = left_type;
             node->data.bool_val.right = right_type;
 
-            // pokud typ operandu null, nemuzeme porovnovat 
+            // pokud typ operandu null, nemuzeme porovnovat
             if (left_type == TYPE_NULL || right_type == TYPE_NULL) {
 
                 semantic_wrapper_ThrowError(7); // chyba: nepovolena operace
             }
 
             // nemuzeme porovnovat typy zahrnujici null
-            if (left_type == TYPE_INT_NULL || left_type == TYPE_FLOAT_NULL || 
+            if (left_type == TYPE_INT_NULL || left_type == TYPE_FLOAT_NULL ||
             right_type == TYPE_INT_NULL || right_type == TYPE_FLOAT_NULL) {
                 semantic_wrapper_ThrowError(7); // chyba: nepovolena operace
             }
 
             // zadny z operatoru nelze aplikovat na str
-            if (left_type == TYPE_STRING || left_type == TYPE_STRING || 
+            if (left_type == TYPE_STRING || left_type == TYPE_STRING ||
             right_type == TYPE_STRING_NULL || right_type == TYPE_STRING_NULL) {
                 semantic_wrapper_ThrowError(7); // chyba: nepovolena operace
             }
 
-            // lze porovnavat promenne stejnych ciselnych typu 
+            // lze porovnavat promenne stejnych ciselnych typu
             if (left_type == TYPE_INT && right_type == TYPE_INT) {
             return TYPE_BOOL;
             }
@@ -771,16 +773,16 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
                     if (temp == -1) semantic_wrapper_ThrowError(7);
                 }
 
-                return TYPE_BOOL; 
+                return TYPE_BOOL;
             }
 
             semantic_wrapper_ThrowError(7);
         }
 
         default:
-            semantic_wrapper_ThrowError(7); 
+            semantic_wrapper_ThrowError(7);
     }
-    return TYPE_UNDEFINED; 
+    return TYPE_UNDEFINED;
 }
 
 
@@ -796,7 +798,7 @@ int expr_to_int(Node* node, SymbolTable* global_table, SymbolTable* local_table)
         if (is_whole_float(node->data.flt))
         {
             node->type = Int_N;
-            node->data.integer = node->data.flt;    
+            node->data.integer = node->data.flt;
         }
         else return -1;
         return 0;
@@ -828,8 +830,8 @@ int expr_to_flt(Node * node, SymbolTable* global_table, SymbolTable* local_table
     {
     case Int_N:
         node->type = Float_N;
-        node->data.flt = node->data.integer;  
-        return 0;  
+        node->data.flt = node->data.integer;
+        return 0;
         break;
     case Id_N:
         VariableInfo* var = find_symbol(local_table, node->data.id);
@@ -863,7 +865,7 @@ bool type_cmp(VarType x, VarType y){
     case TYPE_FLOAT_NULL:
         if (y == TYPE_FLOAT || y == TYPE_FLOAT_NULL) return true;
         break;
-    
+
     default:
         break;
     }

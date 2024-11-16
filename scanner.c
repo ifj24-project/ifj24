@@ -4,18 +4,18 @@
 #include <ctype.h>
 #include <string.h>
 #include "scanner.h"
-#include "error/error.h"
+#include "error.h"
 
 /* TODO :
     - Functions which will clean up the memory from tokens and their values
     - Need lot of testing too Multiline and single line strings
-    - How long Identifiers can be 
+    - How long Identifiers can be
     - Nullables
-    - Param,import as KW 
+    - Param,import as KW
     - unicode value is right but dont print special characters (like [F8 = 248 = ø]),but prints up to 127 )
     - 123.123e123.12 (is lexical or syntax error) (2 dots in float)
     - could add function which will alocate memory so we dont have to do it in every function
-    
+
     - comment ending in "\" sometimes messing up the code so dont type it
 !!! DONT CHANGE THE ORDER OF ENUMS !!! (if I do make changes in Create_ID_or_Keyword,change in detecting keywords)
 */
@@ -31,8 +31,8 @@ char GetNotWhiteChar() {
     char temp = getchar();
     if (IsWhiteChar(temp)) {
         return GetNotWhiteChar();
-    } 
-    else 
+    }
+    else
         return temp;
 }
 
@@ -43,7 +43,7 @@ void create_error(Token* token, int code){
 }
 
 Token* Token_create(enum token_type type, enum token_Category category) {
-    Token* token = malloc(sizeof(Token)); 
+    Token* token = malloc(sizeof(Token));
     if (token == NULL) {
         create_error(token,99);
     }
@@ -92,7 +92,7 @@ Token* Create_ID_or_Keyword(char first){
             Char = getchar();
         }
     }
-    
+
     token->value.ID_name[index] = '\0';
     //printf("Id: %s\n", token->value.ID_name);
     char *keywords[] = {"import","while","void", "var","u8","return","pub","null","f64","i32","if","fn","else","const"};
@@ -104,7 +104,7 @@ Token* Create_ID_or_Keyword(char first){
                 token->type = T_ID;
                 return token;
             }
-            
+
             // 39 is the first keyword, so I flipped list of keywords and minused the position of the index
             token->type = 39 - i;
             free(token->value.ID_name); // if token is not T_id, dont give ID_name value
@@ -112,13 +112,13 @@ Token* Create_ID_or_Keyword(char first){
         }
     }
     return token;
-    
+
 }
 
 Token* numbers(char first){
     Token* token = Token_create(T_Integer, TC_VALUE);
 
-    char numbers[256]; 
+    char numbers[256];
     int index = 0;
     numbers[index] = first;
     index++;
@@ -126,13 +126,13 @@ Token* numbers(char first){
     char Char;
     Char = getchar();
 
-    while (isdigit(Char)) {         
+    while (isdigit(Char)) {
         numbers[index] = Char;
         index++;
         Char = getchar();
     }
-    // Integer part Done    
-    
+    // Integer part Done
+
     if (Char == '.'){
         numbers[index] = Char;
         index++;
@@ -142,7 +142,7 @@ Token* numbers(char first){
             token = Token_create(T_ERORR, TC_ERR);
             token->value.code=1;
             return token;
-        } 
+        }
         while (isdigit(Char)) {
             numbers[index] = Char;
             index++;
@@ -157,7 +157,7 @@ Token* numbers(char first){
         numbers[index] = Char;
         index++;
         Char = getchar();
-        
+
         if (Char == '+' || Char == '-') {
             numbers[index] = Char;
             index++;
@@ -192,7 +192,7 @@ Token* numbers(char first){
     if (strchr(numbers, '.') != NULL || strchr(numbers, 'e') != NULL || strchr(numbers, 'E') != NULL) {
         token->type = T_Float;
         token->value.Float = atof(numbers);    // Convert string to double
-    } 
+    }
     else {
         token->type=T_Integer;
         token->value.integer = atoi(numbers);     // Convert string to int
@@ -201,9 +201,9 @@ Token* numbers(char first){
 }
 
 int escape_sequence() {
-    char curr = getchar(); 
+    char curr = getchar();
     switch (curr) {
-        case '\"':                          // this "  
+        case '\"':                          // this "
             return '\"';
         case 'n':                           // new line
             return '\n';
@@ -211,11 +211,11 @@ int escape_sequence() {
             return '\r';
         case 't' :                          // tab
             return '\t';
-        case '\\':                       
+        case '\\':
             return '\\';
         case 'x':                           // unix code
             return 1;
-        default:                     
+        default:
             return 0;
     }
 }
@@ -275,7 +275,7 @@ Token* String(){
             return token;
         }
 
-        if (index >= length - 10) {  
+        if (index >= length - 10) {
             token->value.stringVal = realloc(token->value.stringVal, length * 2);
             length = length * 2;
             if (token->value.stringVal == NULL) {
@@ -308,7 +308,7 @@ Token* String(){
             }
             Char = getchar();
         }
-        
+
         else {                                  // char in automata
             token->value.stringVal[index] = Char;
             index++;
@@ -345,7 +345,7 @@ Token* multiline_string() {
         Char = getchar();
 
         // Reallocate if running out of space
-        if (index >= length - 10) {  // reserve space for 
+        if (index >= length - 10) {  // reserve space for
             char *temp = realloc(token->value.stringVal, length * 2);
             if (temp == NULL) {
                 free(token->value.stringVal);  // free original memory
@@ -361,7 +361,7 @@ Token* multiline_string() {
             break;
         }
 
-        // Error if end of file 
+        // Error if end of file
         if (Char == EOF) {
             create_error(token, 1);
             return token;
@@ -372,35 +372,35 @@ Token* multiline_string() {
             if (Char == '\n') {
                 can_read = false;
                 token->value.stringVal[index++] = '\n';  // Append newline character
-            } 
+            }
             else {
                 token->value.stringVal[index++] = Char;
             }
         }
 
-        // looking for begginig of new line 
+        // looking for begginig of new line
         else if (!can_read) {
             if (Char == '\\') {
                 Char = getchar();
                 if (Char == '\\') {
                     can_read = true;  // Set can_read for next line
-                } 
+                }
                 else {
                     create_error(token, 1);
                     free(token->value.stringVal);
                     return token;
                 }
-            } 
+            }
         }
     }
 
-    
+
     token->value.stringVal[index-2] = '\0';  // remove the last newline as its not part of intended string
     return token;
 }
 
-Token* scan() {                             
-    char curr = GetNotWhiteChar();         
+Token* scan() {
+    char curr = GetNotWhiteChar();
     char next = curr;
     Token* token;
     //printf("%c \n",curr);
@@ -429,11 +429,11 @@ Token* scan() {
                 token = Token_create(T_Div, TC_OPERATOR);
             }
             break;
-            
+
         case '=':
             if ((next = getchar()) == '=') {                 // ==
                 token = Token_create(T_Equal, TC_LOGICAL);
-            } 
+            }
             else {
                 token = Token_create(T_Assign, TC_OPERATOR);
                 ungetc(next, stdin);
@@ -443,7 +443,7 @@ Token* scan() {
         case '<':
             if ((next = getchar()) == '=') {                 // <=
                 token = Token_create(T_Less_Eq, TC_LOGICAL);
-            } 
+            }
             else {
                 token = Token_create(T_Lesser, TC_LOGICAL);
                 ungetc(next, stdin);
@@ -453,7 +453,7 @@ Token* scan() {
         case '>':
             if ((next = getchar()) == '=') {                 // >=
                 token = Token_create(T_Great_Eq, TC_LOGICAL);
-            } 
+            }
             else {
                 token = Token_create(T_Greater, TC_LOGICAL);
                 ungetc(next, stdin);
@@ -463,33 +463,33 @@ Token* scan() {
         case '!':
             if ((next = getchar()) == '=') {                 // !=
                 token = Token_create(T_Not_Eq, TC_LOGICAL);
-            } 
+            }
             else {
                 token = Token_create(T_ERORR, TC_ERR);
                 token->value.code=1;
             }
             break;
-        
+
         case '(':
             token = Token_create(T_L_Round_B, TC_BRACKET);
             break;
-        
+
         case ')':
             token = Token_create(T_R_Round_B, TC_BRACKET);
             break;
-        
+
         case '[':
             token = Token_create(T_L_Square_B, TC_BRACKET);
             break;
-        
+
         case ']':
             token = Token_create(T_R_Square_B, TC_BRACKET);
             break;
-        
+
         case '{':
             token = Token_create(T_L_Curly_B, TC_BRACKET);
             break;
-        
+
         case '}':
             token = Token_create(T_R_Curly_B, TC_BRACKET);
             break;
@@ -501,7 +501,7 @@ Token* scan() {
         case ';':
             token = Token_create(T_SemiC, TC_PUNCATION);
             break;
-        
+
         case ',':
             token = Token_create(T_Comma, TC_PUNCATION);
             break;
@@ -531,7 +531,7 @@ Token* scan() {
             if (isalnum(next) || next=='_') {
                 token = Create_ID_or_Keyword(curr);
                 ungetc(next, stdin);
-                return token;                   
+                return token;
             }
 
             else {
@@ -546,11 +546,11 @@ Token* scan() {
         case 'P': case 'Q': case 'R': case 'S': case 'T':case 'U': case 'V': case 'W': case 'X': case 'Y':case 'Z':
             token = Create_ID_or_Keyword(curr);
             break;
-        
+
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             token = numbers(curr);
             break;
-        
+
         case '"':
             token = String();
             break;
@@ -561,7 +561,7 @@ Token* scan() {
         case EOF:
             token = Token_create(T_EOF, TC_EOF);
             break;
-        
+
 
         default:
             token = Token_create(T_ERORR, TC_ERR);
@@ -585,7 +585,7 @@ const char* token_type_names[] = {
     "T_EOF", "T_ERORR"
 };
 
-int main() {                                    
+int main() {
      Token* token;
      token = scan();
      printf("Token type: %s\n", token_type_names[token->type]);

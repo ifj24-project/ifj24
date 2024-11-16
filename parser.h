@@ -1,8 +1,8 @@
-#ifndef PARSER_H 
-#define PARSER_H 
+#ifndef PARSER_H
+#define PARSER_H
 
-#include "../scanner.h"
-#include "../symtable.h"
+#include "scanner.h"
+#include "symtable.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,7 +11,7 @@
 typedef struct Node Node;
 
 /**
- * @brief typy uzlu - pocet deti vychazi z ll-gramatiky 
+ * @brief typy uzlu - pocet deti vychazi z ll-gramatiky
  */
 typedef enum NodeType {
     Start_N = 0,
@@ -72,7 +72,7 @@ typedef enum DataTypeEnum{
 
 } DataTypeEnum;
 
-typedef String* IdValue; 
+typedef String* IdValue;
 typedef String* StrValue;
 typedef double FloatValue;
 typedef int IntValue;
@@ -80,7 +80,7 @@ typedef int DataTypeValue;
 typedef int VariableDefineValue;
 typedef bool Not_null_statement;
 typedef SymbolTable* FuncDefineValue;
-typedef struct 
+typedef struct
 {
     VarType left;
     VarType right;
@@ -184,7 +184,7 @@ void free_parse_tree(Node* tree);
 /**
  * Dale jen "pomocne" private fce
  */
-Node * IdNode_new(char *symtable_key); 
+Node * IdNode_new(char *symtable_key);
 Node * StringNode_new(char *string);
 Node * FloatNode_new(double num);
 Node * IntNode_new(int num);
