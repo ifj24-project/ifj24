@@ -182,7 +182,9 @@ void generate(Node *node) {
             break;
 
         case VariableDefine_N:
-            printf("DEFVAR LF@%s$\n", node->first->data.id->data);
+            if (!in_while) {
+                printf("DEFVAR LF@%s$\n", node->first->data.id->data);
+            }
             switch (node->third->type) {
                 case Id_N:
                     printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->third->data.id->data);
@@ -343,10 +345,7 @@ void generate(Node *node) {
         case While_N:
             while_counter++;
             int while_counter_in = while_counter;
-            in_while = true;
-
-
-
+            //in_while = true;
 
 
             if (node->data.has_not_null_id == false) {
@@ -360,6 +359,17 @@ void generate(Node *node) {
             } else {
                 // TODO: destruktor
                 // TODO: redefinice promenne problem
+
+                Node *tmp = node->third;
+                while(tmp != NULL) {
+                    if (tmp->first->first->type == VariableDefine_N) {
+                        printf("DEFVAR LF@%s$\n", tmp->first->first->first->data.id->data);
+                    }
+                    tmp = tmp->second;
+				}
+                in_while = true;
+
+
                 printf("DEFVAR LF@%s$\n", node->second->data.id->data);
                 printf("LABEL while$%d\n", while_counter_in);
                 printf("JUMPIFEQ $while$%d$end LF@%s$ nil@nil\n", while_counter_in, node->first->data.id->data);
@@ -373,6 +383,8 @@ void generate(Node *node) {
 
         case VoidCall_N:
             generate(node->second);
+            convert_builtin(node->first->data.id->data);
+        /*
             if (strcmp(node->first->data.id->data, "ifj.write") == 0) {
                 printf("CALL $ifj_write\n");
             } else if (strcmp(node->first->data.id->data, "ifj.strcmp") == 0) {
@@ -380,6 +392,7 @@ void generate(Node *node) {
             } else {
                 printf("CALL $%s\n", node->first->data.id->data);
             }
+            */
             break;
 
         default:
