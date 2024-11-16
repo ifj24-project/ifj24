@@ -13,9 +13,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "error/error.h"
+#include "error.h"
 #include "symtable.h"
-#include "parser/parser.h"
+#include "parser.h"
 
 // TODO: zabalit fnc generate do dalsi, ktera bude kontrolovat a vyvolavat errory
 // pripadne pak upravit header soubor

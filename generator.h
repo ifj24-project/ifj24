@@ -9,7 +9,8 @@
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
-#include "parser/parser.h"
+#include "parser.h"
+#include "symtable.h"
 
 /**
  * @brief Funkce pro generovani kodu

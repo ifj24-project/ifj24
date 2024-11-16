@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "symstack.h"
-#include "error/error.h"
+#include "error.h"
 #include "stringlib.h"
 #include <malloc.h>
 
@@ -20,7 +20,7 @@ void push_function(SymbolStack* stack, String* key, FunctionInfo func_info) {
     if (new_item == NULL) {
         ThrowError(99);  // Chyba alokace pameti
     }
-    
+
     new_item->key = copy_string(key);       // Kopirujeme klic
     new_item->type = TYPE_FUNCTION;         // Nastavujeme typ jako funkci
     new_item->func_info = func_info;        // Kopirujeme informace o funkci

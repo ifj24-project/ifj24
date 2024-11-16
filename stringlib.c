@@ -1,7 +1,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdio.h>
-#include "error/error.h"
+#include "error.h"
 #include "stringlib.h"
 
 String* create_empty_string() {
@@ -10,13 +10,13 @@ String* create_empty_string() {
         ThrowError(99);
     }
     str->length = 0;
-    str->capacity = 16; 
+    str->capacity = 16;
     str->data = (char*)malloc(str->capacity * sizeof(char));
     if (str->data == NULL) {
         free(str);
         ThrowError(99);
     }
-    str->data[0] = '\0'; 
+    str->data[0] = '\0';
     return str;
 }
 
@@ -38,8 +38,8 @@ String* create_string(const char *initial_data) {
 
 void free_string(String* str) {
     if (str != NULL) {
-        free(str->data);  
-        free(str);       
+        free(str->data);
+        free(str);
     }
 }
 
@@ -94,6 +94,6 @@ String* substring_string(const String *str, size_t start, size_t end) {
         ThrowError(99);
     }
     strncpy(substr->data, str->data + start, substr->length);
-    substr->data[substr->length] = '\0'; 
+    substr->data[substr->length] = '\0';
     return substr;
 }

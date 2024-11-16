@@ -1,7 +1,7 @@
 #ifndef SEMANTIC_H
 #define  SEMANTIC_H
 
-#include "../parser/parser.h"
+#include "parser.h"
 
 void semantic_wrapper_ThrowError(int code);
 

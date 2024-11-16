@@ -1,5 +1,6 @@
 #include "expressionparse.h"
-#include "../error/error.h"
+#include "error.h"
+#include "scanner.h"
 
 /**
  * ERROR HANDLING
@@ -71,7 +72,7 @@ Node * Parse_expression(TokenBuffer* token){
     };
 
     int bracket_cnt = 0;
-    
+
     // PrecStack * stack = prec_stack_init(); // TODO: predej globalni pokud neni NULL
 
     PrecStack * stack;
@@ -81,7 +82,7 @@ Node * Parse_expression(TokenBuffer* token){
         prec_stack_push(stack, P_$, NULL);
     }
     else stack = prec_stack_init();
-    
+
 
     PrecStackItem * input = next_prec_item(token, &bracket_cnt);
     Prectype first_terminal;
@@ -95,7 +96,7 @@ Node * Parse_expression(TokenBuffer* token){
     {
         first_terminal = first_terminal_type(stack);
 
-        
+
         if (prec_table[first_terminal][input->type] == 2)
         {
             Node* ret;
@@ -113,7 +114,7 @@ Node * Parse_expression(TokenBuffer* token){
                 EXPRESSION_PREC_STACK = NULL;
             }
 
-            // // TODO: 
+            // // TODO:
             // prec_stack_free(stack);
             free(input);
             return ret;
@@ -135,7 +136,7 @@ Node * Parse_expression(TokenBuffer* token){
             expr_wrapper_ThrowError(2);
         }
         else
-        {   
+        {
             // printf("stack type: %d\n", stack->top->type);
             // printf("input type: %d\n", input->type);
             // printf("loop tady %d \n", prec_table[stack->top->type][input->type]);
@@ -155,11 +156,11 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
     case T_Greater:
         consume_buffer(token, 1);
         return create_prec_item(P_greater, NULL);
-    
+
     case T_Great_Eq:
         consume_buffer(token, 1);
         return create_prec_item(P_greatereq, NULL);
-    
+
     case T_Lesser:
         consume_buffer(token, 1);
         return create_prec_item(P_lesser, NULL);
@@ -171,7 +172,7 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
     case T_Equal:
         consume_buffer(token, 1);
         return create_prec_item(P_eq, NULL);
-    
+
     case T_Not_Eq:
         consume_buffer(token, 1);
         return create_prec_item(P_noteq, NULL);
@@ -187,7 +188,7 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
     case T_Mul:
         consume_buffer(token, 1);
         return create_prec_item(P_times, NULL);
-    
+
     case T_Div:
         consume_buffer(token, 1);
         return create_prec_item(P_divide, NULL);
@@ -198,7 +199,7 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
             node = Parse_func_call(token);
             return create_prec_item(P_id, node);
         }
-        
+
         node = Parse_id(token);
         return create_prec_item(P_id, node);
 
@@ -227,14 +228,16 @@ PrecStackItem * next_prec_item(TokenBuffer * token, int * bracket_cnt){
         }
         consume_buffer(token, 1);
         return create_prec_item(P_R_RoundB, NULL);
-    
+
     case T_Comma:
     case T_SemiC:
         // consume_buffer(token, 1);
         return create_prec_item(P_$, NULL);
 
     default:
-        expr_wrapper_ThrowError(2);
+        return create_prec_item(P_expression, NULL); // P_exp instead of P_ERROR because non-terminal cant be input
+        // cant add P_ERROR, because it breaks realtion expressions with enums
+        // expr_wrapper_ThrowError(2);
         return NULL;
         break;
     }
@@ -252,7 +255,7 @@ PrecStack* prec_stack_init(){
 
     prec_stack_push(stack, P_$, NULL);
     return stack;
-    
+
 }
 
 void prec_stack_push(PrecStack * stack, Prectype type, Node * data){
@@ -268,7 +271,7 @@ void prec_stack_push(PrecStack * stack, Prectype type, Node * data){
 
     stack->top = item;
     stack->count++;
-    
+
     return;
 }
 
@@ -291,7 +294,7 @@ void prec_push_item(PrecStack * stack, PrecStackItem* item){
 
     stack->top = item;
     stack->count++;
-    
+
     return;
 }
 
@@ -328,7 +331,7 @@ int first_terminal_type(PrecStack* stack){
         if (3 < item->type) return item->type;
         item = item->next;
     }
-    
+
     return 1;
 }
 
@@ -344,7 +347,7 @@ void reduce(PrecStack * stack){
     case P_factor:
     case P_compared:
         if (stack->top->next->type == P_greater)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(Greater_N, top->next->next->node, top->node);
             item = create_prec_item(P_expression, new_node);
@@ -355,7 +358,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_greatereq)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(GreaterEq_N, top->next->next->node, top->node);
             item = create_prec_item(P_expression, new_node);
@@ -366,7 +369,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_lesser)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(Lesser_N, top->next->next->node, top->node);
             item = create_prec_item(P_expression, new_node);
@@ -377,7 +380,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_lessereq)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(LesserEq_N, top->next->next->node, top->node);
             item = create_prec_item(P_expression, new_node);
@@ -388,7 +391,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_eq)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(Eq_N, top->next->next->node, top->node);
             item = create_prec_item(P_expression, new_node);
@@ -399,7 +402,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_noteq)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(NotEq_N, top->next->next->node, top->node);
             item = create_prec_item(P_expression, new_node);
@@ -410,7 +413,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_plus)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(Plus_N, top->next->next->node, top->node);
             item = create_prec_item(P_compared, new_node);
@@ -421,7 +424,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_minus)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(Minus_N, top->next->next->node, top->node);
             item = create_prec_item(P_compared, new_node);
@@ -432,7 +435,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_times)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(Times_N, top->next->next->node, top->node);
             item = create_prec_item(P_term, new_node);
@@ -443,7 +446,7 @@ void reduce(PrecStack * stack){
             break;
         }
         else if (stack->top->next->type == P_divide)
-        {   
+        {
             if (stack->count < 3){expr_wrapper_ThrowError(2);}
             new_node = TwoChildNode_new(Divide_N, top->next->next->node, top->node);
             item = create_prec_item(P_term, new_node);
@@ -479,7 +482,7 @@ void reduce(PrecStack * stack){
             prec_push_item(stack, item);
             break;
         }
-        
+
     default:
         expr_wrapper_ThrowError(2); // cant reduce
         break;

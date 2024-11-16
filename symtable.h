@@ -51,6 +51,7 @@ typedef struct {
         VariableInfo var_info;
     };
     bool is_occupied;    // overi, zda uz obsazeno 
+    bool is_deleted;
 } SymbolTableEntry;
 
 // Struktura tabulky
