@@ -6,7 +6,7 @@ HEADER = parser.h expressionparse.h scanner.h semantic.h error.h stringlib.h sym
 CPP = parser.c expressionparse.c scanner.c  main.c semantic.c error.c stringlib.c symtable.c generator.c
 
 FILES_TO_PACK = $(HEADER) $(CPP) Makefile
-PACK_NAME = xgeier00
+PACK_NAME = xgeierd00
 
 # Program name
 PROGNAME = compiler
