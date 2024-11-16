@@ -90,11 +90,11 @@ void generate(Node *node) {
 
                 printf("POPFRAME\n");
                 printf("EXIT int@0\n");
-                /*
+
                 printf("LABEL divison_by_zero\n");
                 printf("POPFRAME\n");
                 printf("EXIT int@57\n");
-                */
+
                 printf("LABEL error_exit\n");
                 printf("POPFRAME\n");
                 printf("EXIT int@9\n");
@@ -529,11 +529,11 @@ void generate_expr(Node *node, VarType expr_type) {
             // TODO: deleni nulou (DPRINT)
             generate_expr(node->first, expr_type);
             generate_expr(node->second, expr_type);
-            /*
+
             printf("POPS GF@exp_return\n");
             printf("JUMPIFEQ error_exit GF@exp_return int@0\n");
             printf("PUSHS GF@exp_return\n");
-            */
+
 
             if (expr_type == TYPE_FLOAT) {
                 printf("DIVS\n");
