@@ -29,5 +29,8 @@ $(OBJDIR)/%.o: %.c $(HEADER)
 clean:
 	rm $(PROGNAME) -fr $(OBJDIR)
 
+clean-pack:
+	rm $(PACK_NAME).tar.gz
+
 pack:
 	tar -zcvf $(PACK_NAME).tar.gz $(FILES_TO_PACK)
