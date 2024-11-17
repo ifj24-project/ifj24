@@ -13,7 +13,6 @@
     - Nullables
     - Param,import as KW 
     - unicode value is right but dont print special characters (like [F8 = 248 = ø]),but prints up to 127 )
-    - 123.123e123.12 (is lexical or syntax error) (2 dots in float)
     - could add function which will alocate memory so we dont have to do it in every function
     
     - comment ending in "\" sometimes messing up the code so dont type it
@@ -65,7 +64,7 @@ void SkipComment() {
 
 Token* Create_ID_or_Keyword(char first){
     Token* token = Token_create(T_ID, TC_ID);
-    int length=60;
+    int length=256;
     token->value.ID_name = malloc(sizeof(char) * length);
 
     if (token->value.ID_name == NULL) {                 // malloc failed
@@ -184,6 +183,13 @@ Token* numbers(char first){
             return token;
         }
     }
+
+    if (Char == '.') {
+        token = Token_create(T_ERORR, TC_ERR);
+        token->value.code=1;
+        return token;
+    }
+
     ungetc(Char, stdin);        // we are done with numbers push back the last read character
     numbers[index] = '\0';
     // Done with Exponents
@@ -194,6 +200,13 @@ Token* numbers(char first){
     } 
     else {
         token->type=T_Integer;
+
+        if (numbers[0] == '0' && numbers [1] != '\0') {      // Integers cant start with 0
+            token = Token_create(T_ERORR, TC_ERR);
+            token->value.code=1;
+            return token;
+        }
+
         token->value.integer = atoi(numbers);     // Convert string to int
     }
     return token;
