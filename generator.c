@@ -789,6 +789,15 @@ void generate_builtin() {
     printf("STRLEN LF@len2 LF@str2\n");
     printf("DEFVAR LF@tmp1\n");
 
+    // ziskat jeden charakter prevest jej na ord
+    // odecist od sebe a jestli je 0 tak pokracuji na dalsi
+    // jestli je vetsi nebo mensi tak vratim -1 nebo 1
+
+
+
+
+
+    // TODO: dodelat
     printf("EQ LF@tmp1 LF@len1 LF@len2\n");
     printf("JUMPIFEQ $ifj_strcmp$end LF@tmp1 bool@true\n");
     printf("LT LF@tmp1 LF@len1 LF@len2\n");
@@ -801,6 +810,37 @@ void generate_builtin() {
     printf("JUMP $ifj_strcmp$end$end\n");
 
     printf("LABEL $ifj_strcmp$end\n");
+    // ziskat jeden charakter prevest jej na ord
+    // odecist od sebe a jestli je 0 tak pokracuji na dalsi
+    // jestli je vetsi nebo mensi tak vratim -1 nebo 1
+
+    printf("DEFVAR LF@char1\n");
+    printf("DEFVAR LF@char2\n");
+    printf("DEFVAR LF@ord1\n");
+    printf("DEFVAR LF@ord2\n");
+    printf("DEFVAR LF@len3\n");
+
+    printf("MOVE LF@len3 int@0\n");
+
+    printf("LABEL $strcmp$loop\n");
+    printf("GETCHAR LF@char1 LF@str1 LF@len3\n");
+    printf("GETCHAR LF@char2 LF@str2 LF@len3\n");
+    printf("STRI2INT LF@ord1 LF@char1 LF@len3\n");
+    printf("STRI2INT LF@ord2 LF@char2 LF@len3\n");
+    printf("SUB LF@tmp1 LF@ord1 LF@ord2\n");
+    printf("JUMPIFNEQ $strcmp$end$char LF@tmp1 int@0\n");
+    printf("ADD LF@len3 LF@len3 int@1\n");
+    printf("JUMP $strcmp$loop\n");
+
+
+    printf("LABEL $strcmp$end$char\n");
+    printf("LT LF@tmp1 LF@tmp1 int@0\n");
+    printf("JUMPIFEQ $ifj_strcmp$smalls1 LF@tmp1 bool@true\n");
+    printf("MOVE GF@value_return int@1\n");
+    printf("JUMP $ifj_strcmp$end$end\n");
+
+
+
     printf("MOVE GF@value_return int@0\n");
     printf("LABEL $ifj_strcmp$end$end\n");
     printf("POPFRAME\n");
