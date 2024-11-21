@@ -28,7 +28,7 @@ clean:
 	rm $(PROGNAME) $(OBJ)
 
 clean-pack:
-	rm $(PACK_NAME).tar.gz
+	rm $(PACK_NAME).tgz
 
 pack:
-	tar -zcvf $(PACK_NAME).tar.gz $(FILES_TO_PACK)
+	tar -cvvf $(PACK_NAME).tgz $(FILES_TO_PACK)

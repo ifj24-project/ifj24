@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 #include "error.h"
 #include "symtable.h"
@@ -91,9 +92,15 @@ void generate(Node *node) {
                 printf("POPFRAME\n");
                 printf("EXIT int@0\n");
 
-                printf("LABEL divison_by_zero\n");
+                // division by zero error exit 57
+                printf("LABEL division_by_zero$\n");
                 printf("POPFRAME\n");
                 printf("EXIT int@57\n");
+
+                // index out of bounds error exit 58
+                printf("LABEL $index_out_of_bounds$\n");
+                printf("POPFRAME\n");
+                printf("EXIT int@58\n");
 
                 printf("LABEL error_exit\n");
                 printf("POPFRAME\n");
@@ -526,12 +533,11 @@ void generate_expr(Node *node, VarType expr_type) {
             break;
 
         case Divide_N:
-            // TODO: deleni nulou (DPRINT)
             generate_expr(node->first, expr_type);
             generate_expr(node->second, expr_type);
 
             printf("POPS GF@exp_return\n");
-            printf("JUMPIFEQ error_exit GF@exp_return int@0\n");
+            printf("JUMPIFEQ division_by_zero$ GF@exp_return int@0\n");
             printf("PUSHS GF@exp_return\n");
 
 
@@ -684,7 +690,6 @@ char *escape_string(const char *str) {
 }
 
 void generate_builtin() {
-    // TODO
     printf("\n# Builtin functions\n");
     printf("JUMP $skip_builtin\n");
 
@@ -772,7 +777,6 @@ void generate_builtin() {
     //printf("LABEL $skip_concat\n");
 
     // strcmp
-    // TODO: strcmp aby vracelo -1, 0, 1
     //printf("JUMP $skip_strcmp\n");
     printf("LABEL $ifj_strcmp\n");
     printf("CREATEFRAME\n");
@@ -780,69 +784,73 @@ void generate_builtin() {
 
     printf("DEFVAR LF@str1\n");
     printf("DEFVAR LF@str2\n");
-    printf("DEFVAR LF@len1\n");
-    printf("DEFVAR LF@len2\n");
-
     printf("POPS LF@str1\n");
     printf("POPS LF@str2\n");
+
+    printf("DEFVAR LF@len1\n");
+    printf("DEFVAR LF@len2\n");
     printf("STRLEN LF@len1 LF@str1\n");
     printf("STRLEN LF@len2 LF@str2\n");
+
     printf("DEFVAR LF@tmp1\n");
-
-    // ziskat jeden charakter prevest jej na ord
-    // odecist od sebe a jestli je 0 tak pokracuji na dalsi
-    // jestli je vetsi nebo mensi tak vratim -1 nebo 1
-
-
-
-
-
-    // TODO: dodelat
     printf("EQ LF@tmp1 LF@len1 LF@len2\n");
-    printf("JUMPIFEQ $ifj_strcmp$end LF@tmp1 bool@true\n");
-    printf("LT LF@tmp1 LF@len1 LF@len2\n");
-    printf("JUMPIFEQ $ifj_strcmp$smalls1 LF@tmp1 bool@true\n");
-    printf("MOVE GF@value_return int@1\n");
-    printf("JUMP $ifj_strcmp$end$end\n");
+	printf("JUMPIFEQ $ifj_strcmp$diff LF@tmp1 bool@false\n");
 
-    printf("LABEL $ifj_strcmp$smalls1\n");
-    printf("MOVE GF@value_return int@-1\n");
-    printf("JUMP $ifj_strcmp$end$end\n");
-
-    printf("LABEL $ifj_strcmp$end\n");
-    // ziskat jeden charakter prevest jej na ord
-    // odecist od sebe a jestli je 0 tak pokracuji na dalsi
-    // jestli je vetsi nebo mensi tak vratim -1 nebo 1
-
+    // stejne delky
     printf("DEFVAR LF@char1\n");
     printf("DEFVAR LF@char2\n");
     printf("DEFVAR LF@ord1\n");
     printf("DEFVAR LF@ord2\n");
-    printf("DEFVAR LF@len3\n");
+    printf("DEFVAR LF@index\n");
+    printf("DEFVAR LF@tmp2\n");
+    printf("DEFVAR LF@len-1\n");
+    printf("SUB LF@len-1 LF@len1 int@1\n");
 
-    printf("MOVE LF@len3 int@0\n");
+    printf("MOVE LF@index int@0\n");
+    printf("LABEL $ifj_strcmp$loop\n");
+    // jestli je index roven delce tak jsme mimo retezec vracim chybu 58
+    printf("EQ LF@tmp1 LF@index LF@len1\n");
+    printf("JUMPIFEQ $index_out_of_bounds$ LF@tmp1 bool@true\n");
+    // prevedeni jednoho znaku retezce na ord hodnotu
+    printf("STRI2INT LF@ord1 LF@str1 LF@index\n");
+    printf("STRI2INT LF@ord2 LF@str2 LF@index\n");
+    // porovnani dvou ord hodnot
+    printf("SUB LF@tmp2 LF@ord1 LF@ord2\n");
+    // pokud jsou hodnoty rozdilne tak vracim -1 nebo 1
+    printf("LT LF@tmp1 LF@tmp2 int@0\n");
+    printf("JUMPIFEQ $ifj_strcmp$smallstr1 LF@tmp1 bool@true\n");
+    printf("GT LF@tmp1 LF@tmp2 int@0\n");
+    printf("JUMPIFEQ $ifj_strcmp$smallstr2 LF@tmp1 bool@true\n");
+    // pokud jsou hodnoty stejne tak pokracuji na dalsi znak
+    printf("EQ LF@tmp1 LF@tmp2 int@0\n");
+    printf("EQ LF@tmp2 LF@index LF@len-1\n");
+    printf("EQ LF@tmp2 LF@tmp1 LF@tmp2\n");
+    printf("JUMPIFEQ $ifj_strcmp$same LF@tmp2 bool@true\n");
+    printf("ADD LF@index LF@index int@1\n");
+    printf("JUMP $ifj_strcmp$loop\n");
 
-    printf("LABEL $strcmp$loop\n");
-    printf("GETCHAR LF@char1 LF@str1 LF@len3\n");
-    printf("GETCHAR LF@char2 LF@str2 LF@len3\n");
-    printf("STRI2INT LF@ord1 LF@char1 LF@len3\n");
-    printf("STRI2INT LF@ord2 LF@char2 LF@len3\n");
-    printf("SUB LF@tmp1 LF@ord1 LF@ord2\n");
-    printf("JUMPIFNEQ $strcmp$end$char LF@tmp1 int@0\n");
-    printf("ADD LF@len3 LF@len3 int@1\n");
-    printf("JUMP $strcmp$loop\n");
 
+    // rozdilne delky
+    printf("LABEL $ifj_strcmp$diff\n");
+    printf("LT LF@tmp1 LF@len1 LF@len2\n");
+    printf("JUMPIFEQ $ifj_strcmp$smallstr1 LF@tmp1 bool@true\n");
+    printf("JUMP $ifj_strcmp$smallstr2\n");
 
-    printf("LABEL $strcmp$end$char\n");
-    printf("LT LF@tmp1 LF@tmp1 int@0\n");
-    printf("JUMPIFEQ $ifj_strcmp$smalls1 LF@tmp1 bool@true\n");
+    // str1 > str2
+    printf("LABEL $ifj_strcmp$smallstr2\n");
     printf("MOVE GF@value_return int@1\n");
-    printf("JUMP $ifj_strcmp$end$end\n");
+    printf("JUMP $ifj_strcmp$end\n");
 
+    // str1 < str2
+    printf("LABEL $ifj_strcmp$smallstr1\n");
+    printf("MOVE GF@value_return int@-1\n");
+    printf("JUMP $ifj_strcmp$end\n");
 
-
+    // str1 == str2
+    printf("LABEL $ifj_strcmp$same\n");
     printf("MOVE GF@value_return int@0\n");
-    printf("LABEL $ifj_strcmp$end$end\n");
+
+    printf("LABEL $ifj_strcmp$end\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_strcmp\n");
