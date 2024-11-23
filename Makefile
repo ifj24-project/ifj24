@@ -27,6 +27,7 @@ $%.o: %.c $(HEADER)
 clean:
 	rm $(PROGNAME) $(OBJ)
 
+#
 clean-all:
 	rm $(PACK_NAME).tgz
 	rm $(PROGNAME) $(OBJ)
