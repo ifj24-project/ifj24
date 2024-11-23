@@ -22,14 +22,13 @@ $(PROGNAME): $(OBJ)
 $%.o: %.c $(HEADER)
 	$(CC) $(CFLAGS) -o $@ $<
 
-.PHONY: clean pack clean-all
+.PHONY: clean pack clean-pack
 
 clean:
 	rm $(PROGNAME) $(OBJ)
 
-clean-all:
-	rm $(PROGNAME) $(OBJ)
+clean-pack:
 	rm $(PACK_NAME).tgz
 
 pack:
-	tar -cvzf $(PACK_NAME).tgz $(FILES_TO_PACK)
+	tar -cvvf $(PACK_NAME).tgz $(FILES_TO_PACK)
