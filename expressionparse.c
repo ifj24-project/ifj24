@@ -1,3 +1,12 @@
+/** 
+* @file expressionparse.c
+* @author Patrik Mokrusa (xmokrup00)
+*
+* IFJ24
+*
+* @brief Implementace precedencniho alanyzatoru
+*/
+
 #include "expressionparse.h"
 #include "error.h"
 #include "scanner.h"
@@ -25,29 +34,7 @@ Node * Parse_expression(TokenBuffer* token){
     // error == -1
     // accept == 2
 
-    // int last_prec_table[P_all_types][P_all_types] = {
-    //     {-1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 0},
-    //     {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 1, 1, -1, -1, -1, -1, -1, -1, 0, 0},
-    //     {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, -1, -1, -1, -1, 0, 0},
-    //     {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1},
-    //     {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
-    //     {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
-    //     {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 0, -1},
-    //     {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0},
-    //     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, 2}
-    // };
-
+    // tato tabulka odpovida tabulce v dokumentaci
     int prec_table[P_all_types][P_all_types] = {
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // non-terminal
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -73,7 +60,6 @@ Node * Parse_expression(TokenBuffer* token){
 
     int bracket_cnt = 0;
 
-    // PrecStack * stack = prec_stack_init(); // TODO: predej globalni pokud neni NULL
 
     PrecStack * stack;
     if (EXPRESSION_PREC_STACK != NULL) // have 1 stack for recursive calling (needed for error handling)
@@ -90,14 +76,13 @@ Node * Parse_expression(TokenBuffer* token){
     // error handling
     EXPRESSION_PREC_STACK = stack;
     EXPRESSION_PREC_INPUT = input;
-    // EXPRESSION_PREC_INPUT = &input;
 
     while (true)
     {
         first_terminal = first_terminal_type(stack);
 
 
-        if (prec_table[first_terminal][input->type] == 2)
+        if (prec_table[first_terminal][input->type] == 2) // accept
         {
             Node* ret;
             if (stack->top->type == P_$) expr_wrapper_ThrowError(2);
@@ -114,8 +99,6 @@ Node * Parse_expression(TokenBuffer* token){
                 EXPRESSION_PREC_STACK = NULL;
             }
 
-            // // TODO:
-            // prec_stack_free(stack);
             free(input);
             return ret;
         }
@@ -137,9 +120,6 @@ Node * Parse_expression(TokenBuffer* token){
         }
         else
         {
-            // printf("stack type: %d\n", stack->top->type);
-            // printf("input type: %d\n", input->type);
-            // printf("loop tady %d \n", prec_table[stack->top->type][input->type]);
             expr_wrapper_ThrowError(2);
         }
     }

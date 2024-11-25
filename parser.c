@@ -1,3 +1,12 @@
+/** 
+* @file parser.c
+* @author Patrik Mokrusa (xmokrup00)
+*
+* IFJ24
+*
+* @brief Implementace rekurzivniho sestupu
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -34,7 +43,6 @@ NodeStack* node_stack_init(){
 }
 
 void node_stack_push(NodeStack* stack, Node* node){
-    // stack = PARSER_NODE_STACK;
     NodeStackItem* item = (NodeStackItem*) malloc(sizeof(NodeStackItem));
     if (item == NULL) parse_wrapper_ThrowError(99);
 
@@ -46,7 +54,6 @@ void node_stack_push(NodeStack* stack, Node* node){
 
 void node_stack_free(NodeStack* stack){
     NodeStackItem* item = stack->first;
-    // NodeStackItem* item = PARSER_NODE_STACK->first;
     NodeStackItem* temp;
     while (item != NULL)
     {
@@ -98,7 +105,7 @@ TokenBuffer * buffer_ctor(){
         x->third->type == T_ERORR ||
         x->fourth->type == T_ERORR) {
             fprintf(stderr, "\nERROR TOKEN DETECTED!\n\n");
-            parse_wrapper_ThrowError(99);
+            parse_wrapper_ThrowError(1);
         }
 
     return x;
@@ -399,7 +406,6 @@ void sym_push_params(SymbolTable* table, String* func_key, Node* param_node){
 void consume_buffer(TokenBuffer* token, size_t n){
     for (size_t i = 0; i < n; i++)
     {
-        // printf("token: %s\n",get_token_name(token->first->type));
         if (token->first->type == T_String) free(token->first->value.stringVal);
         if (token->first->type == T_ID) free(token->first->value.ID_name);
         free(token->first);
@@ -409,7 +415,7 @@ void consume_buffer(TokenBuffer* token, size_t n){
         token->fourth = scan();
         if (token->fourth->type == T_ERORR) {
             fprintf(stderr, "\nERROR TOKEN DETECTED!\n\n");
-            parse_wrapper_ThrowError(99);
+            parse_wrapper_ThrowError(token->fourth->value.code);
         }
     }
 
@@ -445,7 +451,6 @@ Node * IdNode_new(char* id_string){
 
     x->type = Id_N;
     x->data.id = create_string(id_string);
-    // free(id_string);
     return x;
 }
 
@@ -461,7 +466,6 @@ Node * StringNode_new(char *string){
 
     x->type = Str_N;
     x->data.str = create_string(string);
-    // free(string);
     return x;
 }
 Node * FloatNode_new(double num){
@@ -798,7 +802,7 @@ Node * Parse_program(TokenBuffer* token){
     }
 
     Node* x = Parse_func_define(token);
-    // x->data.sym_table = NULL;
+
     Node* y = Parse_program(token);
 
     return TwoChildNode_new(Program_N, x, y);
@@ -1109,7 +1113,6 @@ Node * Parse_if(TokenBuffer* token){
         Node * c = Parse_func_body(token);
         buffer_check_first(token, T_R_Curly_B);
 
-        // TODO: else not mandatory?
         buffer_check_first(token, T_else);
         buffer_check_first(token, T_L_Curly_B);
         Node * d = Parse_func_body(token);
@@ -1125,7 +1128,7 @@ Node * Parse_if(TokenBuffer* token){
     buffer_check_first(token, T_L_Curly_B);
     Node * b = Parse_func_body(token);
     buffer_check_first(token, T_R_Curly_B);
-    // TODO: else not mandatory?
+
     buffer_check_first(token, T_else);
     buffer_check_first(token, T_L_Curly_B);
     Node * c = Parse_func_body(token);

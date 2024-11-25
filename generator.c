@@ -1,6 +1,6 @@
 /** @file generator.c
 * @author Daniel Geier (xgeierd00)
-* @autor Patrik Mokrusa (xmokrup00)
+* @author Patrik Mokrusa (xmokrup00)
 *
 * IFJ24
 *

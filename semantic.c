@@ -1,3 +1,11 @@
+/** 
+* @file semantic.c
+* @author Patrik Mokrusa (xmokrup00)
+*
+* IFJ24
+*
+* @brief Implementace semantickeho analyzatoru
+*/
 
 #include "semantic.h"
 #include <stdio.h>
@@ -74,8 +82,6 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         }
 
         semantic_scan(node->fourth, global_table, node->first->data.id, local_table);
-        // node->data.sym_table = local_table;
-        // free_symbol_table(local_table);
 
 
         if (check_unused_variables(local_table) != 0) semantic_wrapper_ThrowError(9);
@@ -364,7 +370,6 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                     if (var_info->data_type == def_param->type || var_info->data_type == TYPE_UNDEFINED)
                     {
                         // undefined loophole
-                        // TODO: remove when if |pipes| is done
                     }
                     else { semantic_wrapper_ThrowError(4); }
                 }
@@ -380,7 +385,6 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 {
                     //check expression type
                     VarType temp = semantic_expr(called_param->first->first, global_table, local_table);
-                    // if (def_param->type != temp) semantic_wrapper_ThrowError(4);
                     if (!type_cmp(def_param->type, temp)) {
                         if (temp == TYPE_INT)
                         {
@@ -606,7 +610,6 @@ VarType semantic_expr(Node* node, SymbolTable* global_table, SymbolTable* local_
 
             // dostavame typ promenne z tabulky symbolu
             VariableInfo* var = find_symbol(local_table, node->data.id);
-            // if (!var) var = find_symbol(global_table, node->data.id);
             if (var == NULL) {
 
                 semantic_wrapper_ThrowError(3); // chyba, nenasli jsme symbol v lokalni tabulce ani v globalni

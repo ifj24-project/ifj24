@@ -1,3 +1,12 @@
+/** 
+* @file main.c
+* @author Patrik Mokrusa (xmokrup00)
+*
+* IFJ24
+*
+* @brief driver program pro compiler
+*/
+
 #include "parser.h"
 #include "semantic.h"
 #include "generator.h"

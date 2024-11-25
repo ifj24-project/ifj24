@@ -1,3 +1,12 @@
+/** 
+* @file parser.h
+* @author Patrik Mokrusa (xmokrup00)
+*
+* IFJ24
+*
+* @brief Interface rekurzivniho sestupu
+*/
+
 #ifndef PARSER_H
 #define PARSER_H
 
@@ -58,6 +67,9 @@ typedef enum NodeType {
 
 } NodeType;
 
+/**
+ * @brief Datove typy
+ */
 typedef enum DataTypeEnum{
     DT_UNDEFINED = -1,
     DT_I32 = 1,
@@ -126,10 +138,14 @@ typedef struct TokenBuffer
     Token* second;
     Token* third;
     Token* fourth;
-    SymbolTable* sym_table;
+    SymbolTable* sym_table; // je tady, protoze to byla cesta nejmensiho odporu
 
 }TokenBuffer;
 
+
+/**
+ * @brief item pro stack nodu
+ */
 typedef struct NodeStackItem
 {
     Node* data;
@@ -137,7 +153,9 @@ typedef struct NodeStackItem
 
 } NodeStackItem;
 
-
+/**
+ * @brief stack pro nody, existuje z duvodu uvolnovani pameti pri erroru
+ */
 typedef struct NodeStack
 {
     int count;
@@ -145,13 +163,9 @@ typedef struct NodeStack
 
 } NodeStack;
 
-
-
-NodeStack* node_stack_init();
-void node_stack_push(NodeStack* stack, Node* node);
-void node_stack_free(NodeStack* stack);
-void node_stack_free_keep_nodes(NodeStack* stack);
-
+/**
+ * @brief zajistuje uvolneni pri error exitu
+ */
 void parse_wrapper_ThrowError(int code);
 
 /**
@@ -175,61 +189,252 @@ void consume_buffer(TokenBuffer* token, size_t n);
 /**
  * @brief vysledna fce celeho parsingu
  * @param[in] token ukazatel na buffer tokenu vytvorim pomoci buffer_ctor()
- * @return ukazatel na vrcholovy uzel celeho parse tree
+ * @return ukazatel na koren parse tree
  */
 Node * Parse_start(TokenBuffer* token);
 
+
+/**
+ * @brief uvolni parse tree
+ * @param[in] tree ukazatel na korenovy uzel stromu
+ */
 void free_parse_tree(Node* tree);
+
+
+
+
+
 
 /**
  * Dale jen "pomocne" private fce
  */
+
+
+
+
+
+/**
+ * @brief basic stack funkce
+ */
+NodeStack* node_stack_init();
+void node_stack_push(NodeStack* stack, Node* node);
+void node_stack_free(NodeStack* stack);
+void node_stack_free_keep_nodes(NodeStack* stack);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu typu id_N
+ * @param[in] symtable_key jmeno id
+ */
 Node * IdNode_new(char *symtable_key);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu typu str_N
+ * @param[in] string hodnota string
+ */
 Node * StringNode_new(char *string);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu typu flt_N
+ * @param[in] num hodnota float
+ */
 Node * FloatNode_new(double num);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu typu int_N
+ * @param[in] num hodnota int
+ */
 Node * IntNode_new(int num);
 
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu typu datatype_N
+ * @param[in] type typ z DataTypeEnum
+ */
+Node * DataTypeNode_new(int type); 
 
+
+/**
+ * @brief pomocna funkce pro pushovani parametru do symtablu
+ * @param table symtab
+ * @param func_key klic
+ * @param[in] param_node uzel typu param
+ */
 void sym_push_params(SymbolTable* table, String* func_key, Node* param_node);
+
+/**
+ * @brief pomocna funkce pro konverzi enumu (parser enum -> symtab enum)
+ * @param[in] type 
+ * @return zkonvertovany typ
+ */
 int sym_get_type(int type);
 
-
-
-Node * DataTypeNode_new(int type); // predetermined proradi i32 || f64 || u8 || void
-
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu (ukazatele na deti vyplni NULL)
+ * @param[in] node_type typ uzlu
+ */
 Node * NoChildNode_new(int node_type);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu (tri posledni ukazatele vyplni NULL)
+ * @param[in] node_type typ uzlu
+ * @param first ukazatel na prvni dite uzlu
+ * @return ukazatel na uzel typu node_type
+ */
 Node * OneChildNode_new(int node_type, Node * first);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu (2 posledni ukazatele vyplni NULL)
+ * @param[in] node_type typ uzlu
+ * @param first ukazatel na prvni dite uzlu
+ * @param second ukazatel na druhe dite uzlu
+ * @return ukazatel na uzel typu node_type
+ */
 Node * TwoChildNode_new(int node_type, Node * first, Node * second);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu (posledni ukazatele vyplni NULL)
+ * @param[in] node_type typ uzlu
+ * @param first ukazatel na prvni dite uzlu
+ * @param second ukazatel na druhe dite uzlu
+ * @param third ukazatel na treti dite uzlu
+ * @return ukazatel na uzel typu node_type
+ */
 Node * ThreeChildNode_new(int node_type, Node * first, Node * second, Node * third);
+
+/**
+ * @brief pomocna funkce pro vytvoreni uzlu
+ * @param[in] node_type typ uzlu
+ * @param first ukazatel na prvni dite uzlu
+ * @param second ukazatel na druhe dite uzlu
+ * @param third ukazatel na treti dite uzlu
+ * @param fourth ukazatel ne ctvrte dite uzlu
+ * @return ukazatel na uzel typu node_type
+ */
 Node * FourChildNode_new(int node_type, Node * first, Node * second, Node * third, Node * fourth);
 
+/**
+ * @brief zpracovava pravildo 5 ll-gramatiky
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_id(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravildo 8 ll-gramatiky
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_string(TokenBuffer* token);
 
+/**
+ * @brief zpracovava pravildo 2 ll-gramatiky
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_prolog(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 3, 4
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_program(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 9, 10, 11, 12
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_datatype(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 13
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_func_define(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 14, 15
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_params_define(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 16, 17
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_params_define_next(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 18, 19
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_func_body(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 20, 21, 22, 23, 24, 25
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_statement(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 28, 29
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_rhs(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 26, 27
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_rhs_param(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 30, 31
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_variable_define(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 32, 33
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_variable_assign(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 34
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_func_call(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 35, 36
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_params(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 37, 38
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_params_next(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 39, 40
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_if(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 41, 42
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_while(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 43
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_void_call(TokenBuffer* token);
+
+/**
+ * @brief zpracovava pravilda ll-gramatiky: 44, 45
+ * @param token buffer tokenu (pass parameter)
+ */
 Node * Parse_return_statement(TokenBuffer* token);
-
-
-
-
-
-
 
 #endif
