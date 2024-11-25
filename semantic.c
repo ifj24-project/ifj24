@@ -501,13 +501,13 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 if (temp == TYPE_INT)
                 {
                     int converted = expr_to_flt(node->first->first, global_table, local_table);
-                    if (converted == -1) semantic_wrapper_ThrowError(7);
+                    if (converted == -1) semantic_wrapper_ThrowError(4);
                     temp = TYPE_INT;
                 }
                 else if (temp == TYPE_FLOAT)
                 {
                     int converted = expr_to_int(node->first->first, global_table, local_table);
-                    if (converted == -1) semantic_wrapper_ThrowError(7);
+                    if (converted == -1) semantic_wrapper_ThrowError(4);
                     temp = TYPE_FLOAT;
                 }
                 else semantic_wrapper_ThrowError(4);
