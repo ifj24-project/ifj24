@@ -430,6 +430,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
                 break;
             case TYPE_STRING_NULL:
                 bez_null_type = TYPE_STRING;
+                break;
             default:
                 semantic_wrapper_ThrowError(7);
                 break;
