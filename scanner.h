@@ -1,3 +1,12 @@
+/** 
+* @file scanner.h
+* @author Klara Johanesova (253003)
+*
+* IFJ24
+*
+* @brief Deklarace tokenu
+*/
+
 /**
  * ifndef pridano aby se scanner.h dal includenout na vice mistech a make by nenadaval
  */

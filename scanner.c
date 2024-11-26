@@ -1,3 +1,12 @@
+/** 
+* @file scanner.c
+* @author Klara Johanesova (253003)
+*
+* IFJ24
+*
+* @brief Implementace lexikalniho analyzatoru
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -6,19 +15,6 @@
 #include "scanner.h"
 #include "error.h"
 
-/* TODO :
-    - Functions which will clean up the memory from tokens and their values
-    - Need lot of testing too Multiline and single line strings
-    - How long Identifiers can be
-    - Nullables
-    - Param,import as KW
-    - unicode value is right but dont print special characters (like [F8 = 248 = ø]),but prints up to 127 )
-    - 123.123e123.12 (is lexical or syntax error) (2 dots in float)
-    - could add function which will alocate memory so we dont have to do it in every function
-
-    - comment ending in "\" sometimes messing up the code so dont type it
-!!! DONT CHANGE THE ORDER OF ENUMS !!! (if I do make changes in Create_ID_or_Keyword,change in detecting keywords)
-*/
 
 int IsWhiteChar(char input){
     if (input == ' ' || input == '\t' || input == '\n' || (input >= 11 && input <= 13))
@@ -65,7 +61,7 @@ void SkipComment() {
 
 Token* Create_ID_or_Keyword(char first){
     Token* token = Token_create(T_ID, TC_ID);
-    int length=60;
+    int length=256;
     token->value.ID_name = malloc(sizeof(char) * length);
 
     if (token->value.ID_name == NULL) {                 // malloc failed
@@ -94,12 +90,9 @@ Token* Create_ID_or_Keyword(char first){
     }
 
     token->value.ID_name[index] = '\0';
-    //printf("Id: %s\n", token->value.ID_name);
     char *keywords[] = {"import","while","void", "var","u8","return","pub","null","f64","i32","if","fn","else","const"};
     for(int i = 0; i < 14; i++) {
-        //printf("%s==%s \n", keywords[i], token->value.ID_name);
         if(strcmp(keywords[i], token->value.ID_name) == 0) {
-            //printf("we found KW\n");
             if (strcmp(token->value.ID_name, "null") == 0) {
                 token->type = T_ID;
                 return token;
@@ -151,8 +144,6 @@ Token* numbers(char first){
     }
 
     // decimal part done
-    //numbers[index] = '\0';
-    //printf("Number: %s\n", numbers);
     if (Char == 'e' || Char == 'E') {   // Exponentn part
         numbers[index] = Char;
         index++;
@@ -188,7 +179,6 @@ Token* numbers(char first){
     ungetc(Char, stdin);        // we are done with numbers push back the last read character
     numbers[index] = '\0';
     // Done with Exponents
-    //printf("Number: %s\n", numbers);
     if (strchr(numbers, '.') != NULL || strchr(numbers, 'e') != NULL || strchr(numbers, 'E') != NULL) {
         token->type = T_Float;
         token->value.Float = atof(numbers);    // Convert string to double
@@ -269,7 +259,6 @@ Token* String(){
     Char = getchar();
     int good = 1;
     while(1) {
-        //printf("%c\n",Char);
         if (Char == '\n' || Char == EOF ){     // Errors
             create_error(token,1);
             return token;
@@ -300,7 +289,6 @@ Token* String(){
                     create_error(token,1);
                     return token;
                 }
-                //printf("%caaaaa\n",Char);
             }
             else {
                 token->value.stringVal[index] = escape;
@@ -403,7 +391,6 @@ Token* scan() {
     char curr = GetNotWhiteChar();
     char next = curr;
     Token* token;
-    //printf("%c \n",curr);
 
     switch (curr) {
         case '-':
@@ -421,7 +408,6 @@ Token* scan() {
         case '/':       // can be comment
             if ((next = getchar()) == '/') {
                 SkipComment();
-                //printf("Comment skipped\n");
                 return scan();                  // found comment so we need to call scan again so it doesnt return previous token
             }
             else {
@@ -572,47 +558,3 @@ Token* scan() {
 }
 
 
-// testings
-/*
-const char* token_type_names[] = {
-    "T_Minus", "T_Plus", "T_Mul", "T_Div", "T_Assign",
-    "T_Equal", "T_Lesser", "T_Less_Eq", "T_Greater", "T_Great_Eq", "T_Not_Eq",
-    "T_L_Square_B", "T_R_Square_B", "T_L_Curly_B", "T_R_Curly_B", "T_L_Round_B", "T_R_Round_B",
-    "T_Percent", "T_SemiC", "T_Comma", "T_Dot", "T_At", "T_Colon", "T_Question", "T_Pipe", "T_Underscore",
-    "T_const", "T_else", "T_fn", "T_if", "T_i32", "T_f64", "T_null", "T_pub", "T_return", "T_u8", "T_var", "T_void", "T_while", "T_import",
-    "T_ID",
-    "T_Integer", "T_Float", "T_Exponent", "T_String",
-    "T_EOF", "T_ERORR"
-};
-
-int main() {
-     Token* token;
-     token = scan();
-     printf("Token type: %s\n", token_type_names[token->type]);
-     while (token->type != T_EOF) {
-        token = scan();
-        if (token->Category == TC_ERR) {
-            ThrowError(token->value.code);
-            break;
-         }
-        else {
-            printf("Token type: %s\n", token_type_names[token->type]);
-        }
-        if (token->Category == TC_VALUE) {
-            if (token->type == T_String) {
-                printf("Value: \n|%s|\n", token->value.stringVal);
-            }
-            else if (token->type == T_Float) {
-                printf("Value: %f\n", token->value.Float);
-            }
-            else if (token->type == T_Integer) {
-                printf("Value: %d\n", token->value.integer);
-            }
-            else if (token->type == T_ID){
-                printf("Value: %s\n", token->value.ID_name);
-            }
-        }
-    }
-    return 0;
-    }
-*/
