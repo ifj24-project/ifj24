@@ -28,23 +28,7 @@ void generate(Node* node);
 void generate_expr(Node* node, VarType expr_type);
 
 /**
- * @brief Funkce pro generovani datoveho typu
- *
- * @param type typ datoveho typu
- * @return retezec s datovym typem
- */
-//char* data_type(int type);
-
-/**
- * @brief Funkce pro ziskani leveho potomka
- *
- * @param type typ uzlu
- * @return typ leveho potomka
- */
-//NodeType get_rhs(NodeType type);
-
-/**
- * @brief Funkce pro prevedeni vestavene funkce
+ * @brief Funkce pro prevedeni a zavolani vestavene funkce
  *
  * @param str nazev funkce
  */

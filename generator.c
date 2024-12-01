@@ -18,31 +18,16 @@
 #include "symtable.h"
 #include "parser.h"
 
-// TODO: zabalit fnc generate do dalsi, ktera bude kontrolovat a vyvolavat errory
-// pripadne pak upravit header soubor
-
-/*
-// pomocna promenna pro definici promennych ve funkci a jejich nasledne popovani ze zasobniku
-bool var_def = false;
-// pomocna promenna jestli se nachazime uvnitr funkce
-bool in_func = false;
-// pomocna promenna jestli se nachazime uvnitr while
-bool in_while = false;
-*/
-
 void generate(Node *node) {
     if (node == NULL) return;
-    //static int label_counter = 0;
+
     // pocet if statements
     static int if_counter = 0;
     // pocet while statements
     static int while_counter = 0;
-    // pocet void calls
-    // static int void_call_counter = 0;
 
+    // pomocna promenna jestli definujeme promenne
     static bool var_def = false;
-    // pomocna promenna jestli se nachazime uvnitr funkce
-    //static bool in_func = false;
     // pomocna promenna jestli se nachazime uvnitr while
     static bool in_while = false;
 
@@ -65,12 +50,10 @@ void generate(Node *node) {
 
             break;
 
-
         case DataType_N:
             break;
 
         case FuncDefine_N:
-            //in_func = true;
             if (strcmp(node->first->data.id->data, "main") == 0) {
                 printf("LABEL $$main\n");
                 printf("CREATEFRAME\n");
@@ -97,8 +80,6 @@ void generate(Node *node) {
                 printf("POPFRAME\n");
                 printf("EXIT int@57\n");
 
-
-
                 // index out of bounds error exit 58
                 printf("LABEL $index_out_of_bounds$\n");
                 printf("POPFRAME\n");
@@ -119,26 +100,18 @@ void generate(Node *node) {
                 var_def = false;
                 generate(node->second);
 
-                //in_func = true;
                 printf("# Telo funkce\n");
                 generate(node->third);
                 generate(node->fourth);
 
-                // sem skoci vsechny returny funkce
                 printf("# Return funkce\n");
-                printf("LABEL return$%s\n", node->first->data.id->data);
-
-                // ulozi return hodnotu do globalni promenne
-                //printf("POPS GF@return_value\n");
-                // nebo necham tu hodnotu na zasobniku? -> tj nebudu ji popovat
-
                 printf("POPFRAME\n");
                 printf("RETURN\n\n");
-                // --konec funkce--
 
                 printf("# Definice promennych\n");
                 printf("LABEL vardef$%s\n", node->first->data.id->data);
-                // define all params
+
+                // definice promennych
                 var_def = true;
                 generate(node->second);
                 var_def = false;
@@ -146,18 +119,24 @@ void generate(Node *node) {
                 printf("JUMP vardef$%s$back\n", node->first->data.id->data);
 
                 printf("LABEL skip$%s\n", node->first->data.id->data);
-                //in_func = false;
             }
             break;
 
         case ReturnStatement_N:
+            if (node->first == NULL) {
+                printf("POPFRAME\n");
+                printf("RETURN\n\n");
+
+				return;
+            }
+
             switch (node->first->type) {
                 case Id_N:
                     printf("MOVE GF@value_return LF@%s$\n", node->first->data.id->data);
                     break;
                 case FuncCall_N:
                     generate(node->first);
-                // hodnota je ulozena z predchoziho volani v GF@value_return
+                    // hodnota je ulozena z predchoziho volani v GF@value_return
                     break;
                 case Expression_N:
                     generate_expr(node->first, node->first->data.data_type);
@@ -200,6 +179,7 @@ void generate(Node *node) {
             if (!in_while) {
                 printf("DEFVAR LF@%s$\n", node->first->data.id->data);
             }
+
             switch (node->third->type) {
                 case Id_N:
                     printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->third->data.id->data);
@@ -274,47 +254,20 @@ void generate(Node *node) {
             break;
 
         case FuncCall_N:
-            // TODO: prepsat to na ty podtrzitka
             generate(node->second);
             convert_builtin(node->first->data.id->data);
-        /*
-            if (strcmp(node->first->data.id->data, "ifj.write") == 0) {
-                printf("CALL $ifj_write\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.string") == 0) {
-                printf("CALL $ifj_string\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.readi32") == 0) {
-                printf("CALL $ifj_readi32\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.readf64") == 0) {
-                printf("CALL $ifj_readf64\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.readstr") == 0) {
-                printf("CALL $ifj_readstr\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.i2f") == 0) {
-                printf("CALL $ifj_i2f\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.f2i") == 0) {
-                printf("CALL $ifj_f2i\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.concat") == 0) {
-                printf("CALL $ifj_concat\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.strcmp") == 0) {
-                printf("CALL $ifj_strcmp\n");
-            } else {
-                printf("CALL $%s\n", node->first->data.id->data);
-            }
-            */
             break;
 
-        // pushuji parametry od konce!
         case Params_N:
         case ParamsNext_N:
+            // parametry se pushuji od konce
             generate(node->second);
             switch (node->first->type) {
                 case Id_N:
                     generate_expr(node->first, node->first->data.data_type);
-                //printf("PUSHS LF@%s\n", node->first->data.id->data);
                     break;
                 case FuncCall_N:
                     generate_expr(node->first, node->first->data.data_type);
-                //generate(node->first);
-                //printf("PUSHS GF@value_return\n");
                     break;
                 case Expression_N:
                     generate_expr(node->first, node->first->data.data_type);
@@ -334,7 +287,7 @@ void generate(Node *node) {
         case If_N:
             if_counter++;
             int if_counter_in = if_counter;
-        // if bez pipes if () |neco| ..
+            // if bez |pipes|
             if (node->data.has_not_null_id == false) {
                 generate_expr(node->first, node->first->data.data_type);
                 printf("POPS GF@exp_return\n");
@@ -360,9 +313,8 @@ void generate(Node *node) {
         case While_N:
             while_counter++;
             int while_counter_in = while_counter;
-        //in_while = true;
 
-
+            // zadefinovat si promenne mimo while (redefinice)
             if (node->data.has_not_null_id == false) {
                 Node *tmp = node->second;
                 while (tmp != NULL) {
@@ -381,7 +333,6 @@ void generate(Node *node) {
                 printf("JUMP while$%d\n", while_counter_in);
                 printf("LABEL $while$%d$end\n", while_counter_in);
             } else {
-                // TODO: destruktor
                 Node *tmp = node->third;
                 while (tmp != NULL) {
                     if (tmp->first->first->type == VariableDefine_N) {
@@ -390,7 +341,6 @@ void generate(Node *node) {
                     tmp = tmp->second;
                 }
                 in_while = true;
-
 
                 printf("DEFVAR LF@%s$\n", node->second->data.id->data);
                 printf("LABEL while$%d\n", while_counter_in);
@@ -406,15 +356,6 @@ void generate(Node *node) {
         case VoidCall_N:
             generate(node->second);
             convert_builtin(node->first->data.id->data);
-        /*
-            if (strcmp(node->first->data.id->data, "ifj.write") == 0) {
-                printf("CALL $ifj_write\n");
-            } else if (strcmp(node->first->data.id->data, "ifj.strcmp") == 0) {
-                printf("CALL $ifj_strcmp\n");
-            } else {
-                printf("CALL $%s\n", node->first->data.id->data);
-            }
-            */
             break;
 
         default:
@@ -426,17 +367,8 @@ void generate(Node *node) {
     }
 }
 
-
-/**
- * doporucuju udelat ty expressions zvlast
- * pak byt postorderem prochazel
- *
- * TODO: vymenit "var" v printech za nejaky temp register
- */
 void generate_expr(Node *node, VarType expr_type) {
     // pro realcni udelat zvlast protoze se to chova jinak nez int
-    // kdyz to je string tak to je ve string.id
-    // funkce jsou jinak function_call_N
 
     if (node == NULL) return; // break
 
@@ -449,7 +381,6 @@ void generate_expr(Node *node, VarType expr_type) {
         }
     }
     */
-
 
     switch (node->type) {
         case Expression_N:
@@ -564,69 +495,6 @@ void generate_expr(Node *node, VarType expr_type) {
     return;
 }
 
-/*
-char *data_type(int type) {
-    switch (type) {
-        case DT_I32: //i32
-            return "int";
-            break;
-        case DT_F64: //f64
-            return "float";
-            break;
-        case DT_U8: //u8
-            return "string";
-            break;
-        case DT_VOID: //void
-            return "void";
-            break;
-        case DT_BOOL: //bool
-            return "bool";
-            break;
-        case DT_UNDEFINED: //odvozeny?
-            return "";
-            break;
-        // jak to je s tim nil?
-        case DT_I32_NULL:
-            return "nil";;
-            break;
-        case DT_F64_NULL:
-            return "nil";
-            break;
-        case DT_U8_NULL:
-            return "nil";
-            break;
-        default:
-            // error?
-            return "";
-            break;
-    }
-}
-*/
-
-/*
-// asi jeste vyuziju, aby to bylo na jednom miste (pujde to?)
-// func with switch case to determine "rhs"
-NodeType get_rhs(NodeType type) {
-    switch (type) {
-        case Int_N:
-            return Int_N;
-            break;
-        case Float_N:
-            return Float_N;
-            break;
-        case Id_N:
-            return Id_N;
-            break;
-        case FuncCall_N:
-            return FuncCall_N;
-            break;
-        default:
-            return -1;
-            break;
-    }
-}
-*/
-
 // replace the "." in ifj builtin funcs for "_"
 // will probably remove in future, do this replacement in parser
 void convert_builtin(const char *str) {
@@ -662,39 +530,35 @@ void convert_builtin(const char *str) {
     return;
 }
 
-// convert string to escape sequence
+// prevede string na escape sekvenci
 char *escape_string(const char *str) {
-    // sequences are 4 characters long
+	// sekvence ma 4 znaky
     char *new_str = malloc(strlen(str) * 4 + 1);
     if (new_str == NULL) {
         ThrowError(99);
     }
+    // pointer na zacatek stringu
     char *ret_str = new_str;
 
     char n;
     while ((n = *(str++)) != '\0') {
-        // ascii values of control chars, space, #, backslash
+        // ascii hodnoty kontrolnich znaku, mezery, #, zpetne lomitko
         if (n <= 32 || n == 35 || n == 92) {
-            // escape sequence is in format
-
             sprintf(new_str, "\\%03u", n);
-            // move to next sequence
+            // posunuti na dalsi sekvenci
             new_str += 4;
         } else {
-            // move to next character
+            // jinak zkopirujeme znak
             *new_str++ = n;
         }
     }
-    // appends null terminator
     *new_str = '\0';
     return ret_str;
-    // TODO: free(new_str);
 }
 
 void generate_builtin() {
     printf("\n# Builtin functions\n");
     printf("JUMP $skip_builtin\n");
-
 
     // write
     //printf("JUMP $skip_write\n");
@@ -707,7 +571,6 @@ void generate_builtin() {
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_write\n");
-
 
     // read functions
     // read int
@@ -831,7 +694,6 @@ void generate_builtin() {
     printf("ADD LF@index LF@index int@1\n");
     printf("JUMP $ifj_strcmp$loop\n");
 
-
     // rozdilne delky
     printf("LABEL $ifj_strcmp$diff\n");
     printf("LT LF@tmp1 LF@len1 LF@len2\n");
@@ -910,7 +772,7 @@ void generate_builtin() {
 
     printf("MOVE LF@strRet string@\n");
 
-    // iterate through string
+	// prochazeni retezce
     printf("LABEL $substr$loop\n");
     printf("JUMPIFEQ $substr$end LF@index1 LF@index2\n");
     printf("GETCHAR LF@tmp LF@str LF@index1\n");
@@ -927,7 +789,6 @@ void generate_builtin() {
     printf("MOVE GF@value_return LF@strRet\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
-
     //printf("LABEL $skip_substring\n");
 
     // ord
