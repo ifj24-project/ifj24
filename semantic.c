@@ -56,6 +56,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         free_string(main);
         if (info == NULL) semantic_wrapper_ThrowError(3); // main doesnt exits
         if (info->param_count != 0) semantic_wrapper_ThrowError(4); // main has parametrs
+        if (info->return_type != TYPE_VOID) semantic_wrapper_ThrowError(4); // main is not void type
 
         semantic_scan(node->second, global_table, global_func_key,local_table);
 
@@ -69,6 +70,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         node->data.sym_table = local_table;
         while (def_param != NULL) // nacti parametry do lokalni tabulky jako promenne
         {
+            if (find_symbol(local_table, def_param->name) != NULL) semantic_wrapper_ThrowError(5); // redefinition in parameters
             insert_variable(local_table, def_param->name, def_param->type, false);
             mark_variable_as_changed(local_table, def_param->name);
 
