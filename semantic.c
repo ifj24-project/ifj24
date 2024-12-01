@@ -337,7 +337,7 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
 
         }
 
-        semantic_scan(node->third, global_table, global_func_key, local_table); // co se tam assignuje
+        semantic_scan(node->second, global_table, global_func_key, local_table); // co se tam assignuje
         break;
 
     case VoidCall_N:
@@ -490,9 +490,12 @@ void semantic_scan(Node* node, SymbolTable* global_table, String* global_func_ke
         break;
     case ReturnStatement_N:
         func_info = find_symbol(global_table, global_func_key);
+
+        if (func_info->return_type == TYPE_VOID && node->first != NULL) semantic_wrapper_ThrowError(6); // returns a value in void func
+
         if (node->first == NULL)
         {
-            if (func_info->return_type != TYPE_VOID) semantic_wrapper_ThrowError(4);
+            if (func_info->return_type != TYPE_VOID) semantic_wrapper_ThrowError(6);
             semantic_scan(node->first, global_table, global_func_key, local_table);
             break;
         }
