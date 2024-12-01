@@ -127,7 +127,7 @@ void generate(Node *node) {
                 printf("POPFRAME\n");
                 printf("RETURN\n\n");
 
-				return;
+                return;
             }
 
             switch (node->first->type) {
@@ -136,7 +136,7 @@ void generate(Node *node) {
                     break;
                 case FuncCall_N:
                     generate(node->first);
-                    // hodnota je ulozena z predchoziho volani v GF@value_return
+                // hodnota je ulozena z predchoziho volani v GF@value_return
                     break;
                 case Expression_N:
                     generate_expr(node->first, node->first->data.data_type);
@@ -182,7 +182,11 @@ void generate(Node *node) {
 
             switch (node->third->type) {
                 case Id_N:
-                    printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->third->data.id->data);
+                    if (strcmp(node->third->data.id->data, "null") == 0) {
+                        printf("MOVE LF@%s$ nil@nil\n", node->first->data.id->data);
+                    } else {
+                        printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->second->data.id->data);
+                    }
                     break;
                 case FuncCall_N:
                     generate(node->third);
@@ -287,7 +291,7 @@ void generate(Node *node) {
         case If_N:
             if_counter++;
             int if_counter_in = if_counter;
-            // if bez |pipes|
+        // if bez |pipes|
             if (node->data.has_not_null_id == false) {
                 generate_expr(node->first, node->first->data.data_type);
                 printf("POPS GF@exp_return\n");
@@ -314,12 +318,15 @@ void generate(Node *node) {
             while_counter++;
             int while_counter_in = while_counter;
 
-            // zadefinovat si promenne mimo while (redefinice)
+        // zadefinovat si promenne mimo while (redefinice)
             if (node->data.has_not_null_id == false) {
                 Node *tmp = node->second;
                 while (tmp != NULL) {
                     if (tmp->first->first->type == VariableDefine_N) {
                         printf("DEFVAR LF@%s$\n", tmp->first->first->first->data.id->data);
+                    }
+                    if ((tmp->first->first->type == If_N) && (tmp->first->first->data.has_not_null_id == true)) {
+                        printf("DEFVAR LF@%s$\n", tmp->first->first->second->data.id->data);
                     }
                     tmp = tmp->second;
                 }
@@ -337,6 +344,9 @@ void generate(Node *node) {
                 while (tmp != NULL) {
                     if (tmp->first->first->type == VariableDefine_N) {
                         printf("DEFVAR LF@%s$\n", tmp->first->first->first->data.id->data);
+                    }
+                    if ((tmp->first->first->type == If_N) && (tmp->first->first->data.has_not_null_id == true)) {
+                        printf("DEFVAR LF@%s$\n", tmp->first->first->second->data.id->data);
                     }
                     tmp = tmp->second;
                 }
@@ -532,7 +542,7 @@ void convert_builtin(const char *str) {
 
 // prevede string na escape sekvenci
 char *escape_string(const char *str) {
-	// sekvence ma 4 znaky
+    // sekvence ma 4 znaky
     char *new_str = malloc(strlen(str) * 4 + 1);
     if (new_str == NULL) {
         ThrowError(99);
@@ -588,7 +598,7 @@ void generate_builtin() {
     printf("LABEL $ifj_readf64\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-    printf("READ GF@rvalue_return float\n");
+    printf("READ GF@value_return float\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_readf64\n");
@@ -609,7 +619,7 @@ void generate_builtin() {
     printf("LABEL $ifj_read_bool\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-    printf("READ GF@rvalue_return bool\n");
+    printf("READ GF@value_return bool\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     printf("LABEL $skip_readbool\n");
@@ -659,7 +669,7 @@ void generate_builtin() {
 
     printf("DEFVAR LF@tmp1\n");
     printf("EQ LF@tmp1 LF@len1 LF@len2\n");
-	printf("JUMPIFEQ $ifj_strcmp$diff LF@tmp1 bool@false\n");
+    printf("JUMPIFEQ $ifj_strcmp$diff LF@tmp1 bool@false\n");
 
     // stejne delky
     printf("DEFVAR LF@char1\n");
@@ -772,7 +782,7 @@ void generate_builtin() {
 
     printf("MOVE LF@strRet string@\n");
 
-	// prochazeni retezce
+    // prochazeni retezce
     printf("LABEL $substr$loop\n");
     printf("JUMPIFEQ $substr$end LF@index1 LF@index2\n");
     printf("GETCHAR LF@tmp LF@str LF@index1\n");
@@ -796,8 +806,25 @@ void generate_builtin() {
     printf("LABEL $ifj_ord\n");
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
-    printf("STRI2INTS\n");
-    printf("POPS GF@value_return\n");
+    printf("DEFVAR LF@str\n");
+    printf("DEFVAR LF@index\n");
+
+    printf("POPS LF@str\n");
+    printf("POPS LF@index\n");
+    printf("JUMPIFEQ $ifj_ord$null LF@str nil@nil\n");
+    printf("DEFVAR LF@tmp\n");
+    printf("DEFVAR LF@len\n");
+    printf("STRLEN LF@len LF@str\n");
+    printf("JUMPIFEQ $ifj_ord$null LF@index int@0\n");
+    printf("LT LF@tmp LF@index LF@len\n");
+    printf("JUMPIFEQ $ifj_ord$null LF@tmp bool@false\n");
+
+    printf("STRI2INT GF@value_return LF@str LF@index\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+
+    printf("LABEL $ifj_ord$null\n");
+    printf("MOVE GF@value_return int@0\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_ord\n");
