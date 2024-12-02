@@ -1,3 +1,12 @@
+/** 
+* @file symtable.h
+* @author Ariana Tomen (xtomen00)
+*
+* IFJ24
+*
+* @brief Definice struktury a funkci pro implementaci tabulky symbolu
+*/
+
 #ifndef _SYMTABLE_H
 #define _SYMTABLE_H
 
@@ -5,6 +14,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+/**
+ * @brief Typy podporovane v tabulce symbolu.
+ * 
+ * Obsahuje zakladni datove typy, vcetne typu s podporou null hodnot a funkce/variable specifikace.
+ */
 typedef enum {
     TYPE_INT,      // i32
     TYPE_FLOAT,    // f64
@@ -20,50 +34,90 @@ typedef enum {
     TYPE_NULL // null
 } VarType;
 
-// Struktura parametru funkce
+/**
+ * @brief Struktura parametru funkce.
+ * 
+ * Obsahuje informace o jednom parametru funkce, vcetne jeho nazvu, datoveho typu
+ * a ukazatele na dalsi parametr (pro vazany seznam).
+ */
 typedef struct FunctionParam {
-    String* name;   // jmeno parametru
-    VarType type;   // typ
-    struct FunctionParam *next;  // ukazatel na nasledujici parametr
+    String* name;   /**< Jmeno parametru. */
+    VarType type;   /**< Datovy typ parametru. */
+    struct FunctionParam *next;  /**< Ukazatel na dalsi parametr ve vazanem seznamu. */
 } FunctionParam;
 
-// Struktura funkce
+/**
+ * @brief Struktura reprezentujici funkci.
+ * 
+ * Uchovava informace o navratovem typu funkce a parametrech (ve forme vazaneho seznamu).
+ */
 typedef struct {
-    VarType return_type;       // navratovy typ
-    FunctionParam* params;     // parametry funkce
-    int param_count;           // pocet parametru
+    VarType return_type;        /**< Navratovy typ funkce. */
+    FunctionParam* params;      /**< Ukazatel na prvni parametr funkce. */
+    int param_count;            /**< Pocet parametru funkce. */
 } FunctionInfo;
 
-// Struktura promenne
+/**
+ * @brief Struktura reprezentujici promennou.
+ * 
+ * Obsahuje informace o datovem typu promenne, jeji konstante/stav zmeny a pouziti.
+ */
 typedef struct {
-    VarType data_type;   // datovy typ promenne
-    bool is_const;       // je-li promenna konstantni 
-    bool is_used;        // je-li promenna pouzita
-    bool changed;       // je-li promenna nekdy zmenena
+    VarType data_type;   /**< Datovy typ promenne. */
+    bool is_const;       /**< Znacka indikujici, zda je promenna konstantni. */ 
+    bool is_used;        /**< Znacka indikujici, zda byla promenna pouzita. */
+    bool changed;        /**< Znacka indikujici, zda byla promenna zmenena. */
 } VariableInfo;
 
-// Struktura pro zapis do tabulky symbolu
+/**
+ * @brief Polozka tabulky symbolu.
+ * 
+ * Reprezentuje jednu polozku tabulky symbolu, obsahuje klic, typ (promenna nebo funkce)
+ * a informace o funkci nebo promenne.
+ */
 typedef struct {
-    String* key;         // identifikator (klic)
-    VarType type;        // typ (promenna nebo funkce)
-    union {              // informace o funkci nebo promenne
+    String* key;         /**< Identifikator (klic). */
+    VarType type;        /**< Typ polozky (promenna nebo funkce). */
+    union {              /**< Informace o funkci nebo promenne. */
         FunctionInfo func_info;
         VariableInfo var_info;
     };
-    bool is_occupied;    // overi, zda uz obsazeno 
-    bool is_deleted;
+    bool is_occupied;    /**< Znacka indikujici, zda je polozka obsazena. */
+    bool is_deleted;     /**< Znacka indikujici, zda byla polozka smazana. */
 } SymbolTableEntry;
 
-// Struktura tabulky
+/**
+ * @brief Tabulka symbolu.
+ * 
+ * Struktura uchovavajici informace o tabulce symbolu, obsahujici pole polozek, jejich pocet a velikost tabulky.
+ */
 typedef struct {
-    SymbolTableEntry* table; // pole pro ukladani prvku tabulky
-    int size;                // velikost tabulky
-    int count;               // aktualni pocet prvku 
+    SymbolTableEntry* table; /**< Pole pro ukladani prvku tabulky. */
+    int size;                /**< Velikost tabulky. */
+    int count;               /**< Aktualni pocet prvku v tabulce. */
 } SymbolTable;
 
+/**
+ * @brief Checks if a number is a prime.
+ * 
+ * This function verifies whether the provided number is a prime.
+ * A number is prime if it is greater than 1 and divisible only by 1 and itself.
+ * 
+ * @param num The number to be checked.
+ * @return bool Returns true if the number is prime, otherwise false.
+ */
 bool is_prime(int num);
-int get_next_prime(int num);
 
+/**
+ * @brief Finds the next prime number greater than the given number.
+ * 
+ * This function calculates the next prime number greater than the given input.
+ * If the number is less than 2, it starts searching from 2.
+ * 
+ * @param num The starting number to search from.
+ * @return int Returns the next prime number.
+ */
+int get_next_prime(int num);
 
 /**
  * @brief Creates a new symbol table.
