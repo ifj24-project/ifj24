@@ -1,3 +1,12 @@
+/** 
+* @file stringlib.c
+* @author Ariana Tomen (xtomen00)
+*
+* IFJ24
+*
+* @brief Implementace knihovny string
+*/
+
 #include <string.h>
 #include <malloc.h>
 #include <stdio.h>
