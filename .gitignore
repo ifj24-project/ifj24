@@ -2,9 +2,10 @@
 compiler
 .vscode
 input4.txt
+input5.txt
 test.sh
 bin
 .idea
 *.exe
 *.out
-*.tar.gz
+*.tgz
