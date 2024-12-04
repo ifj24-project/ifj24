@@ -87,8 +87,9 @@ void generate(Node *node) {
 
                 printf("LABEL error_exit\n");
                 printf("POPFRAME\n");
-                printf("EXIT int@9\n");
+                printf("EXIT int@9\n\n\n");
             } else {
+                printf("# Funkce %s\n", node->first->data.id->data);
                 printf("JUMP skip$%s\n", node->first->data.id->data);
                 printf("LABEL $%s\n", node->first->data.id->data);
                 printf("CREATEFRAME\n");
@@ -118,7 +119,7 @@ void generate(Node *node) {
 
                 printf("JUMP vardef$%s$back\n", node->first->data.id->data);
 
-                printf("LABEL skip$%s\n", node->first->data.id->data);
+                printf("LABEL skip$%s\n\n", node->first->data.id->data);
             }
             break;
 
@@ -135,7 +136,7 @@ void generate(Node *node) {
                     printf("MOVE GF@value_return LF@%s$\n", node->first->data.id->data);
                     break;
                 case FuncCall_N:
-                    generate(node->first);
+                    generate_expr(node->first, node->first->data.data_type);
                 // hodnota je ulozena z predchoziho volani v GF@value_return
                     break;
                 case Expression_N:
@@ -185,7 +186,7 @@ void generate(Node *node) {
                     if (strcmp(node->third->data.id->data, "null") == 0) {
                         printf("MOVE LF@%s$ nil@nil\n", node->first->data.id->data);
                     } else {
-                        printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->second->data.id->data);
+                        printf("MOVE LF@%s$ LF@%s$\n", node->first->data.id->data, node->third->data.id->data);
                     }
                     break;
                 case FuncCall_N:
@@ -272,6 +273,7 @@ void generate(Node *node) {
                     break;
                 case FuncCall_N:
                     generate_expr(node->first, node->first->data.data_type);
+                    printf("PUSHS GF@value_return\n");
                     break;
                 case Expression_N:
                     generate_expr(node->first, node->first->data.data_type);
@@ -303,7 +305,9 @@ void generate(Node *node) {
                 printf("LABEL $if$%d$end\n", if_counter_in);
             } else {
                 printf("JUMPIFEQ $if$%d$else LF@%s$ nil@nil\n", if_counter_in, node->first->data.id->data);
-                printf("DEFVAR LF@%s$\n", node->second->data.id->data);
+                if (!in_while) {
+                    printf("DEFVAR LF@%s$\n", node->second->data.id->data);
+                }
                 printf("MOVE LF@%s$ LF@%s$\n", node->second->data.id->data, node->first->data.id->data);
                 generate(node->third);
                 printf("JUMP $if$%d$end\n", if_counter_in);
@@ -378,19 +382,7 @@ void generate(Node *node) {
 }
 
 void generate_expr(Node *node, VarType expr_type) {
-    // pro realcni udelat zvlast protoze se to chova jinak nez int
-
     if (node == NULL) return; // break
-
-    // rozlisit realcni a int
-    // bool -> ANDS, ORS, NOTS
-    /*
-    if (expr_type == DT_BOOL) {
-        switch (node->type) {
-            // ANDS, ORS, NOTS
-        }
-    }
-    */
 
     switch (node->type) {
         case Expression_N:
@@ -398,13 +390,11 @@ void generate_expr(Node *node, VarType expr_type) {
             break;
 
         case Id_N:
-            // TODO: nejak tam tu promennou dat misto "symbol"
             if (strcmp(node->data.id->data, "null") == 0) {
                 printf("PUSH nil@nil\n");
             } else {
                 printf("PUSHS LF@%s$\n", node->data.id->data);
             }
-        // if null push null nill
             break;
 
         case Float_N:
@@ -439,21 +429,18 @@ void generate_expr(Node *node, VarType expr_type) {
         case GreaterEq_N:
             generate_expr(node->first, node->data.bool_val.left);
             generate_expr(node->second, node->data.bool_val.right);
-        // do something
             printf("LTS\nNOTS\n");
             break;
 
         case Eq_N:
             generate_expr(node->first, node->data.bool_val.left);
             generate_expr(node->second, node->data.bool_val.right);
-        // do something
             printf("EQS\n");
             break;
 
         case NotEq_N:
             generate_expr(node->first, node->data.bool_val.left);
             generate_expr(node->second, node->data.bool_val.right);
-        // do something
             printf("EQS\nNOTS\n");
             break;
 
@@ -483,7 +470,6 @@ void generate_expr(Node *node, VarType expr_type) {
             printf("JUMPIFEQ division_by_zero$ GF@exp_return int@0\n");
             printf("PUSHS GF@exp_return\n");
 
-
             if (expr_type == TYPE_FLOAT) {
                 printf("DIVS\n");
             } else {
@@ -494,7 +480,7 @@ void generate_expr(Node *node, VarType expr_type) {
         case FuncCall_N:
             generate(node->second);
             convert_builtin(node->first->data.id->data);
-            printf("PUSHS GF@value_return\n");
+            //printf("POPS GF@value_return\n");
             break;
 
         default:
@@ -505,8 +491,7 @@ void generate_expr(Node *node, VarType expr_type) {
     return;
 }
 
-// replace the "." in ifj builtin funcs for "_"
-// will probably remove in future, do this replacement in parser
+// prevede vestavene funkce a zavola je
 void convert_builtin(const char *str) {
     if (strcmp(str, "ifj.write") == 0) {
         printf("CALL $ifj_write\n");
@@ -612,18 +597,6 @@ void generate_builtin() {
     printf("POPFRAME\n");
     printf("RETURN\n");
     //printf("LABEL $skip_readstr\n");
-
-    /*
-    // read bool
-    printf("JUMP $skip_readbool\n");
-    printf("LABEL $ifj_read_bool\n");
-    printf("CREATEFRAME\n");
-    printf("PUSHFRAME\n");
-    printf("READ GF@value_return bool\n");
-    printf("POPFRAME\n");
-    printf("RETURN\n");
-    printf("LABEL $skip_readbool\n");
-    */
 
     // work with strings
     // string

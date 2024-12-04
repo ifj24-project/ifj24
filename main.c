@@ -1,4 +1,4 @@
-/** 
+/**
 * @file main.c
 * @author Patrik Mokrusa (xmokrup00)
 *
@@ -22,9 +22,6 @@ int main()
 
     semantic_scan(parse_tree, symbol_table, NULL, NULL);
 
-    /**
-     * Gregoruv generator tady.
-     */
     generate(parse_tree);
 
     free_symbol_table(symbol_table);
